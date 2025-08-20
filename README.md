@@ -88,14 +88,14 @@ The fourth wave focuses on Non-Admin OADP components:
 
 ## 🌊 V Wave
 
-The final wave updates the Must-Admin OADP components:
+The final wave updates the OADP Must-Gather components:
 
 - `openshift/velero`  
- └─🟠─ `openshift/oadp-must-admin`
+ └─🟠─ `openshift/oadp-must-gather`
 
 - `openshift/oadp-operator`  
   `migtools/oadp-non-admin`  
- └─🟢─ `openshift/oadp-must-admin`
+ └─🟢─ `openshift/oadp-must-gather`
 
 > **Note:** This wave is effectively gated only by the `migtools/oadp-non-admin` update from previous IV Wave; all other components are already ready.
 
