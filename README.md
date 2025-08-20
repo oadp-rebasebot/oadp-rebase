@@ -26,7 +26,7 @@ These icons help to quickly identify the impact of each update, from full rebase
 The first wave focuses on independent core dependencies without requiring `go.mod` replacements:
 
 - `openshift/docker-distribution`  
- └─🟢─ `migtools/udistribution`
+ └─🟠─ `migtools/udistribution`
 - 🔵 `migtools/kopia`
 - 🔵 `openshift/restic`
 
