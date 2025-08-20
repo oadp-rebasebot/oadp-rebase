@@ -74,7 +74,15 @@ The fourth wave focuses on Non-Admin OADP components:
 - `openshift/oadp-operator`  
  └─🟢─ `migtools/oadp-non-admin`# only tag update
 
-> **Note:** Here, `migtools/oadp-non-admin` is blocked only by the `openshift/oadp-operator` update from Wave III.
+- `openshift/oadp-operator`  
+  `migtools/udistribution`  
+ └─🟢─ `migtools/openshift-velero-plugin`# only tag update
+
+- `openshift/velero`  
+  `openshift/docker-distribution/v3`  
+ └─🟠─ `migtools/openshift-velero-plugin`# `go.mod` replace + update
+
+> **Note:** This wave is blocked only by the `openshift/oadp-operator` update from Wave III.
 
 ---
 
