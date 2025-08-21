@@ -30,7 +30,8 @@ The first wave focuses on independent core dependencies without requiring `go.mo
 - 🔵 `migtools/kopia`
 - 🔵 `openshift/restic`
 
-> **Note:** `migtools/udistribution` requires only a tag update.
+> **Note:** `migtools/udistribution` requires only a tag update.  
+> **Note:** `migtools/kopia` repository must be rebased from the same upstream branch or tag referenced in Velero's `go.mod`. This alignment is automatically handled by the relevant scripts in the [`rebase-configs`](./rebase-configs) directory.
 
 ---
 
