@@ -1,13 +1,41 @@
-# For the oadp-dev, use the newest branch in a format e.g. v0.21.1-velero-patch
+# ===============================================================
+# Track the upstream Velero branch, extract the Kopia commit hash
+# from its go.mod file, and determine the corresponding Kopia
+# reference (tag or branch) in the upstream project-velero/kopia
+# repository. This ensures that the Kopia rebase matches the
+# Velero rebase.
+# ===============================================================
 
-SOURCE_UPSTREAM_BRANCH=$(curl --silent --header "X-GitHub-Api-Version:2022-11-28" \
-  "https://api.github.com/repos/project-velero/kopia/branches" \
-  | grep -E '"name": "v[0-9]+\.[0-9]+\.[0-9]*-velero-patch"' \
+UPSTREAM_VELERO_BRANCH=main
+DESTINATION_DOWNSTREAM_VELERO_BRANCH=oadp-dev
+
+KOPIA_HASH=$(curl -s -L "https://raw.githubusercontent.com/vmware-tanzu/velero/$UPSTREAM_VELERO_BRANCH/go.mod" \
+  | grep 'replace github.com/kopia/kopia' \
+  | awk '{print $NF}' \
+  | awk -F'-' '{print $NF}')
+
+UPSTREAM_KOPIA_REPO="project-velero/kopia"
+
+UPSTREAM_KOPIA_TAG_BRANCH_FOR_VELERO=$(curl -s -L "https://api.github.com/repos/${UPSTREAM_KOPIA_REPO}/tags" \
+  | grep -E '"name":|"sha":' \
+  | paste - - \
+  | grep "$KOPIA_HASH" \
   | awk -F'"' '{print $4}' \
-  | sort -V \
-  | tail -n 1)
-  
-SOURCE_UPSTREAM_REPO="https://github.com/project-velero/kopia:$SOURCE_UPSTREAM_BRANCH"
-DESTINATION_DOWNSTREAM_REPO="migtools/kopia:oadp-dev"
-REBASE_REPO="oadp-rebasebot/kopia:rebase-bot-oadp-dev"
+  | head -n1
+)
+
+if [ -z "$UPSTREAM_KOPIA_TAG_BRANCH_FOR_VELERO" ]; then
+  UPSTREAM_KOPIA_TAG_BRANCH_FOR_VELERO=$(
+    curl -s "https://api.github.com/repos/${UPSTREAM_KOPIA_REPO}/branches?per_page=100" \
+    | grep -E '"name":|"sha":' \
+    | paste - - \
+    | grep "$KOPIA_HASH" \
+    | awk -F'"' '{print $4}' \
+    | head -n1
+  )
+fi
+
+SOURCE_UPSTREAM_REPO="https://github.com/$UPSTREAM_KOPIA_REPO:$UPSTREAM_KOPIA_TAG_BRANCH_FOR_VELERO"
+DESTINATION_DOWNSTREAM_REPO="migtools/kopia:$DESTINATION_DOWNSTREAM_VELERO_BRANCH"
+REBASE_REPO="oadp-rebasebot/kopia:rebase-bot-$DESTINATION_DOWNSTREAM_VELERO_BRANCH"
 
