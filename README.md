@@ -77,11 +77,11 @@ The fourth wave focuses on Non-Admin OADP components:
 
 - `openshift/oadp-operator`  
   `migtools/udistribution`  
- └─🟢─ `migtools/openshift-velero-plugin`# only tag update
+ └─🟢─ `openshift/openshift-velero-plugin`# only tag update
 
 - `openshift/velero`  
   `openshift/docker-distribution/v3`  
- └─🟠─ `migtools/openshift-velero-plugin`# `go.mod` replace + update
+ └─🟠─ `openshift/openshift-velero-plugin`# `go.mod` replace + update
 
 > **Note:** This wave is blocked only by the `openshift/oadp-operator` update from Wave III.
 
@@ -99,6 +99,64 @@ The final wave updates the OADP Must-Gather components:
  └─🟢─ `openshift/oadp-must-gather`
 
 > **Note:** This wave is effectively gated only by the `migtools/oadp-non-admin` update from previous IV Wave; all other components are already ready.
+
+---
+
+## Using the Rebase Script
+
+The `run-oadp-rebase.sh` script provides a unified interface for running rebase operations.
+
+### Prerequisites
+
+1. **Secrets Directory**: Create `~/.rebasebot/secrets/` with GitHub App private keys:
+   - `oadp-rebasebot-app-key`
+   - `oadp-rebasebot-cloner-key`
+
+2. **Container Runtime**: Install Docker or Podman
+
+### Basic Usage
+
+```bash
+# Run single repository rebase
+./run-oadp-rebase.sh -b oadp-dev kopia
+
+# Run entire wave
+./run-oadp-rebase.sh -w 1
+
+# Dry run (preview changes without applying)
+./run-oadp-rebase.sh -d -w 2
+
+# Test configuration locally
+./run-oadp-rebase.sh -t -b oadp-dev kopia
+```
+
+### Common Options
+
+- `-d, --dry-run` - Preview changes without applying them
+- `-w, --wave` - Run an entire wave (1-5)
+- `-b, --branch BRANCH` - Specify target branch (default: oadp-dev)
+- `-t, --test` - Test configuration only (no rebase)
+- `-r, --remote` - Use remote configuration files
+- `-s, --secrets-dir DIR` - Custom secrets directory
+
+### Examples
+
+```bash
+# Rebase kopia for oadp-dev branch
+./run-oadp-rebase.sh -b oadp-dev kopia
+
+# Rebase kopia for oadp-1.5 branch
+./run-oadp-rebase.sh -b oadp-1.5 kopia
+
+# Run wave 1 with dry-run
+./run-oadp-rebase.sh -d -w 1
+
+# Run wave 2 for oadp-1.5 branch
+./run-oadp-rebase.sh -b oadp-1.5 -w 2
+
+# Test velero configuration
+./run-oadp-rebase.sh -t -b oadp-dev velero
+```
 
 ---
 
