@@ -54,7 +54,7 @@ get_config_name() {
 
         # === Velero Core ===
         velero-oadp-dev) echo "openshift_velero_oadp-dev" ;;
-        velero-1.5) echo "openshift_velero_oadp-1.5" ;;
+        velero-oadp-1.5) echo "openshift_velero_oadp-1.5" ;;
 
         # === Wave 3 ===
         # ==============
