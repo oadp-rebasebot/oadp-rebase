@@ -218,6 +218,8 @@ run_container_rebase() {
   --source \"$SOURCE_UPSTREAM_REPO\" \
   --dest \"$DESTINATION_DOWNSTREAM_REPO\" \
   --rebase \"$REBASE_REPO\" \
+  --git-username \"$GIT_USERNAME\" \
+  --git-email \"$GIT_EMAIL\" \
   --github-app-id \"$GITHUB_APP_ID\" \
   --github-app-key /secrets/oadp-rebasebot-app-key \
   --github-cloner-id \"$GITHUB_CLONER_ID\" \
