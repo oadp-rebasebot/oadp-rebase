@@ -5,4 +5,8 @@ DESTINATION_DOWNSTREAM_REPO="migtools/udistribution:main"
 REBASE_REPO="oadp-rebasebot/udistribution:rebase-bot-main"
 
 EXTRA_REBASEBOT_ARGS="--always-run-hooks"
-HOOK_SCRIPTS="--post-rebase-hook git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:rebasebot-hook-scripts/go-replace_docker-distribution_main.sh git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:rebasebot-hook-scripts/go-mod-tidy-and-commit.sh"
+HOOK_SCRIPTS_LOCATION="git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:rebasebot-hook-scripts"
+HOOK_SCRIPTS="--post-rebase-hook \
+  ${HOOK_SCRIPTS_LOCATION}/go-replace_docker-distribution_main.sh \
+  ${HOOK_SCRIPTS_LOCATION}/go-mod-tidy-and-commit.sh \
+  "
