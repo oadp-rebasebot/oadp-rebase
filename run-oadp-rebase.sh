@@ -147,7 +147,7 @@ load_config() {
     config_name="$(get_config_name "$config")" || error_exit "Unknown config '$config'"
     config_file="${config_name}.env.sh"
 
-    log_info "Loading ${source_type} config..."
+    log_info "Loading ${source_type} configuration: ${config_file}"
 
     # Required to not left some variables from the previous run that may have been
     # set for different config
