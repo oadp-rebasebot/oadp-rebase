@@ -148,7 +148,15 @@ load_config() {
     config_file="${config_name}.env.sh"
 
     log_info "Loading ${source_type} config..."
-    unset SOURCE_UPSTREAM_REPO DESTINATION_DOWNSTREAM_REPO REBASE_REPO HOOK_SCRIPTS EXTRA_REBASEBOT_ARGS SKIP_REPO
+
+    # Required to not left some variables from the previous run that may have been
+    # set for different config
+    [ -n "${SOURCE_UPSTREAM_REPO:-}" ] && unset SOURCE_UPSTREAM_REPO
+    [ -n "${DESTINATION_DOWNSTREAM_REPO:-}" ] && unset DESTINATION_DOWNSTREAM_REPO
+    [ -n "${REBASE_REPO:-}" ] && unset REBASE_REPO
+    [ -n "${HOOK_SCRIPTS:-}" ] && unset HOOK_SCRIPTS
+    [ -n "${EXTRA_REBASEBOT_ARGS:-}" ] && unset EXTRA_REBASEBOT_ARGS
+    [ -n "${SKIP_REPO:-}" ] && unset SKIP_REPO
 
     if [ "$source_type" = "local" ]; then
         [ -f "rebase-configs/$config_file" ] || error_exit "Config file not found: rebase-configs/${config_file}"
@@ -162,6 +170,7 @@ load_config() {
         trap - EXIT
         rm -f "$temp_config"
     fi
+
     log_success "Config loaded"
 }
 
@@ -173,7 +182,7 @@ test_config() {
     if [ "${SKIP_REPO:-false}" = "true" ]; then
         log_warn "Skipping $config (SKIP_REPO=true in config)"
         return 0
-    fi    
+    fi
     log_info "SOURCE_UPSTREAM_REPO: ${SOURCE_UPSTREAM_REPO:-<not set>}"
     log_info "DESTINATION_DOWNSTREAM_REPO: ${DESTINATION_DOWNSTREAM_REPO:-<not set>}"
     log_info "REBASE_REPO: ${REBASE_REPO:-<not set>}"
@@ -195,6 +204,11 @@ run_container_rebase() {
 
     check_secrets
     load_config "$config" "$source_type"
+    # Check if this repo should be skipped
+    if [ "${SKIP_REPO:-false}" = "true" ]; then
+        log_warn "Skipping $config (SKIP_REPO=true in config)"
+        return 0
+    fi
 
     CMD="$CONTAINER_ENGINE run --rm --pull=always \
   -v \"$SECRETS_DIR:/secrets:Z,ro\" \
@@ -283,7 +297,7 @@ run_wave() {
 
     # Always print summary
     log_section "Wave $wave_num summary"
-    log_info "Total repos in wave: $total_count"
+    log_info "Total repos in wave $wave_num: $total_count"
     log_info "✅ Success: $success_count"
     log_info "❌ Failed: $failed_count"
     log_info "⚠️ Skipped: $skipped_count"
