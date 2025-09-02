@@ -40,7 +40,6 @@ get_config_name() {
 
         # === Wave 3 ===
         velero-plugin-for-csi-oadp-dev) echo "openshift_velero_plugin_for_csi_oadp-dev" ;;
-        velero-plugin-for-csi-oadp-1.5) echo "openshift_velero_plugin_for_csi_oadp-1.5" ;;
         oadp-operator-oadp-dev) echo "openshift_oadp-operator_oadp-dev" ;;
         oadp-operator-oadp-1.5) echo "openshift_oadp-operator_oadp-1.5" ;;
         velero-plugin-for-aws-oadp-dev) echo "openshift_velero_plugin_for_aws_oadp-dev" ;;
@@ -94,7 +93,7 @@ get_wave_repos() {
         case "$wave" in
             1) echo "kopia-oadp-1.5 restic-oadp-1.5" ;;
             2) echo "velero-oadp-1.5" ;;
-            3) echo "velero-plugin-for-csi-oadp-1.5 oadp-operator-oadp-1.5 velero-plugin-for-aws-oadp-1.5 velero-plugin-for-legacy-aws-oadp-1.5 velero-plugin-for-microsoft-azure-oadp-1.5" ;;
+            3) echo "oadp-operator-oadp-1.5 velero-plugin-for-aws-oadp-1.5 velero-plugin-for-legacy-aws-oadp-1.5 velero-plugin-for-microsoft-azure-oadp-1.5" ;;
             4) echo "oadp-non-admin-oadp-1.5 openshift-velero-plugin-oadp-1.5" ;;
             5) echo "oadp-must-gather-oadp-1.5" ;;
             *) return 1 ;;
