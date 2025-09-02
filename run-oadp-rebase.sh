@@ -19,81 +19,44 @@ GIT_EMAIL="${GIT_EMAIL:-oadp-maintainers@redhat.com}"
 SECRETS_DIR="${SECRETS_DIR:-${HOME}/.rebasebot/secrets}"
 REBASEBOT_IMAGE="${REBASEBOT_IMAGE:-quay.io/migtools/rebasebot:latest}"
 OADP_BRANCH="${OADP_BRANCH:-oadp-dev}"
+OADP_BRANCH_SET=""
 
 # === Repository Configuration Mapping ===
 
 get_config_name() {
-    # Returns the configuration file base name corresponding to a repository.
-    #
-    # Each repository has a config file in rebase-configs/ named as:
-    #   <CONFIG_NAME>.env.sh
-    #
-    # Usage example:
-    #   udistribution-main) echo "migtools_udistribution_main" ;;
-    #
-    # Input: repository name (e.g., udistribution-main)
-    # Output: config name (e.g., migtools_udistribution_main)
-    #
     case "$1" in
         # === Udistribution ===
         udistribution-main) echo "migtools_udistribution_main" ;;
 
         # === Wave 1 ===
-        # ==============
-
-        # === Kopia ===
         kopia-oadp-dev) echo "migtools_kopia_oadp-dev" ;;
         kopia-oadp-1.5) echo "migtools_kopia_oadp-1.5" ;;
-
-        # === Restic ===
         restic-oadp-dev) echo "openshift_restic_oadp-dev" ;;
         restic-oadp-1.5) echo "openshift_restic_oadp-1.5" ;;
 
         # === Wave 2 ===
-        # ==============
-
-        # === Velero Core ===
         velero-oadp-dev) echo "openshift_velero_oadp-dev" ;;
         velero-oadp-1.5) echo "openshift_velero_oadp-1.5" ;;
 
         # === Wave 3 ===
-        # ==============
-
-        # === Velero CSI Plugin ===
         velero-plugin-for-csi-oadp-dev) echo "openshift_velero_plugin_for_csi_oadp-dev" ;;
         velero-plugin-for-csi-oadp-1.5) echo "openshift_velero_plugin_for_csi_oadp-1.5" ;;
-
-        # === OADP Operator ===
         oadp-operator-oadp-dev) echo "openshift_oadp_operator_oadp-dev" ;;
         oadp-operator-oadp-1.5) echo "openshift_oadp_operator_oadp-1.5" ;;
-
-        # === Velero AWS Plugin ===
         velero-plugin-for-aws-oadp-dev) echo "openshift_velero_plugin_for_aws_oadp-dev" ;;
         velero-plugin-for-aws-oadp-1.5) echo "openshift_velero_plugin_for_aws_oadp-1.5" ;;
-
-        # === Velero Legacy AWS Plugin ===
         velero-plugin-for-legacy-aws-oadp-dev) echo "openshift_velero_plugin_for_legacy_aws_oadp-dev" ;;
         velero-plugin-for-legacy-aws-oadp-1.5) echo "openshift_velero_plugin_for_legacy_aws_oadp-1.5" ;;
-
-        # === Velero Azure Plugin ===
         velero-plugin-for-microsoft-azure-oadp-dev) echo "openshift_velero_plugin_for_microsoft_azure_oadp-dev" ;;
         velero-plugin-for-microsoft-azure-oadp-1.5) echo "openshift_velero_plugin_for_microsoft_azure_oadp-1.5" ;;
 
         # === Wave 4 ===
-        # ==============
-
-        # === Non-Admin ===
         oadp-non-admin-oadp-dev) echo "migtools_oadp_non_admin_oadp-dev" ;;
         oadp-non-admin-oadp-1.5) echo "migtools_oadp_non_admin_oadp-1.5" ;;
-
-        # === OpenShift Velero Plugin ===
         openshift-velero-plugin-oadp-dev) echo "openshift_openshift_velero_plugin_oadp-dev" ;;
         openshift-velero-plugin-oadp-1.5) echo "openshift_openshift_velero_plugin_oadp-1.5" ;;
 
         # === Wave 5 ===
-        # ==============
-
-        # === Must Gather ===
         oadp-must-gather-oadp-dev) echo "openshift_oadp_must_gather_oadp-dev" ;;
         oadp-must-gather-oadp-1.5) echo "openshift_oadp_must_gather_oadp-1.5" ;;
 
@@ -111,9 +74,16 @@ get_wave_repos() {
     branch="$1"
     wave="$2"
 
+    # Special case for udistribution: always include main in wave 1
+    if [ "$wave" -eq 1 ]; then
+        if [ "$branch" = "oadp-dev" ] || [ "$branch" = "main" ]; then
+            echo "udistribution-main kopia-oadp-dev restic-oadp-dev"
+            return 0
+        fi
+    fi
+
     if [ "$branch" = "oadp-dev" ]; then
         case "$wave" in
-            1) echo "udistribution-main kopia-oadp-dev" ;;
             2) echo "velero-oadp-dev" ;;
             3) echo "velero-plugin-for-csi-oadp-dev oadp-operator-oadp-dev velero-plugin-for-aws-oadp-dev velero-plugin-for-legacy-aws-oadp-dev velero-plugin-for-microsoft-azure-oadp-dev" ;;
             4) echo "oadp-non-admin-oadp-dev openshift-velero-plugin-oadp-dev" ;;
@@ -122,11 +92,11 @@ get_wave_repos() {
         esac
     elif [ "$branch" = "oadp-1.5" ]; then
         case "$wave" in
-            1) echo "kopia-oadp-1.5" ;;
-            2) echo "velero-1.5" ;;
-            3) echo "velero-plugin-for-csi-1.5 oadp-operator-1.5 velero-plugin-for-aws-1.5 velero-plugin-for-legacy-aws-oadp-1.5 velero-plugin-for-microsoft-azure-1.5" ;;
-            4) echo "oadp-non-admin-1.5 openshift-velero-plugin-1.5" ;;
-            5) echo "oadp-must-gather-1.5" ;;
+            1) echo "kopia-oadp-1.5 restic-oadp-1.5" ;;
+            2) echo "velero-oadp-1.5" ;;
+            3) echo "velero-plugin-for-csi-oadp-1.5 oadp-operator-oadp-1.5 velero-plugin-for-aws-oadp-1.5 velero-plugin-for-legacy-aws-oadp-1.5 velero-plugin-for-microsoft-azure-oadp-1.5" ;;
+            4) echo "oadp-non-admin-oadp-1.5 openshift-velero-plugin-oadp-1.5" ;;
+            5) echo "oadp-must-gather-oadp-1.5" ;;
             *) return 1 ;;
         esac
     else
@@ -136,15 +106,8 @@ get_wave_repos() {
 
 # === Utility Functions ===
 
-error_exit() {
-    printf "❌  %s\n" "$*" >&2
-    exit 1
-}
-
-log_section() {
-    printf "\n==========================================\n%s\n==========================================\n" "$*"
-}
-
+error_exit() { printf "❌  %s\n" "$*" >&2; exit 1; }
+log_section() { printf "\n==========================================\n%s\n==========================================\n" "$*"; }
 log_info() { printf "ℹ️  %s\n" "$*"; }
 log_success() { printf "✅ %s\n" "$*"; }
 log_fail() { printf "❌  %s\n" "$*"; }
@@ -167,14 +130,6 @@ Options:
   -s, --secrets-dir DIR  Secrets directory
   -r, --remote           Use remote configuration
   -h, --help             Show this help
-
-Examples:
-  $0 kopia-oadp-dev           # Run single repository oadp-dev receipt
-  $0 kopia-oadp-1.5           # Run single repository oadp-1.5 receipt
-  $0 kopia -b oadp-1.5        # Run single repository, same as above  
-  $0 -w 1                     # Run wave 1
-  $0 -d -w 2                  # Dry-run wave 2
-  $0 -t kopia                 # Test configuration
 EOF
 }
 
@@ -189,11 +144,11 @@ check_secrets() {
 load_config() {
     config="$1"
     source_type="$2"
-
     config_name="$(get_config_name "$config")" || error_exit "Unknown config '$config'"
     config_file="${config_name}.env.sh"
 
     log_info "Loading ${source_type} config..."
+    unset SOURCE_UPSTREAM_REPO DESTINATION_DOWNSTREAM_REPO REBASE_REPO HOOK_SCRIPTS EXTRA_REBASEBOT_ARGS SKIP_REPO
 
     if [ "$source_type" = "local" ]; then
         [ -f "rebase-configs/$config_file" ] || error_exit "Config file not found: rebase-configs/${config_file}"
@@ -202,14 +157,11 @@ load_config() {
         config_url="https://raw.githubusercontent.com/oadp-rebasebot/oadp-rebase/refs/heads/oadp-dev/rebase-configs/$config_file"
         temp_config="$(mktemp)"
         trap 'rm -f "$temp_config"' EXIT
-        if ! curl --fail --silent --show-error "$config_url" > "$temp_config"; then
-            error_exit "Failed to load remote config: ${config_url}"
-        fi
+        curl --fail --silent --show-error "$config_url" > "$temp_config" || error_exit "Failed to load remote config: ${config_url}"
         . "$temp_config"
         trap - EXIT
         rm -f "$temp_config"
     fi
-
     log_success "Config loaded"
 }
 
@@ -217,18 +169,16 @@ test_config() {
     config="$1"
     log_info "Testing local config: $config"
     load_config "$config" "local"
+    # Check if this repo should be skipped
+    if [ "${SKIP_REPO:-false}" = "true" ]; then
+        log_warn "Skipping $config (SKIP_REPO=true in config)"
+        return 0
+    fi    
     log_info "SOURCE_UPSTREAM_REPO: ${SOURCE_UPSTREAM_REPO:-<not set>}"
     log_info "DESTINATION_DOWNSTREAM_REPO: ${DESTINATION_DOWNSTREAM_REPO:-<not set>}"
     log_info "REBASE_REPO: ${REBASE_REPO:-<not set>}"
-    # Check if HOOK_SCRIPTS is set and non-empty
-    if [[ -n "${HOOK_SCRIPTS:-}" ]]; then
-        log_info "HOOK_SCRIPTS: $HOOK_SCRIPTS"
-    fi
-
-    # Check if EXTRA_REBASEBOT_ARGS is set and non-empty
-    if [[ -n "${EXTRA_REBASEBOT_ARGS:-}" ]]; then
-        log_info "EXTRA_REBASEBOT_ARGS: $EXTRA_REBASEBOT_ARGS"
-    fi    
+    [ -n "${HOOK_SCRIPTS:-}" ] && log_info "HOOK_SCRIPTS: $HOOK_SCRIPTS"
+    [ -n "${EXTRA_REBASEBOT_ARGS:-}" ] && log_info "EXTRA_REBASEBOT_ARGS: $EXTRA_REBASEBOT_ARGS"
 }
 
 run_container_rebase() {
@@ -246,10 +196,6 @@ run_container_rebase() {
     check_secrets
     load_config "$config" "$source_type"
 
-    log_info "SOURCE_UPSTREAM_REPO: $SOURCE_UPSTREAM_REPO"
-    log_info "DESTINATION_DOWNSTREAM_REPO: $DESTINATION_DOWNSTREAM_REPO"
-    log_info "REBASE_REPO: $REBASE_REPO"
-
     CMD="$CONTAINER_ENGINE run --rm --pull=always \
   -v \"$SECRETS_DIR:/secrets:Z,ro\" \
   -e GIT_USERNAME=\"$GIT_USERNAME\" \
@@ -263,18 +209,8 @@ run_container_rebase() {
   --github-cloner-id \"$GITHUB_CLONER_ID\" \
   --github-cloner-key /secrets/oadp-rebasebot-cloner-key"
 
-    # Check if HOOK_SCRIPTS is set and non-empty
-    if [[ -n "${HOOK_SCRIPTS:-}" ]]; then
-        log_info "HOOK_SCRIPTS: $HOOK_SCRIPTS"
-        CMD="$CMD $HOOK_SCRIPTS"
-    fi
-
-    # Check if EXTRA_REBASEBOT_ARGS is set and non-empty
-    if [[ -n "${EXTRA_REBASEBOT_ARGS:-}" ]]; then
-        log_info "EXTRA_REBASEBOT_ARGS: $EXTRA_REBASEBOT_ARGS"
-        CMD="$CMD $EXTRA_REBASEBOT_ARGS"
-    fi
-
+    [ -n "${HOOK_SCRIPTS:-}" ] && CMD="$CMD $HOOK_SCRIPTS"
+    [ -n "${EXTRA_REBASEBOT_ARGS:-}" ] && CMD="$CMD $EXTRA_REBASEBOT_ARGS"
     [ "$dry_run" = "true" ] && CMD="$CMD --dry-run"
 
     log_info "Command:"
@@ -288,21 +224,50 @@ run_wave() {
     source_type="$3"
 
     repos="$(get_wave_repos "$OADP_BRANCH" "$wave_num")" || error_exit "Unknown wave '$wave_num' for branch $OADP_BRANCH"
-
     log_info "Wave $wave_num repositories: $repos"
 
+    # === Pre-check: ensure all configs exist ===
+    missing_configs=""
+    for config in $repos; do
+        config_name="$(get_config_name "$config")" || { missing_configs="$missing_configs $config"; continue; }
+        config_file="rebase-configs/${config_name}.env.sh"
+        if [ ! -f "$config_file" ]; then
+            missing_configs="$missing_configs $config_file"
+        fi
+    done
+
+    if [ -n "$missing_configs" ]; then
+        log_fail "Aborting wave $wave_num: the following config(s) are missing:"
+        for repo in $missing_configs; do
+            [ -n "$repo" ] && printf "  %s\n" "$repo"
+        done
+        return 1
+    fi
+
+    # === Wave execution ===
     failed=""
     skipped=""
     success_count=0
 
     for config in $repos; do
         log_section "Processing repo: $config"
+
+        # Check if config exists
         if ! get_config_name "$config" >/dev/null 2>&1; then
             log_warn "Skipping $config (no config)"
             skipped="$skipped $config"
             continue
         fi
 
+        # Load config to check SKIP_REPO flag
+        load_config "$config" "$source_type"
+        if [ "${SKIP_REPO:-false}" = "true" ]; then
+            log_warn "Skipping $config (SKIP_REPO=true in config)"
+            skipped="$skipped $config"
+            continue
+        fi
+
+        # Run rebase
         if run_container_rebase "$config" "$dry_run" "$source_type"; then
             log_success "Processed $config"
             success_count=$((success_count + 1))
@@ -312,16 +277,21 @@ run_wave() {
         fi
     done
 
-    total_count=0
-    failed_count=0
-    skipped_count=0
+    total_count=$(echo "$repos" | wc -w)
+    failed_count=$(echo "$failed" | wc -w)
+    skipped_count=$(echo "$skipped" | wc -w)
 
-    for repo in $repos; do total_count=$((total_count + 1)); done
-    for repo in $failed; do [ -n "$repo" ] && failed_count=$((failed_count + 1)); done
-    for repo in $skipped; do [ -n "$repo" ] && skipped_count=$((skipped_count + 1)); done
-
+    # Always print summary
     log_section "Wave $wave_num summary"
-    log_info "Total: ${total_count}, Success: ${success_count}, Failed: ${failed_count}, Skipped: ${skipped_count}"
+    log_info "Total repos in wave: $total_count"
+    log_info "✅ Success: $success_count"
+    log_info "❌ Failed: $failed_count"
+    log_info "⚠️ Skipped: $skipped_count"
+
+    if [ -n "$skipped" ]; then
+        log_info "Skipped repositories:"
+        for repo in $skipped; do [ -n "$repo" ] && printf "  %s\n" "$repo"; done
+    fi
 
     if [ -n "$failed" ]; then
         log_fail "Failed repositories:"
@@ -329,7 +299,7 @@ run_wave() {
         return 1
     fi
 
-    log_success "All repositories processed successfully!"
+    log_success "All repositories processed (or skipped) successfully!"
 }
 
 # === Argument Parsing ===
@@ -347,7 +317,7 @@ while [ $# -gt 0 ]; do
         -t|--test) TEST_MODE="true"; shift ;;
         -w|--wave) WAVE_MODE="true"; shift ;;
         -r|--remote) REMOTE_MODE="true"; shift ;;
-        -b|--branch) OADP_BRANCH="$2"; shift 2 ;;
+        -b|--branch) OADP_BRANCH="$2"; OADP_BRANCH_SET=1; shift 2 ;;
         -s|--secrets-dir) SECRETS_DIR="$2"; shift 2 ;;
         -*) error_exit "Unknown option: $1" ;;
         *) [ -z "$TARGET" ] || error_exit "Multiple targets specified"; TARGET="$1"; shift ;;
@@ -359,16 +329,20 @@ done
 SOURCE_TYPE="local"
 [ "$REMOTE_MODE" = "true" ] && SOURCE_TYPE="remote"
 
+# Special handling for udistribution default branch
+if [ "$WAVE_MODE" != "true" ]; then
+    if [ "$TARGET" = "udistribution" ] && [ -z "${OADP_BRANCH_SET:-}" ]; then
+        TARGET="udistribution-main"
+    elif ! get_config_name "$TARGET" >/dev/null 2>&1; then
+        TARGET="${TARGET}-${OADP_BRANCH}"
+    fi
+fi
+
 if [ "$WAVE_MODE" = "true" ]; then
     [ "$TEST_MODE" = "true" ] && error_exit "Test mode not supported for wave"
     run_wave "$TARGET" "$DRY_RUN" "$SOURCE_TYPE"
 else
-    if ! get_config_name "$TARGET" >/dev/null 2>&1; then
-        TARGET="${TARGET}-${OADP_BRANCH}"
-    fi
-
     get_config_name "$TARGET" >/dev/null || error_exit "Unknown config '$TARGET'"
-
     if [ "$TEST_MODE" = "true" ]; then
         test_config "$TARGET"
     else
