@@ -14,8 +14,13 @@ stage_and_commit(){
     fi
 
     if [[ -n $(git status --porcelain) ]]; then
+        # short hash of the submodule
+        local submodule_short_hash
+        submodule_short_hash=$(git -C "$SUBMODULE_PATH" rev-parse --short HEAD)
+
         git add -A
-        git commit "${author_flag[@]}" -q -m "UPSTREAM: <drop>: Use restic submodule, branch $SUBMODULE_BRANCH"
+        git commit "${author_flag[@]}" -q \
+          -m "UPSTREAM: <drop>: update restic @ ${submodule_short_hash} (branch $SUBMODULE_BRANCH)"
     fi
 }
 
@@ -24,14 +29,10 @@ if ! git config --file .gitmodules --get "submodule.$SUBMODULE_PATH.url" >/dev/n
     echo "Adding submodule $SUBMODULE_PATH..."
     git submodule add -b "$SUBMODULE_BRANCH" "$SUBMODULE_URL" "$SUBMODULE_PATH"
 else
-    # Update branch in .gitmodules if changed
     git config -f .gitmodules "submodule.$SUBMODULE_PATH.branch" "$SUBMODULE_BRANCH"
 fi
 
-# Sync .git/config with .gitmodules
 git submodule sync "$SUBMODULE_PATH"
-
-# Always init/update to latest commit on the configured branch
 git submodule update --init --remote --rebase "$SUBMODULE_PATH"
 
 stage_and_commit
