@@ -41,8 +41,8 @@ get_config_name() {
         # === Wave 3 ===
         velero-plugin-for-csi-oadp-dev) echo "openshift_velero_plugin_for_csi_oadp-dev" ;;
         velero-plugin-for-csi-oadp-1.5) echo "openshift_velero_plugin_for_csi_oadp-1.5" ;;
-        oadp-operator-oadp-dev) echo "openshift_oadp_operator_oadp-dev" ;;
-        oadp-operator-oadp-1.5) echo "openshift_oadp_operator_oadp-1.5" ;;
+        oadp-operator-oadp-dev) echo "openshift_oadp-operator_oadp-dev" ;;
+        oadp-operator-oadp-1.5) echo "openshift_oadp-operator_oadp-1.5" ;;
         velero-plugin-for-aws-oadp-dev) echo "openshift_velero_plugin_for_aws_oadp-dev" ;;
         velero-plugin-for-aws-oadp-1.5) echo "openshift_velero_plugin_for_aws_oadp-1.5" ;;
         velero-plugin-for-legacy-aws-oadp-dev) echo "openshift_velero_plugin_for_legacy_aws_oadp-dev" ;;
