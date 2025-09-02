@@ -19,4 +19,4 @@ DESTINATION_DOWNSTREAM_REPO="openshift/velero:$DESTINATION_DOWNSTREAM_VELERO_BRA
 REBASE_REPO="oadp-rebasebot/velero:rebase-bot-$DESTINATION_DOWNSTREAM_VELERO_BRANCH"
 
 EXTRA_REBASEBOT_ARGS="--always-run-hooks"
-HOOK_SCRIPTS="--post-rebase-hook git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:rebasebot-hook-scripts/go-replace_kopia_oadp-dev.sh git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:rebasebot-hook-scripts/go-mod-tidy-and-commit.sh"
+HOOK_SCRIPTS="--post-rebase-hook git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:rebasebot-hook-scripts/go-replace_kopia_oadp-dev.sh git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:rebasebot-hook-scripts/go-mod-tidy-and-commit.sh git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:restic-submodule-and-commit_oadp-dev.sh"
