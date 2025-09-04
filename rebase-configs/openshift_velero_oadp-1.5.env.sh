@@ -1,3 +1,21 @@
+# function to fetch API body or fail on error
+# This is to ensure we can handle e.g. 403 "API rate limit exceeded" error
+fetch_github_api() {
+    url="$1"
+
+    response=$(curl -s -L -w "%{http_code}" "$url")
+    http_code=$(printf "%s" "$response" | tail -c 3)
+    body=$(printf "%s" "$response" | head -c $(($(printf "%s" "$response" | wc -c) - 3)))
+
+    if [ "$http_code" != "200" ]; then
+        printf 'Error: API returned %s\n' "$http_code" >&2
+        printf '%s\n' "$body" >&2
+        return 1
+    fi
+
+    printf '%s\n' "$body"
+}
+
 # ===============================================================
 # Fetch the latest minor Velero release for a given major version.
 # ===============================================================
@@ -5,9 +23,11 @@
 UPSTREAM_VELERO_MAJOR_VERSION=v1.16
 DESTINATION_DOWNSTREAM_VELERO_BRANCH=oadp-1.5
 
+tags_body=$(fetch_github_api "https://api.github.com/repos/vmware-tanzu/velero/tags?per_page=100") || exit 1
+
 # Do not include -rc.X versions, only released Velero
 LATEST_VELERO_TAG=$(
-  curl -s -L "https://api.github.com/repos/vmware-tanzu/velero/tags?per_page=100" \
+  printf '%s\n' "$tags_body" \
   | grep -Eo "\"name\": \"${UPSTREAM_VELERO_MAJOR_VERSION}\.[0-9]+\"" \
   | awk -F'"' '{print $4}' \
   | sort -V \

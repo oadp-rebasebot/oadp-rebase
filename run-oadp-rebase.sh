@@ -156,6 +156,9 @@ load_config() {
     [ -n "${HOOK_SCRIPTS:-}" ] && unset HOOK_SCRIPTS
     [ -n "${EXTRA_REBASEBOT_ARGS:-}" ] && unset EXTRA_REBASEBOT_ARGS
     [ -n "${SKIP_REPO:-}" ] && unset SKIP_REPO
+    
+    # Always load common function config !
+    # TBD...
 
     if [ "$source_type" = "local" ]; then
         [ -f "rebase-configs/$config_file" ] || error_exit "Config file not found: rebase-configs/${config_file}"
@@ -173,6 +176,16 @@ load_config() {
     log_success "Config loaded"
 }
 
+print_config() {
+    log_info "Rebase details:"
+    log_info "  🌊  Upstream:           ${SOURCE_UPSTREAM_REPO:-<not set>}"
+    log_info "    🔀 Rebase (for PR):   ${REBASE_REPO:-<not set>}"
+    log_info "      🎯 Downstream:      ${DESTINATION_DOWNSTREAM_REPO:-<not set>}"
+    [ -n "${HOOK_SCRIPTS:-}" ] && log_info "  🪝 HOOK_SCRIPTS: $HOOK_SCRIPTS"
+    [ -n "${EXTRA_REBASEBOT_ARGS:-}" ] && log_info "  🔧 EXTRA_REBASEBOT_ARGS: $EXTRA_REBASEBOT_ARGS"
+    return 0
+}
+
 test_config() {
     config="$1"
     log_info "Testing local config: $config"
@@ -182,11 +195,7 @@ test_config() {
         log_warn "Skipping $config (SKIP_REPO=true in config)"
         return 0
     fi
-    log_info "SOURCE_UPSTREAM_REPO: ${SOURCE_UPSTREAM_REPO:-<not set>}"
-    log_info "DESTINATION_DOWNSTREAM_REPO: ${DESTINATION_DOWNSTREAM_REPO:-<not set>}"
-    log_info "REBASE_REPO: ${REBASE_REPO:-<not set>}"
-    [ -n "${HOOK_SCRIPTS:-}" ] && log_info "HOOK_SCRIPTS: $HOOK_SCRIPTS"
-    [ -n "${EXTRA_REBASEBOT_ARGS:-}" ] && log_info "EXTRA_REBASEBOT_ARGS: $EXTRA_REBASEBOT_ARGS"
+    print_config
 }
 
 run_container_rebase() {
@@ -203,6 +212,8 @@ run_container_rebase() {
 
     check_secrets
     load_config "$config" "$source_type"
+    print_config
+
     # Check if this repo should be skipped
     if [ "${SKIP_REPO:-false}" = "true" ]; then
         log_warn "Skipping $config (SKIP_REPO=true in config)"
