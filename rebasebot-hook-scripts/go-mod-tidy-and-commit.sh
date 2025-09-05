@@ -25,16 +25,16 @@ process_go_mod_updates() {
         module_base_path=$(dirname "$go_mod_file")
 
         # Reset go.mod and go.sum to make sure they are the same as in the source
-        for filename in "go.mod" "go.sum"; do
-            local full_path="$module_base_path/$filename"
-            if [[ ! -f "$full_path" ]]; then
-                continue
-            fi
-            if ! git checkout "source/$REBASEBOT_SOURCE" -- "$full_path"; then
-                echo "go module at $module_base_path is downstream only, skip its resetting"
-                break
-            fi
-        done
+        # for filename in "go.mod" "go.sum"; do
+        #     local full_path="$module_base_path/$filename"
+        #     if [[ ! -f "$full_path" ]]; then
+        #         continue
+        #     fi
+        #     if ! git checkout "source/$REBASEBOT_SOURCE" -- "$full_path"; then
+        #         echo "go module at $module_base_path is downstream only, skip its resetting"
+        #         break
+        #     fi
+        # done
 
         pushd "$module_base_path"
 
