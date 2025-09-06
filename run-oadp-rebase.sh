@@ -20,6 +20,7 @@ SECRETS_DIR="${SECRETS_DIR:-${HOME}/.rebasebot/secrets}"
 REBASEBOT_IMAGE="${REBASEBOT_IMAGE:-quay.io/migtools/rebasebot:latest}"
 OADP_BRANCH="${OADP_BRANCH:-oadp-dev}"
 OADP_BRANCH_SET=""
+WORKING_DIR=""
 
 # === Repository Configuration Mapping ===
 
@@ -132,6 +133,14 @@ Options:
 EOF
 }
 
+ensure_working_dir() {
+    if [ -n "$WORKING_DIR" ]; then
+        mkdir -p "$WORKING_DIR" || error_exit "Failed to create working dir: $WORKING_DIR"
+        chmod 777 "$WORKING_DIR"
+        log_info "Using working directory: $WORKING_DIR"
+    fi
+}
+
 check_secrets() {
     [ -d "$SECRETS_DIR" ] || error_exit "Secrets directory $SECRETS_DIR not found"
     [ -f "$SECRETS_DIR/oadp-rebasebot-app-key" ] || error_exit "Missing app key: $SECRETS_DIR/oadp-rebasebot-app-key"
@@ -211,6 +220,7 @@ run_container_rebase() {
     log_info "Dry run: $dry_run, Config source: $source_type"
 
     check_secrets
+    ensure_working_dir
     load_config "$config" "$source_type"
     print_config
 
@@ -220,8 +230,13 @@ run_container_rebase() {
         return 0
     fi
 
+    WORKING_MOUNT=""
+    if [ -n "$WORKING_DIR" ]; then
+        WORKING_MOUNT="-v \"$WORKING_DIR:/working:Z,rw\""
+    fi
+
     CMD="$CONTAINER_ENGINE run --rm --pull=always \
-  -v \"$SECRETS_DIR:/secrets:Z,ro\" \
+  -v \"$SECRETS_DIR:/secrets:Z,ro\" $WORKING_MOUNT \
   -e GIT_USERNAME=\"$GIT_USERNAME\" \
   -e GIT_EMAIL=\"$GIT_EMAIL\" \
   \"$REBASEBOT_IMAGE\" \
@@ -345,6 +360,7 @@ while [ $# -gt 0 ]; do
         -r|--remote) REMOTE_MODE="true"; shift ;;
         -b|--branch) OADP_BRANCH="$2"; OADP_BRANCH_SET=1; shift 2 ;;
         -s|--secrets-dir) SECRETS_DIR="$2"; shift 2 ;;
+        --working-dir) WORKING_DIR="$2"; shift 2 ;;
         -*) error_exit "Unknown option: $1" ;;
         *) [ -z "$TARGET" ] || error_exit "Multiple targets specified"; TARGET="$1"; shift ;;
     esac
