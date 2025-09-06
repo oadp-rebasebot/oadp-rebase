@@ -28,6 +28,7 @@ get_config_name() {
     case "$1" in
         # === Udistribution ===
         udistribution-main) echo "migtools_udistribution_main" ;;
+        kubevirt-velero-plugin-main) echo "migtools_kubevirt_velero_plugin_main" ;;
 
         # === Wave 1 ===
         kopia-oadp-dev) echo "migtools_kopia_oadp-dev" ;;
@@ -77,7 +78,7 @@ get_wave_repos() {
     # Special case for udistribution: always include main in wave 1
     if [ "$wave" -eq 1 ]; then
         if [ "$branch" = "oadp-dev" ] || [ "$branch" = "main" ]; then
-            echo "udistribution-main kopia-oadp-dev restic-oadp-dev"
+            echo "udistribution-main kopia-oadp-dev restic-oadp-dev kubevirt-velero-plugin-main"
             return 0
         fi
     fi
@@ -371,10 +372,12 @@ done
 SOURCE_TYPE="local"
 [ "$REMOTE_MODE" = "true" ] && SOURCE_TYPE="remote"
 
-# Special handling for udistribution default branch
+# Special handling for udistribution and kubevirt-velero-plugin default branch
 if [ "$WAVE_MODE" != "true" ]; then
     if [ "$TARGET" = "udistribution" ] && [ -z "${OADP_BRANCH_SET:-}" ]; then
         TARGET="udistribution-main"
+    elif [ "$TARGET" = "kubevirt-velero-plugin" ] && [ -z "${OADP_BRANCH_SET:-}" ]; then
+        TARGET="kubevirt-velero-plugin-main"
     elif ! get_config_name "$TARGET" >/dev/null 2>&1; then
         TARGET="${TARGET}-${OADP_BRANCH}"
     fi
