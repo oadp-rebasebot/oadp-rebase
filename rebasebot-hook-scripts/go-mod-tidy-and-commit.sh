@@ -38,9 +38,26 @@ process_go_mod_updates() {
 
         pushd "$module_base_path"
 
-        echo "go mod tidy output for $module_base_path"
+        echo "=== Running 'go mod tidy' in $module_base_path ==="
         if ! go mod tidy; then
             echo "Unable to run 'go mod tidy' in $module_base_path" >&2
+            exit 1
+        fi
+
+        if [ -d "vendor" ]; then
+            echo "=== vendor directory exists for $module_base_path"
+            echo "=== go mod vendor output for $module_base_path"
+            if ! go mod vendor; then
+                echo "Unable to run 'go mod vendor' in $module_base_path" >&2
+                exit 1
+            fi
+        else
+            echo "=== No vendor directory found — skipping 'go mod vendor' ==="
+        fi
+
+        echo "=== Running 'go vet' in $module_base_path ==="
+        if ! go vet ./...; then
+            echo "Unable to run 'go vet' in $module_base_path" >&2
             exit 1
         fi
 

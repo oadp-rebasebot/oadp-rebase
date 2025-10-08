@@ -114,6 +114,15 @@ log_success() { printf "✅ %s\n" "$*"; }
 log_fail() { printf "❌  %s\n" "$*"; }
 log_warn() { printf "⚠️  %s\n" "$*"; }
 
+get_repo_name() {
+    config="$1"
+    # Extract the repository name (first part before the branch suffix)
+    # e.g., "kopia-oadp-dev" -> "kopia"
+    # e.g., "velero-plugin-for-aws-oadp-1.5" -> "velero-plugin-for-aws"
+    # e.g., "udistribution-main" -> "udistribution"
+    echo "$config" | sed -E 's/-(oadp-dev|oadp-1\.5|main)$//'
+}
+
 usage() {
     cat <<EOF
 OADP Rebase Runner
@@ -124,13 +133,16 @@ Arguments:
   target    Repository (exact repo-branch) or wave number
 
 Options:
-  -d, --dry-run          Dry-run mode
-  -t, --test             Test configuration only (local only)
-  -b, --branch BRANCH    Specify branch (default: $OADP_BRANCH)
-  -w, --wave             Execute entire wave
-  -s, --secrets-dir DIR  Secrets directory
-  -r, --remote           Use remote configuration
-  -h, --help             Show this help
+  -d, --dry-run              Dry-run mode
+  -t, --test                 Test configuration only (local only)
+  -b, --branch BRANCH        Specify branch (default: $OADP_BRANCH)
+  -w, --wave                 Execute entire wave
+  -s, --secrets-dir DIR      Secrets directory
+  -r, --remote               Use remote configuration
+  -l, --local                Use local rebasebot CLI instead of container
+      --working-dir DIR      Working directory for rebase operations
+      --local-hooks          Use local hook scripts from ./rebasebot-hook-scripts
+  -h, --help                 Show this help
 EOF
 }
 
@@ -139,6 +151,23 @@ ensure_working_dir() {
         mkdir -p "$WORKING_DIR" || error_exit "Failed to create working dir: $WORKING_DIR"
         chmod 777 "$WORKING_DIR"
         log_info "Using working directory: $WORKING_DIR"
+    fi
+}
+
+transform_hook_scripts_to_local() {
+    mode="$1"  # "container" or "cli"
+
+    if [ -z "${HOOK_SCRIPTS:-}" ]; then
+        return 0
+    fi
+
+    if [ "$mode" = "container" ]; then
+        # For container: replace git: URLs with /hooks/ paths
+        HOOK_SCRIPTS=$(echo "$HOOK_SCRIPTS" | sed -E 's|git:https://[^:]+:rebasebot-hook-scripts/|/hooks/|g')
+    else
+        # For CLI: replace git: URLs with absolute paths to local directory
+        local_hooks_dir="$(pwd)/rebasebot-hook-scripts"
+        HOOK_SCRIPTS=$(echo "$HOOK_SCRIPTS" | sed -E "s|git:https://[^:]+:rebasebot-hook-scripts/|${local_hooks_dir}/|g")
     fi
 }
 
@@ -200,12 +229,83 @@ test_config() {
     config="$1"
     log_info "Testing local config: $config"
     load_config "$config" "local"
+
+    # Transform hook scripts to local paths if --local-hooks is set
+    if [ "$USE_LOCAL_HOOKS" = "true" ]; then
+        [ -d "./rebasebot-hook-scripts" ] || error_exit "Local hooks directory ./rebasebot-hook-scripts not found"
+        log_info "Using local hook scripts from ./rebasebot-hook-scripts"
+        transform_hook_scripts_to_local "cli"
+    fi
+
     # Check if this repo should be skipped
     if [ "${SKIP_REPO:-false}" = "true" ]; then
         log_warn "Skipping $config (SKIP_REPO=true in config)"
         return 0
     fi
     print_config
+}
+
+run_local_rebase() {
+    config="$1"
+    dry_run="$2"
+    source_type="$3"
+
+    # Check if rebasebot CLI is available
+    if ! command -v rebasebot >/dev/null 2>&1; then
+        error_exit "rebasebot CLI not found in PATH. Please install it or use container mode (remove --local flag)."
+    fi
+
+    log_section "Rebasing using recepit: $config (local CLI)"
+    log_info "Dry run: $dry_run, Config source: $source_type"
+
+    check_secrets
+    ensure_working_dir
+    load_config "$config" "$source_type"
+
+    # Transform hook scripts to local paths if --local-hooks is set
+    if [ "$USE_LOCAL_HOOKS" = "true" ]; then
+        [ -d "./rebasebot-hook-scripts" ] || error_exit "Local hooks directory ./rebasebot-hook-scripts not found"
+        log_info "Using local hook scripts from ./rebasebot-hook-scripts"
+        transform_hook_scripts_to_local "cli"
+    fi
+
+    print_config
+
+    # Check if this repo should be skipped
+    if [ "${SKIP_REPO:-false}" = "true" ]; then
+        log_warn "Skipping $config (SKIP_REPO=true in config)"
+        return 0
+    fi
+
+    # Determine repository-specific working directory
+    REPO_WORKING_DIR=""
+    if [ -n "$WORKING_DIR" ]; then
+        repo_name="$(get_repo_name "$config")"
+        REPO_WORKING_DIR="${WORKING_DIR}/${repo_name}"
+        mkdir -p "$REPO_WORKING_DIR" || error_exit "Failed to create repo working dir: $REPO_WORKING_DIR"
+        chmod 777 "$REPO_WORKING_DIR"
+        log_info "Using repository working directory: $REPO_WORKING_DIR"
+    fi
+
+    CMD="rebasebot \
+  --source \"$SOURCE_UPSTREAM_REPO\" \
+  --dest \"$DESTINATION_DOWNSTREAM_REPO\" \
+  --rebase \"$REBASE_REPO\" \
+  --git-username \"$GIT_USERNAME\" \
+  --git-email \"$GIT_EMAIL\" \
+  --github-app-id \"$GITHUB_APP_ID\" \
+  --github-app-key \"$SECRETS_DIR/oadp-rebasebot-app-key\" \
+  --github-cloner-id \"$GITHUB_CLONER_ID\" \
+  --github-cloner-key \"$SECRETS_DIR/oadp-rebasebot-cloner-key\""
+
+    [ -n "$REPO_WORKING_DIR" ] && CMD="$CMD --working-dir \"$REPO_WORKING_DIR\""
+    [ -n "${HOOK_SCRIPTS:-}" ] && CMD="$CMD $HOOK_SCRIPTS"
+    [ -n "${EXTRA_REBASEBOT_ARGS:-}" ] && CMD="$CMD $EXTRA_REBASEBOT_ARGS"
+    [ "$dry_run" = "true" ] && CMD="$CMD --dry-run"
+
+    log_info "Command:"
+    log_info "\$ ${CMD}"
+    sh -c "$CMD"
 }
 
 run_container_rebase() {
@@ -223,6 +323,17 @@ run_container_rebase() {
     check_secrets
     ensure_working_dir
     load_config "$config" "$source_type"
+
+    # Transform hook scripts to local paths and setup mount if --local-hooks is set
+    HOOKS_MOUNT=""
+    if [ "$USE_LOCAL_HOOKS" = "true" ]; then
+        [ -d "./rebasebot-hook-scripts" ] || error_exit "Local hooks directory ./rebasebot-hook-scripts not found"
+        log_info "Using local hook scripts from ./rebasebot-hook-scripts"
+        transform_hook_scripts_to_local "container"
+        # Mount the local hooks directory into the container
+        HOOKS_MOUNT="-v \"$(pwd)/rebasebot-hook-scripts:/hooks:Z,ro\""
+    fi
+
     print_config
 
     # Check if this repo should be skipped
@@ -231,15 +342,43 @@ run_container_rebase() {
         return 0
     fi
 
+    # Determine repository-specific working directory
     WORKING_MOUNT=""
+    REBASEBOT_WORKING_DIR=""
     if [ -n "$WORKING_DIR" ]; then
+        repo_name="$(get_repo_name "$config")"
+
+        # Create the parent working directory and repo-specific subdirectory
+        mkdir -p "${WORKING_DIR}/${repo_name}" || error_exit "Failed to create repo working dir: ${WORKING_DIR}/${repo_name}"
+        chmod 777 "${WORKING_DIR}/${repo_name}"
+
+        # Mount the parent working directory
         WORKING_MOUNT="-v \"$WORKING_DIR:/working:Z,rw\""
+
+        # Pass the repo-specific subdirectory to rebasebot (as seen inside container)
+        REBASEBOT_WORKING_DIR="/working/${repo_name}"
+
+        log_info "Using repository working directory: ${WORKING_DIR}/${repo_name} (mounted as ${REBASEBOT_WORKING_DIR})"
     fi
 
-    CMD="$CONTAINER_ENGINE run --rm --pull=always \
-  -v \"$SECRETS_DIR:/secrets:Z,ro\" $WORKING_MOUNT \
+    # Add --userns=keep-id and --user for podman to preserve host UID/GID and prevent ownership issues
+    USERNS_FLAG=""
+    USER_FLAG=""
+    EXTRA_ENV_FLAGS=""
+    if echo "$CONTAINER_ENGINE" | grep -q "podman"; then
+        USERNS_FLAG="--userns=keep-id"
+        USER_FLAG="--user $(id -u):$(id -g)"
+        # Configure git to trust all directories to avoid "dubious ownership" errors
+        # Set Go cache/module directories to /tmp to avoid permission issues
+        # Set HOME to /tmp so various tools can write config files
+        EXTRA_ENV_FLAGS="-e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0='*' -e GOCACHE=/tmp/go-cache -e GOMODCACHE=/tmp/go-mod -e HOME=/tmp"
+    fi
+
+    CMD="$CONTAINER_ENGINE run --rm --pull=always $USERNS_FLAG $USER_FLAG \
+  -v \"$SECRETS_DIR:/secrets:Z,ro\" $WORKING_MOUNT $HOOKS_MOUNT \
   -e GIT_USERNAME=\"$GIT_USERNAME\" \
   -e GIT_EMAIL=\"$GIT_EMAIL\" \
+  $EXTRA_ENV_FLAGS \
   \"$REBASEBOT_IMAGE\" \
   --source \"$SOURCE_UPSTREAM_REPO\" \
   --dest \"$DESTINATION_DOWNSTREAM_REPO\" \
@@ -251,6 +390,7 @@ run_container_rebase() {
   --github-cloner-id \"$GITHUB_CLONER_ID\" \
   --github-cloner-key /secrets/oadp-rebasebot-cloner-key"
 
+    [ -n "$REBASEBOT_WORKING_DIR" ] && CMD="$CMD --working-dir \"$REBASEBOT_WORKING_DIR\""
     [ -n "${HOOK_SCRIPTS:-}" ] && CMD="$CMD $HOOK_SCRIPTS"
     [ -n "${EXTRA_REBASEBOT_ARGS:-}" ] && CMD="$CMD $EXTRA_REBASEBOT_ARGS"
     [ "$dry_run" = "true" ] && CMD="$CMD --dry-run"
@@ -310,7 +450,13 @@ run_wave() {
         fi
 
         # Run rebase
-        if run_container_rebase "$config" "$dry_run" "$source_type"; then
+        if [ "$USE_LOCAL_CLI" = "true" ]; then
+            rebase_func="run_local_rebase"
+        else
+            rebase_func="run_container_rebase"
+        fi
+
+        if $rebase_func "$config" "$dry_run" "$source_type"; then
             log_success "Processed $config"
             success_count=$((success_count + 1))
         else
@@ -350,6 +496,8 @@ DRY_RUN="false"
 TEST_MODE="false"
 WAVE_MODE="false"
 REMOTE_MODE="false"
+USE_LOCAL_CLI="false"
+USE_LOCAL_HOOKS="false"
 TARGET=""
 
 while [ $# -gt 0 ]; do
@@ -359,9 +507,11 @@ while [ $# -gt 0 ]; do
         -t|--test) TEST_MODE="true"; shift ;;
         -w|--wave) WAVE_MODE="true"; shift ;;
         -r|--remote) REMOTE_MODE="true"; shift ;;
+        -l|--local) USE_LOCAL_CLI="true"; shift ;;
         -b|--branch) OADP_BRANCH="$2"; OADP_BRANCH_SET=1; shift 2 ;;
         -s|--secrets-dir) SECRETS_DIR="$2"; shift 2 ;;
         --working-dir) WORKING_DIR="$2"; shift 2 ;;
+        --local-hooks) USE_LOCAL_HOOKS="true"; shift ;;
         -*) error_exit "Unknown option: $1" ;;
         *) [ -z "$TARGET" ] || error_exit "Multiple targets specified"; TARGET="$1"; shift ;;
     esac
@@ -391,7 +541,11 @@ else
     if [ "$TEST_MODE" = "true" ]; then
         test_config "$TARGET"
     else
-        run_container_rebase "$TARGET" "$DRY_RUN" "$SOURCE_TYPE"
+        if [ "$USE_LOCAL_CLI" = "true" ]; then
+            run_local_rebase "$TARGET" "$DRY_RUN" "$SOURCE_TYPE"
+        else
+            run_container_rebase "$TARGET" "$DRY_RUN" "$SOURCE_TYPE"
+        fi
     fi
 fi
 
