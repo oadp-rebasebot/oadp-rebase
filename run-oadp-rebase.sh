@@ -50,6 +50,8 @@ get_config_name() {
         velero-plugin-for-legacy-aws-oadp-1.5) echo "openshift_velero_plugin_for_legacy_aws_oadp-1.5" ;;
         velero-plugin-for-microsoft-azure-oadp-dev) echo "openshift_velero_plugin_for_microsoft_azure_oadp-dev" ;;
         velero-plugin-for-microsoft-azure-oadp-1.5) echo "openshift_velero_plugin_for_microsoft_azure_oadp-1.5" ;;
+        velero-plugin-for-gcp-oadp-dev) echo "openshift_velero_plugin_for_gcp_oadp-dev" ;;
+        velero-plugin-for-gcp-oadp-1.5) echo "openshift_velero_plugin_for_gcp_oadp-1.5" ;;
 
         # === Wave 4 ===
         oadp-non-admin-oadp-dev) echo "migtools_oadp_non_admin_oadp-dev" ;;
@@ -86,7 +88,7 @@ get_wave_repos() {
     if [ "$branch" = "oadp-dev" ]; then
         case "$wave" in
             2) echo "velero-oadp-dev" ;;
-            3) echo "velero-plugin-for-csi-oadp-dev oadp-operator-oadp-dev velero-plugin-for-aws-oadp-dev velero-plugin-for-legacy-aws-oadp-dev velero-plugin-for-microsoft-azure-oadp-dev" ;;
+            3) echo "velero-plugin-for-csi-oadp-dev oadp-operator-oadp-dev velero-plugin-for-aws-oadp-dev velero-plugin-for-legacy-aws-oadp-dev velero-plugin-for-microsoft-azure-oadp-dev velero-plugin-for-gcp-oadp-dev" ;;
             4) echo "oadp-non-admin-oadp-dev openshift-velero-plugin-oadp-dev" ;;
             5) echo "oadp-must-gather-oadp-dev oadp-cli-oadp-dev" ;;
             *) return 1 ;;
@@ -95,7 +97,7 @@ get_wave_repos() {
         case "$wave" in
             1) echo "kopia-oadp-1.5 restic-oadp-1.5" ;;
             2) echo "velero-oadp-1.5" ;;
-            3) echo "oadp-operator-oadp-1.5 velero-plugin-for-aws-oadp-1.5 velero-plugin-for-legacy-aws-oadp-1.5 velero-plugin-for-microsoft-azure-oadp-1.5" ;;
+            3) echo "oadp-operator-oadp-1.5 velero-plugin-for-aws-oadp-1.5 velero-plugin-for-legacy-aws-oadp-1.5 velero-plugin-for-microsoft-azure-oadp-1.5 velero-plugin-for-gcp-oadp-1.5" ;;
             4) echo "oadp-non-admin-oadp-1.5 openshift-velero-plugin-oadp-1.5" ;;
             5) echo "oadp-must-gather-oadp-1.5" ;;
             *) return 1 ;;

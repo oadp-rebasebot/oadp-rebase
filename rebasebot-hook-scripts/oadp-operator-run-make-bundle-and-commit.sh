@@ -1,3 +1,6 @@
+#!/bin/bash
+set -euo pipefail
+
 # Similar to: https://github.com/openshift-eng/rebasebot/blob/846d846969accb3c2eababc8b23cc73ed3d484ca/rebasebot/builtin-hooks/update_go_modules.sh#L6
 stage_and_commit(){
     if [[ -z "${REBASEBOT_GIT_USERNAME:-}" || -z "${REBASEBOT_GIT_EMAIL:-}" ]]; then
@@ -17,3 +20,4 @@ stage_and_commit(){
 make bundle
 
 stage_and_commit
+
