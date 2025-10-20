@@ -30,6 +30,7 @@ The first wave focuses on independent core dependencies without requiring `go.mo
 - 🔵 `migtools/kopia`
 - 🔵 `openshift/restic`
 - 🔵 `migtools/kubevirt-velero-plugin`
+- 🔵 `migtools/filebrowser`
 
 
 > **Note:** `migtools/udistribution` requires only a tag update.  

@@ -35,6 +35,7 @@ get_config_name() {
         kopia-oadp-1.5) echo "migtools_kopia_oadp-1.5" ;;
         restic-oadp-dev) echo "openshift_restic_oadp-dev" ;;
         restic-oadp-1.5) echo "openshift_restic_oadp-1.5" ;;
+        filebrowser-oadp-dev) echo "migtools_filebrowser_oadp-dev" ;;
 
         # === Wave 2 ===
         velero-oadp-dev) echo "openshift_velero_oadp-dev" ;;
@@ -80,7 +81,7 @@ get_wave_repos() {
     # Special case for udistribution: always include main in wave 1
     if [ "$wave" -eq 1 ]; then
         if [ "$branch" = "oadp-dev" ] || [ "$branch" = "main" ]; then
-            echo "udistribution-main kopia-oadp-dev restic-oadp-dev kubevirt-velero-plugin-main"
+            echo "udistribution-main kopia-oadp-dev restic-oadp-dev kubevirt-velero-plugin-main filebrowser-oadp-dev"
             return 0
         fi
     fi
