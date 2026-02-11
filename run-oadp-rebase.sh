@@ -33,20 +33,25 @@ get_config_name() {
         # === Wave 1 ===
         kopia-oadp-dev) echo "migtools_kopia_oadp-dev" ;;
         kopia-oadp-1.5) echo "migtools_kopia_oadp-1.5" ;;
+        kopia-oadp-1.6) echo "migtools_kopia_oadp-1.6" ;;
         restic-oadp-dev) echo "openshift_restic_oadp-dev" ;;
         restic-oadp-1.5) echo "openshift_restic_oadp-1.5" ;;
+        restic-oadp-1.6) echo "openshift_restic_oadp-1.6" ;;
         filebrowser-oadp-dev) echo "migtools_filebrowser_oadp-dev" ;;
 
         # === Wave 2 ===
         velero-oadp-dev) echo "openshift_velero_oadp-dev" ;;
         velero-oadp-1.5) echo "openshift_velero_oadp-1.5" ;;
+        velero-oadp-1.6) echo "openshift_velero_oadp-1.6" ;;
 
         # === Wave 3 ===
         velero-plugin-for-csi-oadp-dev) echo "openshift_velero_plugin_for_csi_oadp-dev" ;;
         oadp-operator-oadp-dev) echo "openshift_oadp-operator_oadp-dev" ;;
         oadp-operator-oadp-1.5) echo "openshift_oadp-operator_oadp-1.5" ;;
+        oadp-operator-oadp-1.6) echo "openshift_oadp-operator_oadp-1.6" ;;
         velero-plugin-for-aws-oadp-dev) echo "openshift_velero_plugin_for_aws_oadp-dev" ;;
         velero-plugin-for-aws-oadp-1.5) echo "openshift_velero_plugin_for_aws_oadp-1.5" ;;
+        velero-plugin-for-aws-oadp-1.6) echo "openshift_velero_plugin_for_aws_oadp-1.6" ;;
         velero-plugin-for-legacy-aws-oadp-dev) echo "openshift_velero_plugin_for_legacy_aws_oadp-dev" ;;
         velero-plugin-for-legacy-aws-oadp-1.5) echo "openshift_velero_plugin_for_legacy_aws_oadp-1.5" ;;
         velero-plugin-for-microsoft-azure-oadp-dev) echo "openshift_velero_plugin_for_microsoft_azure_oadp-dev" ;;
@@ -103,6 +108,15 @@ get_wave_repos() {
             5) echo "oadp-must-gather-oadp-1.5" ;;
             *) return 1 ;;
         esac
+    elif [ "$branch" = "oadp-1.6" ]; then
+        case "$wave" in
+            1) echo "kopia-oadp-1.6 restic-oadp-1.6" ;;
+            2) echo "velero-oadp-1.6" ;;
+            3) echo "oadp-operator-oadp-1.6 velero-plugin-for-aws-oadp-1.6" ;;
+            4) echo "" ;;
+            5) echo "" ;;
+            *) return 1 ;;
+        esac
     else
         return 1
     fi
@@ -123,7 +137,7 @@ get_repo_name() {
     # e.g., "kopia-oadp-dev" -> "kopia"
     # e.g., "velero-plugin-for-aws-oadp-1.5" -> "velero-plugin-for-aws"
     # e.g., "udistribution-main" -> "udistribution"
-    echo "$config" | sed -E 's/-(oadp-dev|oadp-1\.5|main)$//'
+    echo "$config" | sed -E 's/-(oadp-dev|oadp-1\.[0-9]+|main)$//'
 }
 
 usage() {
