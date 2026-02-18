@@ -333,7 +333,8 @@ run_local_rebase() {
   --github-app-id \"$GITHUB_APP_ID\" \
   --github-app-key \"$SECRETS_DIR/oadp-rebasebot-app-key\" \
   --github-cloner-id \"$GITHUB_CLONER_ID\" \
-  --github-cloner-key \"$SECRETS_DIR/oadp-rebasebot-cloner-key\""
+  --github-cloner-key \"$SECRETS_DIR/oadp-rebasebot-cloner-key\" \
+  --conflict-policy strict"
 
     [ -n "$REPO_WORKING_DIR" ] && CMD="$CMD --working-dir \"$REPO_WORKING_DIR\""
     [ -n "${HOOK_SCRIPTS:-}" ] && CMD="$CMD $HOOK_SCRIPTS"
@@ -426,7 +427,8 @@ run_container_rebase() {
   --github-app-id \"$GITHUB_APP_ID\" \
   --github-app-key /secrets/oadp-rebasebot-app-key \
   --github-cloner-id \"$GITHUB_CLONER_ID\" \
-  --github-cloner-key /secrets/oadp-rebasebot-cloner-key"
+  --github-cloner-key /secrets/oadp-rebasebot-cloner-key \
+  --conflict-policy strict"
 
     [ -n "$REBASEBOT_WORKING_DIR" ] && CMD="$CMD --working-dir \"$REBASEBOT_WORKING_DIR\""
     [ -n "${HOOK_SCRIPTS:-}" ] && CMD="$CMD $HOOK_SCRIPTS"
