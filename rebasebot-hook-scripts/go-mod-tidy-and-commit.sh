@@ -6,6 +6,10 @@ set -o pipefail  # Return the exit status of the last command in the pipe that f
 # Bypass the Go module proxy to resolve branch-based replace directives
 # to the latest commit on the branch, avoiding stale cached versions.
 export GOPROXY=direct
+# Skip checksum database verification for downstream fork modules that
+# are not published to the Go ecosystem (sum.golang.org returns 404).
+export GONOSUMDB='github.com/openshift/*,github.com/migtools/*'
+export GONOSUMCHECK='github.com/openshift/*,github.com/migtools/*'
 
 stage_and_commit(){
     # If commiter email and name is passed as environment variable then use it.
