@@ -163,6 +163,76 @@ The `run-oadp-rebase.sh` script provides a unified interface for running rebase 
 
 ---
 
+## Manual Intervention Guide
+
+When rebasebot runs with `--conflict-policy strict` and detects that upstream content was lost during cherry-picking, it stops with:
+
+```
+ERROR - Manual intervention is needed to rebase <source> into <dest>
+```
+
+The working directory (`.rebase/`) is preserved with three remotes configured:
+- `source` — upstream repository
+- `dest` — downstream repository
+- `rebase` — intermediate fork for PRs
+
+### Understanding the Problem
+
+Rebasebot starts from `source/<upstream-branch>` (current upstream) and cherry-picks all downstream-only commits on top. The downstream history often includes **old merge commits** from previous rebasebot runs (e.g., "Merge upstream:main into oadp-dev"). When these are cherry-picked with `-Xtheirs`, they can downgrade dependencies back to old versions because the merge commit's conflict resolution predates the current upstream.
+
+### Fix Steps
+
+```bash
+# 1. Enter the working directory
+cd .rebase
+
+# 2. Check the git log to find the last good commit (before the problematic merge cherry-pick)
+git log --oneline -10
+
+# 3. Reset to the commit before the bad cherry-pick
+#    (the last meaningful downstream commit, before old merge commits)
+git reset --hard <last-good-commit>
+
+# 4. Verify upstream content was restored
+git diff source/<upstream-branch> -- Dockerfile
+git diff source/<upstream-branch> -- go.mod
+# These should be empty or show only intentional downstream differences
+
+# 5. Run the post-rebase hooks manually using local checkout
+#    Check the repo's rebase-config .env.sh file to identify which hooks are needed.
+#    Hook scripts are located in rebasebot-hook-scripts/ in this repository.
+#    Example for a repo that uses go-replace and go-mod-tidy hooks:
+
+# Run the go-replace hook (adds go.mod replace directives for downstream dependencies)
+../rebasebot-hook-scripts/go-replace_velero_<branch>.sh
+
+# Run the go-mod-tidy hook (runs go mod tidy, go vet, and commits)
+REBASEBOT_SOURCE=<upstream-branch> \
+REBASEBOT_GIT_USERNAME="oadp-team-rebase-bot" \
+REBASEBOT_GIT_EMAIL="oadp-maintainers@redhat.com" \
+../rebasebot-hook-scripts/go-mod-tidy-and-commit.sh
+
+# 6. Verify the result
+git log --oneline -5
+git status
+
+# 7. Set up auth for pushing (if needed)
+gh auth setup-git
+# Or use SSH:
+# git remote set-url rebase git@github.com:oadp-rebasebot/<repo>.git
+
+# 8. Push to the rebase branch
+git push rebase HEAD:rebase-bot-<branch> --force
+```
+
+> **Note:** Check the corresponding config in `rebase-configs/` (e.g., `openshift_velero_plugin_for_gcp_oadp-dev.env.sh`) to see which hook scripts are required for each repository and branch.
+
+> **Note:** After pushing, you can create a PR manually from the rebase fork to the downstream repo, or re-run rebasebot — it will detect the existing branch and create/update the PR automatically.
+
+> **Tip:** To prevent rebasebot from overwriting your manual fixes, add the `rebase/manual` label to the PR.
+
+---
+
 ## Summary
 
 This structured **🌊 wave** approach allows for:
