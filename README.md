@@ -61,6 +61,7 @@ The third wave rebases and updates Velero plugins and updates the OADP operator:
 - [`openshift/velero`](https://github.com/openshift/velero)  
  ├─🟠─ [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator)  
  ├─🔵─ [`openshift/velero-plugin-for-aws`](https://github.com/openshift/velero-plugin-for-aws)  
+ ├─🔵─ [`openshift/velero-plugin-for-gcp`](https://github.com/openshift/velero-plugin-for-gcp)  
  ├─🔵─ [`openshift/velero-plugin-for-legacy-aws`](https://github.com/openshift/velero-plugin-for-legacy-aws)  
  └─🔵─ [`openshift/velero-plugin-for-microsoft-azure`](https://github.com/openshift/velero-plugin-for-microsoft-azure)  
 
