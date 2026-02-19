@@ -3,6 +3,10 @@
 set -e  # Exit immediately if a command exits with a non-zero status
 set -o pipefail  # Return the exit status of the last command in the pipe that failed
 
+# Bypass the Go module proxy to resolve branch-based replace directives
+# to the latest commit on the branch, avoiding stale cached versions.
+export GOPROXY=direct
+
 stage_and_commit(){
     # If commiter email and name is passed as environment variable then use it.
     if [[ -z "$REBASEBOT_GIT_USERNAME" || -z "$REBASEBOT_GIT_EMAIL" ]]; then
