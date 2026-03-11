@@ -13,6 +13,7 @@ REBASE_REPO="oadp-rebasebot/velero:rebase-bot-$DESTINATION_DOWNSTREAM_VELERO_BRA
 EXTRA_REBASEBOT_ARGS="--always-run-hooks"
 HOOK_SCRIPTS_LOCATION="git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:rebasebot-hook-scripts"
 HOOK_SCRIPTS="--post-rebase-hook \
+  ${HOOK_SCRIPTS_LOCATION}/fix-malformed-filenames-and-commit.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-replace_kopia_oadp-1.6.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-mod-tidy-and-commit.sh \
   ${HOOK_SCRIPTS_LOCATION}/restic-submodule-and-commit_oadp-1.6.sh \
