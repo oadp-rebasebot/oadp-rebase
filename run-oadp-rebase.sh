@@ -38,6 +38,7 @@ get_config_name() {
         restic-oadp-1.5) echo "openshift_restic_oadp-1.5" ;;
         restic-oadp-1.6) echo "openshift_restic_oadp-1.6" ;;
         filebrowser-oadp-dev) echo "migtools_filebrowser_oadp-dev" ;;
+        filebrowser-oadp-1.6) echo "migtools_filebrowser_oadp-1.6" ;;
 
         # === Wave 2 ===
         velero-oadp-dev) echo "openshift_velero_oadp-dev" ;;
@@ -54,20 +55,32 @@ get_config_name() {
         velero-plugin-for-aws-oadp-1.6) echo "openshift_velero_plugin_for_aws_oadp-1.6" ;;
         velero-plugin-for-legacy-aws-oadp-dev) echo "openshift_velero_plugin_for_legacy_aws_oadp-dev" ;;
         velero-plugin-for-legacy-aws-oadp-1.5) echo "openshift_velero_plugin_for_legacy_aws_oadp-1.5" ;;
+        velero-plugin-for-legacy-aws-oadp-1.6) echo "openshift_velero_plugin_for_legacy_aws_oadp-1.6" ;;
         velero-plugin-for-microsoft-azure-oadp-dev) echo "openshift_velero_plugin_for_microsoft_azure_oadp-dev" ;;
         velero-plugin-for-microsoft-azure-oadp-1.5) echo "openshift_velero_plugin_for_microsoft_azure_oadp-1.5" ;;
+        velero-plugin-for-microsoft-azure-oadp-1.6) echo "openshift_velero_plugin_for_microsoft_azure_oadp-1.6" ;;
         velero-plugin-for-gcp-oadp-dev) echo "openshift_velero_plugin_for_gcp_oadp-dev" ;;
         velero-plugin-for-gcp-oadp-1.5) echo "openshift_velero_plugin_for_gcp_oadp-1.5" ;;
+        velero-plugin-for-gcp-oadp-1.6) echo "openshift_velero_plugin_for_gcp_oadp-1.6" ;;
 
         # === Wave 4 ===
         oadp-non-admin-oadp-dev) echo "migtools_oadp_non_admin_oadp-dev" ;;
         oadp-non-admin-oadp-1.5) echo "migtools_oadp_non_admin_oadp-1.5" ;;
+        oadp-non-admin-oadp-1.6) echo "migtools_oadp_non_admin_oadp-1.6" ;;
+        oadp-vm-file-restore-oadp-dev) echo "migtools_oadp_vm_file_restore_oadp-dev" ;;
+        oadp-vm-file-restore-oadp-1.6) echo "migtools_oadp_vm_file_restore_oadp-1.6" ;;
         openshift-velero-plugin-oadp-dev) echo "openshift_openshift_velero_plugin_oadp-dev" ;;
         openshift-velero-plugin-oadp-1.5) echo "openshift_openshift_velero_plugin_oadp-1.5" ;;
+        openshift-velero-plugin-oadp-1.6) echo "openshift_openshift_velero_plugin_oadp-1.6" ;;
+        kubevirt-datamover-controller-oadp-dev) echo "migtools_kubevirt_datamover_controller_oadp-dev" ;;
+        kubevirt-datamover-controller-oadp-1.6) echo "migtools_kubevirt_datamover_controller_oadp-1.6" ;;
 
         # === Wave 5 ===
         oadp-must-gather-oadp-dev) echo "openshift_oadp_must_gather_oadp-dev" ;;
         oadp-must-gather-oadp-1.5) echo "openshift_oadp_must_gather_oadp-1.5" ;;
+        oadp-must-gather-oadp-1.6) echo "openshift_oadp_must_gather_oadp-1.6" ;;
+        kubevirt-datamover-plugin-oadp-dev) echo "migtools_kubevirt_datamover_plugin_oadp-dev" ;;
+        kubevirt-datamover-plugin-oadp-1.6) echo "migtools_kubevirt_datamover_plugin_oadp-1.6" ;;
 
         # === OADP CLI ===
         oadp-cli-oadp-dev) echo "migtools_oadp_cli_oadp-dev" ;;
@@ -95,8 +108,8 @@ get_wave_repos() {
         case "$wave" in
             2) echo "velero-oadp-dev" ;;
             3) echo "velero-plugin-for-csi-oadp-dev oadp-operator-oadp-dev velero-plugin-for-aws-oadp-dev velero-plugin-for-legacy-aws-oadp-dev velero-plugin-for-microsoft-azure-oadp-dev velero-plugin-for-gcp-oadp-dev" ;;
-            4) echo "oadp-non-admin-oadp-dev openshift-velero-plugin-oadp-dev" ;;
-            5) echo "oadp-must-gather-oadp-dev oadp-cli-oadp-dev" ;;
+            4) echo "oadp-non-admin-oadp-dev openshift-velero-plugin-oadp-dev kubevirt-datamover-controller-oadp-dev oadp-vm-file-restore-oadp-dev" ;;
+            5) echo "oadp-must-gather-oadp-dev oadp-cli-oadp-dev kubevirt-datamover-plugin-oadp-dev" ;;
             *) return 1 ;;
         esac
     elif [ "$branch" = "oadp-1.5" ]; then
@@ -110,11 +123,11 @@ get_wave_repos() {
         esac
     elif [ "$branch" = "oadp-1.6" ]; then
         case "$wave" in
-            1) echo "kopia-oadp-1.6 restic-oadp-1.6" ;;
+            1) echo "kopia-oadp-1.6 restic-oadp-1.6 filebrowser-oadp-1.6" ;;
             2) echo "velero-oadp-1.6" ;;
-            3) echo "oadp-operator-oadp-1.6 velero-plugin-for-aws-oadp-1.6" ;;
-            4) echo "" ;;
-            5) echo "" ;;
+            3) echo "oadp-operator-oadp-1.6 velero-plugin-for-aws-oadp-1.6 velero-plugin-for-legacy-aws-oadp-1.6 velero-plugin-for-microsoft-azure-oadp-1.6 velero-plugin-for-gcp-oadp-1.6" ;;
+            4) echo "oadp-non-admin-oadp-1.6 openshift-velero-plugin-oadp-1.6 kubevirt-datamover-controller-oadp-1.6 oadp-vm-file-restore-oadp-1.6" ;;
+            5) echo "oadp-must-gather-oadp-1.6 kubevirt-datamover-plugin-oadp-1.6" ;;
             *) return 1 ;;
         esac
     else
@@ -305,6 +318,7 @@ run_local_rebase() {
     fi
 
     CMD="rebasebot \
+  --conflict-policy strict \
   --source \"$SOURCE_UPSTREAM_REPO\" \
   --dest \"$DESTINATION_DOWNSTREAM_REPO\" \
   --rebase \"$REBASE_REPO\" \
@@ -397,6 +411,7 @@ run_container_rebase() {
   -e GIT_EMAIL=\"$GIT_EMAIL\" \
   $EXTRA_ENV_FLAGS \
   \"$REBASEBOT_IMAGE\" \
+  --conflict-policy strict \
   --source \"$SOURCE_UPSTREAM_REPO\" \
   --dest \"$DESTINATION_DOWNSTREAM_REPO\" \
   --rebase \"$REBASE_REPO\" \
