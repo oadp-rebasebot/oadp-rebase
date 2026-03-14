@@ -115,6 +115,12 @@ func RenderTable(w io.Writer, statuses []RepoStatus, checks []Check, branch stri
 					cRed, ds.Org, ds.Repo,
 					cYellow, short(ds.HaveHash), short(ds.HeadHash),
 					cReset)
+				// Show commit details when available
+				for _, c := range ds.Commits {
+					fmt.Fprintf(w, "  %*s    %s%s %s%s\n",
+						nameWidth, "",
+						cDim, short(c.SHA), c.Message, cReset)
+				}
 			}
 
 			// Image sub-lines (show details when >1 image or any missing)
@@ -319,6 +325,11 @@ func RenderText(w io.Writer, statuses []RepoStatus, checks []Check, branch strin
 				fmt.Fprintf(w, "    %s⚡ %s/%s: %s%s → %s%s\n",
 					cRed, ds.Org, ds.Repo,
 					cYellow, short(ds.HaveHash), short(ds.HeadHash), cReset)
+				// Show commit details when available
+				for _, c := range ds.Commits {
+					fmt.Fprintf(w, "      %s%s %s%s\n",
+						cDim, short(c.SHA), c.Message, cReset)
+				}
 			}
 
 			// Image sub-lines
@@ -374,8 +385,22 @@ func RenderJSON(w io.Writer, statuses []RepoStatus) {
 				if k > 0 {
 					fmt.Fprint(w, ", ")
 				}
-				fmt.Fprintf(w, "{\"module\": \"%s\", \"org\": \"%s\", \"repo\": \"%s\", \"have\": \"%s\", \"head\": \"%s\", \"in_sync\": %t}",
+				fmt.Fprintf(w, "{\"module\": \"%s\", \"org\": \"%s\", \"repo\": \"%s\", \"have\": \"%s\", \"head\": \"%s\", \"in_sync\": %t",
 					ds.Module, ds.Org, ds.Repo, ds.HaveHash, ds.HeadHash, ds.InSync)
+				if len(ds.Commits) > 0 {
+					fmt.Fprint(w, ", \"commits\": [")
+					for ci, cm := range ds.Commits {
+						if ci > 0 {
+							fmt.Fprint(w, ", ")
+						}
+						// Escape quotes in commit messages for valid JSON
+						escapedMsg := strings.ReplaceAll(cm.Message, "\\", "\\\\")
+						escapedMsg = strings.ReplaceAll(escapedMsg, "\"", "\\\"")
+						fmt.Fprintf(w, "{\"sha\": \"%s\", \"message\": \"%s\"}", cm.SHA, escapedMsg)
+					}
+					fmt.Fprint(w, "]")
+				}
+				fmt.Fprint(w, "}")
 			}
 			fmt.Fprint(w, "]")
 		}

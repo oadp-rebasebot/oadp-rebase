@@ -198,6 +198,42 @@ func (c *GitHubClient) HeadCommitSHA(org, repo, branch string) (string, error) {
 	return result.SHA, nil
 }
 
+// CompareCommits returns the commits between base and head (base...head).
+// It uses the GitHub compare API. Only the first line of each commit message is returned.
+func (c *GitHubClient) CompareCommits(org, repo, base, head string) ([]CommitInfo, error) {
+	apiPath := fmt.Sprintf("/repos/%s/%s/compare/%s...%s", org, repo, base, head)
+
+	body, code, err := c.get(apiPath)
+	if err != nil {
+		return nil, err
+	}
+	if code != http.StatusOK {
+		return nil, fmt.Errorf("GitHub API %s returned %d", apiPath, code)
+	}
+
+	var result struct {
+		Commits []struct {
+			SHA    string `json:"sha"`
+			Commit struct {
+				Message string `json:"message"`
+			} `json:"commit"`
+		} `json:"commits"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("parsing compare: %w", err)
+	}
+
+	commits := make([]CommitInfo, len(result.Commits))
+	for i, c := range result.Commits {
+		msg := c.Commit.Message
+		if idx := strings.Index(msg, "\n"); idx != -1 {
+			msg = msg[:idx]
+		}
+		commits[i] = CommitInfo{SHA: c.SHA, Message: msg}
+	}
+	return commits, nil
+}
+
 // RateLimitRemaining returns the remaining API calls.
 func (c *GitHubClient) RateLimitRemaining() (int, error) {
 	body, code, err := c.get("/rate_limit")

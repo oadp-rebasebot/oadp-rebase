@@ -9,12 +9,13 @@ import (
 
 func main() {
 	var (
-		configDir  string
-		waveFilter int
-		repoFilter string
-		jsonOutput bool
-		verbose    bool
-		format     string
+		configDir      string
+		waveFilter     int
+		repoFilter     string
+		jsonOutput     bool
+		verbose        bool
+		format         string
+		hideDepDetails bool
 	)
 
 	flag.StringVar(&configDir, "config-dir", "", "Path to rebase-configs/ (auto-detected if empty)")
@@ -23,6 +24,7 @@ func main() {
 	flag.BoolVar(&jsonOutput, "json", false, "Output as JSON")
 	flag.BoolVar(&verbose, "verbose", false, "Show detailed check output")
 	flag.StringVar(&format, "format", "table", "Output format: table or text")
+	flag.BoolVar(&hideDepDetails, "hide-dependency-details", false, "Hide commits between current and target hash for out-of-sync dependencies")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: rebase-status [flags] <branch>\n\n")
 		fmt.Fprintf(os.Stderr, "Check OADP rebase readiness for a given branch.\n\n")
@@ -89,6 +91,11 @@ func main() {
 	// Run checks
 	results := RunAllChecks(specs, DefaultChecks, client)
 
+	// Fetch dependency commit details (default: on, unless --hide-dependency-details)
+	if !hideDepDetails {
+		fetchDepCommitDetails(results, client, branch)
+	}
+
 	// Render output
 	if jsonOutput {
 		RenderJSON(os.Stdout, results)
@@ -104,6 +111,27 @@ func main() {
 			if iss.Severity == "error" {
 				os.Exit(1)
 			}
+		}
+	}
+}
+
+// fetchDepCommitDetails populates DepSync.Commits for out-of-sync dependencies
+// by querying the GitHub compare API. The branch parameter is the downstream
+// branch (e.g. "oadp-1.6") which is the branch these commits live on.
+func fetchDepCommitDetails(results []RepoStatus, client *GitHubClient, branch string) {
+	for i := range results {
+		for j := range results[i].DepSyncs {
+			ds := &results[i].DepSyncs[j]
+			if ds.InSync || ds.HaveHash == "" || ds.HeadHash == "" {
+				continue
+			}
+			commits, err := client.CompareCommits(ds.Org, ds.Repo, ds.HaveHash, ds.HeadHash)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "warning: could not fetch commits for %s/%s (%s..%s): %v\n",
+					ds.Org, ds.Repo, short(ds.HaveHash), short(ds.HeadHash), err)
+				continue
+			}
+			ds.Commits = commits
 		}
 	}
 }

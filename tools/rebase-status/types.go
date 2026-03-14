@@ -82,6 +82,13 @@ type DepSync struct {
 	HaveHash string // commit hash found in go.mod
 	HeadHash string // HEAD commit on the dep's branch
 	InSync   bool
+	Commits  []CommitInfo // commits between HaveHash and HeadHash (when details requested)
+}
+
+// CommitInfo is a single commit's metadata.
+type CommitInfo struct {
+	SHA     string
+	Message string // first line of commit message
 }
 
 // Issue is a problem found during checking.
