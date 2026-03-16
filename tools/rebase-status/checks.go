@@ -10,14 +10,13 @@ import (
 // DefaultChecks is the ordered list of checks to run.
 // To add a new check: define a CheckFunc, add a Check entry here.
 var DefaultChecks = []Check{
-	{ID: "config", Header: "Config", Run: checkConfig},
-	{ID: "branch", Header: "Branch", Run: checkBranch},
+	{ID: "config", Header: "Rebase Cfg", Run: checkConfig},
 	{ID: "rebasebot", Header: "Rebase", Run: checkRebasebotBranch},
 	{ID: "go_version", Header: "Go", Run: checkGoVersion},
-	{ID: "ci_config", Header: "CI", Run: checkCIConfig},
-	{ID: "dep_sync", Header: "Sync", Run: checkDepSync},
+	{ID: "ci_config", Header: "Prow Cfg", Run: checkCIConfig},
+	{ID: "dep_sync", Header: "Deps", Run: checkDepSync},
 	{ID: "konflux", Header: "Konflux", Run: checkKonflux},
-	{ID: "image_sync", Header: "ImgSync", Run: checkImageSync},
+	{ID: "image_sync", Header: "Image", Run: checkImageSync},
 }
 
 // downstreamModules maps Go module paths of downstream forks to their

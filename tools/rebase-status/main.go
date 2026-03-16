@@ -23,7 +23,7 @@ func main() {
 	flag.StringVar(&repoFilter, "repo", "", "Only check this repo (short name, e.g. 'velero')")
 	flag.BoolVar(&jsonOutput, "json", false, "Output as JSON")
 	flag.BoolVar(&verbose, "verbose", false, "Show detailed check output")
-	flag.StringVar(&format, "format", "table", "Output format: table or text")
+	flag.StringVar(&format, "format", "table", "Output format: table, text, or markdown")
 	flag.BoolVar(&hideDepDetails, "hide-dependency-details", false, "Hide commits between current and target hash for out-of-sync dependencies")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: rebase-status [flags] <branch>\n\n")
@@ -33,6 +33,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  rebase-status oadp-1.6 --wave 3\n")
 		fmt.Fprintf(os.Stderr, "  rebase-status oadp-1.6 --repo velero\n")
 		fmt.Fprintf(os.Stderr, "  rebase-status --format text oadp-1.6\n")
+		fmt.Fprintf(os.Stderr, "  rebase-status --format markdown oadp-1.6\n")
 		fmt.Fprintf(os.Stderr, "  rebase-status oadp-1.6 --json\n\n")
 		fmt.Fprintf(os.Stderr, "Flags:\n")
 		flag.PrintDefaults()
@@ -101,6 +102,8 @@ func main() {
 		RenderJSON(os.Stdout, results)
 	} else if format == "text" {
 		RenderText(os.Stdout, results, DefaultChecks, branch)
+	} else if format == "markdown" || format == "md" {
+		RenderMarkdown(os.Stdout, results, DefaultChecks, branch)
 	} else {
 		RenderTable(os.Stdout, results, DefaultChecks, branch)
 	}

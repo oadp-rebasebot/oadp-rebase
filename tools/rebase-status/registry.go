@@ -11,11 +11,11 @@ import (
 
 // Wave metadata — update this when adding new waves.
 var wavesMeta = []WaveInfo{
-	{1, "base dependencies"},
-	{2, "velero"},
-	{3, "plugins + operator"},
-	{4, "downstream controllers"},
-	{5, "final dependents"},
+	{1, "Independent Dependencies"},
+	{2, "Velero Integration"},
+	{3, "Plugins and Operator"},
+	{4, "Downstream Controllers"},
+	{5, "Final Dependents"},
 }
 
 // RepoDef is the canonical definition of a repo in the OADP ecosystem.
@@ -113,6 +113,17 @@ var filenameToRepo = map[string]struct{ org, repo string }{
 	"migtools_kubevirt_datamover_controller":       {"migtools", "kubevirt-datamover-controller"},
 	"migtools_kubevirt_datamover_plugin":           {"migtools", "kubevirt-datamover-plugin"},
 	"migtools_oadp_vm_file_restore":               {"migtools", "oadp-vm-file-restore"},
+}
+
+// RebaseConfigFilename returns the config filename for a given org/repo/branch.
+// e.g. ("openshift", "velero", "oadp-1.6") → "openshift_velero_oadp-1.6.env.sh"
+func RebaseConfigFilename(org, repo, branch string) string {
+	for prefix, entry := range filenameToRepo {
+		if entry.org == org && entry.repo == repo {
+			return prefix + "_" + branch + ".env.sh"
+		}
+	}
+	return ""
 }
 
 // LoadSpecs builds a RepoSpec list for the given branch.

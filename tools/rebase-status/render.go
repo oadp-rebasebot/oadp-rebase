@@ -362,6 +362,394 @@ func RenderText(w io.Writer, statuses []RepoStatus, checks []Check, branch strin
 	fmt.Fprintln(w)
 }
 
+// RenderMarkdown outputs results as clean Markdown suitable for email or docs.
+func RenderMarkdown(w io.Writer, statuses []RepoStatus, checks []Check, branch string) {
+	total, ready, errs, warns := scoreboard(statuses)
+
+	fmt.Fprintf(w, "# OADP Rebase Status: %s\n\n", branch)
+	fmt.Fprintf(w, "_Generated %s_ | [Rebase Repository](https://github.com/oadp-rebasebot/oadp-rebase)\n\n", time.Now().Format("2006-01-02 15:04 MST"))
+
+	// Score with progress bar
+	pct := 0
+	if total > 0 {
+		pct = ready * 100 / total
+	}
+	fmt.Fprintf(w, "**%d/%d repos ready (%d%%)**", ready, total, pct)
+	if errs > 0 {
+		fmt.Fprintf(w, " | %d errors", errs)
+	}
+	if warns > 0 {
+		fmt.Fprintf(w, " | %d warnings", warns)
+	}
+	fmt.Fprintln(w)
+
+	byWave := groupByWave(statuses)
+	waves := sortedWaves(byWave)
+
+	for _, waveNum := range waves {
+		repos := byWave[waveNum]
+		waveName := waveNameFor(waveNum)
+
+		// Wave header with progress
+		waveTotal, waveReady := 0, 0
+		for _, r := range repos {
+			if r.Spec.Skip {
+				continue
+			}
+			waveTotal++
+			hasErr := false
+			for _, iss := range r.Issues {
+				if iss.Severity == "error" {
+					hasErr = true
+					break
+				}
+			}
+			if !hasErr {
+				waveReady++
+			}
+		}
+		waveIcon := ":white_check_mark:"
+		if waveReady < waveTotal {
+			waveIcon = ":construction:"
+		}
+		fmt.Fprintf(w, "\n## %s Wave %d — %s (%d/%d)\n\n", waveIcon, waveNum, waveName, waveReady, waveTotal)
+
+		// Table header
+		fmt.Fprint(w, "| Component | Upstream | Rebase CI |")
+		for _, chk := range checks {
+			fmt.Fprintf(w, " %s |", chk.Header)
+		}
+		fmt.Fprintln(w)
+
+		// Separator
+		fmt.Fprint(w, "| --- | --- | --- |")
+		for range checks {
+			fmt.Fprint(w, " :---: |")
+		}
+		fmt.Fprintln(w)
+
+		// Rows
+		for _, r := range repos {
+			repoLink := mdRepoLink(r.Spec)
+
+			if r.Spec.Skip {
+				fmt.Fprintf(w, "| %s | | — |", repoLink)
+				for range checks {
+					fmt.Fprint(w, " SKIP |")
+				}
+				fmt.Fprintln(w)
+				continue
+			}
+
+			upstream := mdUpstreamCell(r.Spec)
+			ciLink := mdCILink(r.Spec)
+			fmt.Fprintf(w, "| %s | %s | %s |", repoLink, upstream, ciLink)
+			for _, chk := range checks {
+				result, ok := r.Checks[chk.ID]
+				if !ok {
+					fmt.Fprint(w, " ? |")
+					continue
+				}
+				switch chk.ID {
+				case "image_sync":
+					fmt.Fprintf(w, " %s |", mdImgSyncCell(result, r.Images, r.Spec.Repo))
+				case "config":
+					fmt.Fprintf(w, " %s |", mdRebaseCfgCell(result, r.Spec))
+				case "ci_config":
+					fmt.Fprintf(w, " %s |", mdProwCfgCell(result, r.Spec))
+				case "rebasebot":
+					fmt.Fprintf(w, " %s |", mdRebasebotCell(result, r.Spec))
+				case "go_version":
+					fmt.Fprintf(w, " %s |", mdGoVersionCell(result, r.Spec))
+				default:
+					fmt.Fprintf(w, " %s |", formatCell(result))
+				}
+			}
+			fmt.Fprintln(w)
+		}
+
+		// Details section — collapsible if there are any
+		hasAnyDetails := false
+		for _, r := range repos {
+			if r.Spec.Skip {
+				continue
+			}
+			for _, ds := range r.DepSyncs {
+				if !ds.InSync {
+					hasAnyDetails = true
+					break
+				}
+			}
+			if hasAnyDetails {
+				break
+			}
+			if len(r.Images) > 1 {
+				hasAnyDetails = true
+			} else {
+				for _, img := range r.Images {
+					if !img.Exists {
+						hasAnyDetails = true
+						break
+					}
+				}
+			}
+			if hasAnyDetails {
+				break
+			}
+			for _, iss := range r.Issues {
+				if mdShouldShowIssue(iss) {
+					hasAnyDetails = true
+					break
+				}
+			}
+			if hasAnyDetails {
+				break
+			}
+		}
+
+		if hasAnyDetails {
+			for _, r := range repos {
+				if r.Spec.Skip {
+					continue
+				}
+
+				hasDetails := false
+
+				// Out-of-sync deps
+				for _, ds := range r.DepSyncs {
+					if ds.InSync {
+						continue
+					}
+					if !hasDetails {
+						fmt.Fprintf(w, "\n**%s**\n", r.Spec.Repo)
+						hasDetails = true
+					}
+					depLink := fmt.Sprintf("https://github.com/%s/%s/tree/%s", ds.Org, ds.Repo, r.Spec.Branch)
+					fmt.Fprintf(w, "- :zap: [%s/%s](%s): `%s` → `%s`\n",
+						ds.Org, ds.Repo, depLink, short(ds.HaveHash), short(ds.HeadHash))
+					for _, c := range ds.Commits {
+						commitURL := fmt.Sprintf("https://github.com/%s/%s/commit/%s", ds.Org, ds.Repo, c.SHA)
+						fmt.Fprintf(w, "  - [`%s`](%s) %s\n", short(c.SHA), commitURL, c.Message)
+					}
+				}
+
+				// Images — show all when multiple, or just missing when single
+				if len(r.Images) > 1 {
+					if !hasDetails {
+						fmt.Fprintf(w, "\n**%s**\n", r.Spec.Repo)
+						hasDetails = true
+					}
+					fmt.Fprintf(w, "\n<a id=\"images-%s\"></a>\n", r.Spec.Repo)
+					for _, img := range r.Images {
+						quayURL := fmt.Sprintf("https://quay.io/repository/%s/%s?tab=tags", img.Namespace, img.Repo)
+						if img.Exists {
+							fmt.Fprintf(w, "- :white_check_mark: [%s](%s): `:%s` (%s)\n",
+								img.Name, quayURL, img.Tag, img.LastModified.Format("2006-01-02"))
+						} else {
+							fmt.Fprintf(w, "- :x: [%s](%s): missing `:%s`\n", img.Name, quayURL, img.Tag)
+						}
+					}
+				} else {
+					for _, img := range r.Images {
+						if img.Exists {
+							continue
+						}
+						if !hasDetails {
+							fmt.Fprintf(w, "\n**%s**\n", r.Spec.Repo)
+							hasDetails = true
+						}
+						quayURL := fmt.Sprintf("https://quay.io/repository/%s/%s?tab=tags", img.Namespace, img.Repo)
+						fmt.Fprintf(w, "- :package: [%s](%s): missing `:%s`\n", img.Name, quayURL, img.Tag)
+					}
+				}
+
+				// Issues
+				for _, iss := range r.Issues {
+					if !mdShouldShowIssue(iss) {
+						continue
+					}
+					if !hasDetails {
+						fmt.Fprintf(w, "\n**%s**\n", r.Spec.Repo)
+						hasDetails = true
+					}
+					icon := ":x:"
+					if iss.Severity == "warning" {
+						icon = ":warning:"
+					}
+					fmt.Fprintf(w, "- %s %s\n", icon, iss.Message)
+				}
+			}
+
+		}
+	}
+
+	// Legend
+	fmt.Fprintln(w, "\n---")
+	fmt.Fprintln(w, "\n<details>")
+	fmt.Fprintln(w, "<summary>Column legend</summary>")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "| Column | Description |")
+	fmt.Fprintln(w, "| --- | --- |")
+	fmt.Fprintln(w, "| **Component** | Repository name (links to rebase PRs) |")
+	fmt.Fprintln(w, "| **Upstream** | Upstream repo and branch/tag being rebased from |")
+	fmt.Fprintln(w, "| **Rebase CI** | Prow rebasebot job status badge (links to job history) |")
+	fmt.Fprintln(w, "| **Rebase Cfg** | Rebase config file exists in oadp-rebase (links to file) |")
+	fmt.Fprintln(w, "| **Rebase** | Rebasebot scratch branch exists (links to branch) |")
+	fmt.Fprintln(w, "| **Go** | Go version detected in the repo |")
+	fmt.Fprintln(w, "| **Prow Cfg** | CI operator config exists in openshift/release (links to dir) |")
+	fmt.Fprintln(w, "| **Deps** | Internal OADP dependency sync status |")
+	fmt.Fprintln(w, "| **Konflux** | `.konflux/` directory exists on the branch |")
+	fmt.Fprintln(w, "| **Image** | Container image tag on Quay (links to tags page) |")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "</details>")
+}
+
+// mdShouldShowIssue returns true if the issue should appear in the details section.
+func mdShouldShowIssue(iss Issue) bool {
+	if strings.Contains(iss.Message, "internal dep(s) out of sync") {
+		return false
+	}
+	if strings.Contains(iss.Message, "images") && strings.Contains(iss.Message, "tag") {
+		return false
+	}
+	if strings.Contains(iss.Message, "image(s) missing tag") {
+		return false
+	}
+	return true
+}
+
+// mdUpstreamCell formats the upstream info as a linked markdown table cell.
+// Shows just the branch/tag as the label, linking to the full upstream repo+ref.
+func mdUpstreamCell(spec RepoSpec) string {
+	if spec.Upstream == "" {
+		return ""
+	}
+	u := strings.TrimPrefix(spec.Upstream, "https://github.com/")
+	orgRepo := u
+	refPart := ""
+	if idx := strings.Index(u, ":"); idx != -1 {
+		orgRepo = u[:idx]
+		refPart = u[idx+1:]
+	}
+	url := "https://github.com/" + orgRepo
+	label := orgRepo
+	if refPart != "" {
+		url += "/tree/" + refPart
+		label = refPart
+	}
+	return fmt.Sprintf("[%s](%s)", label, url)
+}
+
+// mdImgSyncCell formats the image sync cell for markdown using a date linked to Quay.
+// For multi-image repos, shows the date with an (existing/total) count linked to the details anchor.
+func mdImgSyncCell(result *CheckResult, images []ImageInfo, repoName string) string {
+	if result.Status == StatusNA {
+		return "—"
+	}
+	if result.Status == StatusFail {
+		if len(images) > 1 {
+			existing := 0
+			for _, img := range images {
+				if img.Exists {
+					existing++
+				}
+			}
+			return fmt.Sprintf("%s [(%d/%d)](#images-%s)", result.Status.Icon(), existing, len(images), repoName)
+		}
+		return result.Status.Icon()
+	}
+	// Find the oldest image and use it for the date and link
+	var oldest *ImageInfo
+	for i := range images {
+		img := &images[i]
+		if img.Exists && (oldest == nil || img.LastModified.Before(oldest.LastModified)) {
+			oldest = img
+		}
+	}
+	if oldest == nil {
+		return formatCell(result)
+	}
+	quayURL := fmt.Sprintf("https://quay.io/repository/%s/%s?tab=tags", oldest.Namespace, oldest.Repo)
+	dateStr := fmt.Sprintf("[%s](%s)", oldest.LastModified.Format("2006-01-02"), quayURL)
+	if len(images) > 1 {
+		existing := 0
+		for _, img := range images {
+			if img.Exists {
+				existing++
+			}
+		}
+		return fmt.Sprintf("%s [(%d/%d)](#images-%s)", dateStr, existing, len(images), repoName)
+	}
+	return dateStr
+}
+
+// mdGoVersionCell formats the Go version cell as a link to go.mod on the branch.
+func mdGoVersionCell(result *CheckResult, spec RepoSpec) string {
+	cell := formatCell(result)
+	if result.Status != StatusOK || result.Summary == "" {
+		return cell
+	}
+	goModURL := fmt.Sprintf("https://github.com/%s/%s/blob/%s/go.mod", spec.Org, spec.Repo, spec.Branch)
+	return fmt.Sprintf("[%s](%s)", result.Summary, goModURL)
+}
+
+// mdRebasebotCell formats the Rebase cell as a link to the rebasebot branch on GitHub.
+func mdRebasebotCell(result *CheckResult, spec RepoSpec) string {
+	cell := formatCell(result)
+	if result.Status != StatusOK {
+		return cell
+	}
+	repo := spec.RebasebotRepo
+	branch := spec.RebasebotBranch
+	if repo == "" {
+		repo = "oadp-rebasebot/" + spec.Repo
+		branch = "rebase-bot-" + spec.Branch
+	}
+	branchURL := fmt.Sprintf("https://github.com/%s/tree/%s", repo, branch)
+	return fmt.Sprintf("[%s](%s)", cell, branchURL)
+}
+
+// mdRebaseCfgCell formats the Rebase Cfg cell as a link to the config file in oadp-rebase.
+func mdRebaseCfgCell(result *CheckResult, spec RepoSpec) string {
+	cell := formatCell(result)
+	if result.Status != StatusOK {
+		return cell
+	}
+	filename := RebaseConfigFilename(spec.Org, spec.Repo, spec.Branch)
+	if filename == "" {
+		return cell
+	}
+	cfgURL := fmt.Sprintf("https://github.com/oadp-rebasebot/oadp-rebase/blob/oadp-dev/rebase-configs/%s", filename)
+	return fmt.Sprintf("[%s](%s)", cell, cfgURL)
+}
+
+// mdProwCfgCell formats the Prow Cfg cell as a link to the ci-operator config dir in openshift/release.
+func mdProwCfgCell(result *CheckResult, spec RepoSpec) string {
+	cell := formatCell(result)
+	if result.Status != StatusOK {
+		return cell
+	}
+	cfgURL := fmt.Sprintf("https://github.com/openshift/release/tree/master/ci-operator/config/%s/%s", spec.Org, spec.Repo)
+	return fmt.Sprintf("[%s](%s)", cell, cfgURL)
+}
+
+// mdRepoLink returns a Markdown link for the repo name pointing to its rebase PRs.
+func mdRepoLink(spec RepoSpec) string {
+	prURL := fmt.Sprintf("https://github.com/%s/%s/pulls?q=is%%3Apr+(is%%3Aopen+OR+is%%3Aclosed)+in%%3Atitle+%%22Merge+https%%3A%%2F%%2Fgithub.com%%2F%%22",
+		spec.Org, spec.Repo)
+	return fmt.Sprintf("[%s](%s)", spec.Repo, prURL)
+}
+
+// mdCILink returns a Markdown CI badge for the repo's Prow rebase job.
+func mdCILink(spec RepoSpec) string {
+	branchDashed := strings.ReplaceAll(spec.Branch, ".", "-")
+	jobName := fmt.Sprintf("periodic-ci-openshift-eng-rebasebot-main-%s-%s-%s",
+		spec.Org, spec.Repo, branchDashed)
+	badgeURL := fmt.Sprintf("https://prow.ci.openshift.org/badge.svg?jobs=%s", jobName)
+	historyURL := fmt.Sprintf("https://prow.ci.openshift.org/job-history/gs/origin-ci-test/logs/%s", jobName)
+	return fmt.Sprintf("[![%s](%s)](%s)", spec.Branch, badgeURL, historyURL)
+}
+
 // RenderJSON outputs results as JSON (for scripting).
 func RenderJSON(w io.Writer, statuses []RepoStatus) {
 	fmt.Fprintln(w, "[")
