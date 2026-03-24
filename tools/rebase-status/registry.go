@@ -84,7 +84,7 @@ var repoImages = map[string][]QuayImage{
 	"migtools/oadp-cli":                            {{Namespace: "konveyor", Repo: "oadp-cli-binaries", Name: "oadp-cli-binaries"}},
 	"migtools/kubevirt-datamover-controller":       {{Namespace: "konveyor", Repo: "kubevirt-datamover-controller", Name: "kubevirt-datamover-controller"}},
 	"migtools/kubevirt-datamover-plugin":           {{Namespace: "konveyor", Repo: "kubevirt-datamover-plugin", Name: "kubevirt-datamover-plugin"}},
-	"migtools/oadp-vmdp":                          {{Namespace: "konveyor", Repo: "oadp-vmdp", Name: "oadp-vmdp"}},
+	"migtools/oadp-vmdp":                          {{Namespace: "konveyor", Repo: "oadp-vmdp-binaries", Name: "oadp-vmdp-binaries"}},
 	// oadp-vm-file-restore produces 4 images from one repo
 	"migtools/oadp-vm-file-restore": {
 		{Namespace: "konveyor", Repo: "oadp-vm-file-restore", Name: "oadp-vm-file-restore"},
