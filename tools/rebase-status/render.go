@@ -461,6 +461,8 @@ func RenderMarkdown(w io.Writer, statuses []RepoStatus, checks []Check, branch s
 					fmt.Fprintf(w, " %s |", mdRebasebotCell(result, r.Spec))
 				case "go_version":
 					fmt.Fprintf(w, " %s |", mdGoVersionCell(result, r.Spec))
+				case "konflux":
+					fmt.Fprintf(w, " %s |", mdKonfluxCell(result, r.Spec, r.Konflux))
 				default:
 					fmt.Fprintf(w, " %s |", formatCell(result))
 				}
@@ -598,7 +600,7 @@ func RenderMarkdown(w io.Writer, statuses []RepoStatus, checks []Check, branch s
 	fmt.Fprintln(w, "| **Go** | Go version detected in the repo |")
 	fmt.Fprintln(w, "| **Prow Cfg** | CI operator config exists in openshift/release (links to dir) |")
 	fmt.Fprintln(w, "| **Deps** | Internal OADP dependency sync status |")
-	fmt.Fprintln(w, "| **Konflux** | `.konflux/` directory exists on the branch |")
+	fmt.Fprintln(w, "| **Konflux** | Konflux build config (`.konflux/` dir or `konflux.Dockerfile`); shows builder image tag |")
 	fmt.Fprintln(w, "| **Image** | Container image tag on Quay (links to tags page) |")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "</details>")
@@ -721,6 +723,33 @@ func mdRebaseCfgCell(result *CheckResult, spec RepoSpec) string {
 	}
 	cfgURL := fmt.Sprintf("https://github.com/oadp-rebasebot/oadp-rebase/blob/oadp-dev/rebase-configs/%s", filename)
 	return fmt.Sprintf("[%s](%s)", cell, cfgURL)
+}
+
+// mdKonfluxCell formats the Konflux cell with a link to the konflux.Dockerfile if present.
+func mdKonfluxCell(result *CheckResult, spec RepoSpec, info *KonfluxInfo) string {
+	cell := formatCell(result)
+	if result.Status != StatusOK || info == nil {
+		return cell
+	}
+	if info.HasDockerfile {
+		url := fmt.Sprintf("https://github.com/%s/%s/blob/%s/konflux.Dockerfile",
+			spec.Org, spec.Repo, spec.Branch)
+		label := cell
+		if label == "" || label == result.Status.Icon() {
+			if info.HasDir {
+				label = ".konflux + Dockerfile"
+			} else {
+				label = "Dockerfile"
+			}
+		}
+		return fmt.Sprintf("[%s](%s)", label, url)
+	}
+	if info.HasDir {
+		url := fmt.Sprintf("https://github.com/%s/%s/tree/%s/.konflux",
+			spec.Org, spec.Repo, spec.Branch)
+		return fmt.Sprintf("[.konflux](%s)", url)
+	}
+	return cell
 }
 
 // mdProwCfgCell formats the Prow Cfg cell as a link to the ci-operator config dir in openshift/release.

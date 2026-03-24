@@ -36,6 +36,7 @@ var allRepos = []RepoDef{
 	{Org: "migtools", Repo: "filebrowser", Wave: 1},
 	{Org: "migtools", Repo: "udistribution", Wave: 1, MainOnly: true},
 	{Org: "migtools", Repo: "kubevirt-velero-plugin", Wave: 1, MainOnly: true},
+	{Org: "migtools", Repo: "oadp-vmdp", Wave: 1},
 
 	// Wave 2 — velero
 	{Org: "openshift", Repo: "velero", Wave: 2},
@@ -56,7 +57,7 @@ var allRepos = []RepoDef{
 
 	// Wave 5 — final dependents
 	{Org: "openshift", Repo: "oadp-must-gather", Wave: 5},
-	{Org: "migtools", Repo: "oadp-cli", Wave: 5, MainOnly: true},
+	{Org: "migtools", Repo: "oadp-cli", Wave: 5},
 	{Org: "migtools", Repo: "kubevirt-datamover-plugin", Wave: 5},
 }
 
@@ -83,6 +84,7 @@ var repoImages = map[string][]QuayImage{
 	"migtools/oadp-cli":                            {{Namespace: "konveyor", Repo: "oadp-cli-binaries", Name: "oadp-cli-binaries"}},
 	"migtools/kubevirt-datamover-controller":       {{Namespace: "konveyor", Repo: "kubevirt-datamover-controller", Name: "kubevirt-datamover-controller"}},
 	"migtools/kubevirt-datamover-plugin":           {{Namespace: "konveyor", Repo: "kubevirt-datamover-plugin", Name: "kubevirt-datamover-plugin"}},
+	"migtools/oadp-vmdp":                          {{Namespace: "konveyor", Repo: "oadp-vmdp", Name: "oadp-vmdp"}},
 	// oadp-vm-file-restore produces 4 images from one repo
 	"migtools/oadp-vm-file-restore": {
 		{Namespace: "konveyor", Repo: "oadp-vm-file-restore", Name: "oadp-vm-file-restore"},
@@ -113,6 +115,7 @@ var filenameToRepo = map[string]struct{ org, repo string }{
 	"migtools_kubevirt_datamover_controller":       {"migtools", "kubevirt-datamover-controller"},
 	"migtools_kubevirt_datamover_plugin":           {"migtools", "kubevirt-datamover-plugin"},
 	"migtools_oadp_vm_file_restore":               {"migtools", "oadp-vm-file-restore"},
+	"migtools_oadp_vmdp":                          {"migtools", "oadp-vmdp"},
 }
 
 // RebaseConfigFilename returns the config filename for a given org/repo/branch.

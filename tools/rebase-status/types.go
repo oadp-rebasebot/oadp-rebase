@@ -60,8 +60,9 @@ type RepoStatus struct {
 	Spec     RepoSpec
 	Checks   map[string]*CheckResult
 	Issues   []Issue
-	DepSyncs []DepSync   // internal dependency sync details
-	Images   []ImageInfo // container image tag status
+	DepSyncs []DepSync    // internal dependency sync details
+	Images   []ImageInfo  // container image tag status
+	Konflux  *KonfluxInfo // Konflux build config details
 }
 
 // ImageInfo describes the status of a container image tag on Quay.
@@ -89,6 +90,13 @@ type DepSync struct {
 type CommitInfo struct {
 	SHA     string
 	Message string // first line of commit message
+}
+
+// KonfluxInfo describes the Konflux build configuration found in a repo.
+type KonfluxInfo struct {
+	HasDir        bool   // .konflux/ directory exists
+	HasDockerfile bool   // konflux.Dockerfile exists
+	BuilderTag    string // e.g. "rhel_9_golang_1.25" from the FROM line
 }
 
 // Issue is a problem found during checking.

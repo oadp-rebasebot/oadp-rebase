@@ -53,6 +53,9 @@ var (
 	imageStore   = map[string][]ImageInfo{}
 	imageStoreMu sync.Mutex
 
+	konfluxStore   = map[string]*KonfluxInfo{}
+	konfluxStoreMu sync.Mutex
+
 	// quayClient is set by main before running checks
 	quayClient *QuayClient
 )
@@ -169,16 +172,72 @@ func checkCIConfig(client *GitHubClient, spec *RepoSpec) *CheckResult {
 	}
 }
 
-// checkKonflux checks if .konflux/ directory exists on the branch.
+// checkKonflux checks for Konflux build configuration: .konflux/ directory
+// and/or konflux.Dockerfile. When a Dockerfile is found, parses the builder
+// image tag from the FROM line (e.g. "rhel_9_golang_1.25").
 func checkKonflux(client *GitHubClient, spec *RepoSpec) *CheckResult {
-	exists, err := client.DirExists(spec.Org, spec.Repo, ".konflux", spec.Branch)
-	if err != nil {
-		return &CheckResult{StatusWarn, "err", fmt.Sprintf("API error: %v", err)}
+	info := &KonfluxInfo{}
+
+	// Check .konflux/ directory
+	dirExists, err := client.DirExists(spec.Org, spec.Repo, ".konflux", spec.Branch)
+	if err == nil && dirExists {
+		info.HasDir = true
 	}
-	if exists {
-		return &CheckResult{StatusOK, "", ""}
+
+	// Check konflux.Dockerfile
+	content, err := client.FileContent(spec.Org, spec.Repo, "konflux.Dockerfile", spec.Branch)
+	if err == nil && content != nil {
+		info.HasDockerfile = true
+		info.BuilderTag = parseKonfluxBuilder(string(content))
 	}
-	return &CheckResult{StatusNA, "", ".konflux directory not found"}
+
+	// Store for rendering
+	konfluxStoreMu.Lock()
+	konfluxStore[spec.FullName()] = info
+	konfluxStoreMu.Unlock()
+
+	if !info.HasDir && !info.HasDockerfile {
+		return &CheckResult{StatusNA, "", "no .konflux/ or konflux.Dockerfile"}
+	}
+
+	summary := info.BuilderTag
+	if summary == "" && info.HasDir {
+		summary = ".konflux"
+	}
+
+	return &CheckResult{StatusOK, summary, ""}
+}
+
+// parseKonfluxBuilder extracts the builder image tag from a konflux.Dockerfile.
+// Looks for lines like: FROM brew.registry.redhat.io/.../openshift-golang-builder:rhel_9_golang_1.25 AS builder
+// Returns just the tag portion (e.g. "rhel_9_golang_1.25").
+func parseKonfluxBuilder(dockerfile string) string {
+	for _, line := range strings.Split(dockerfile, "\n") {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(strings.ToUpper(line), "FROM ") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+		// Check if this is a builder stage (has "AS builder" suffix)
+		isBuilder := false
+		for i, f := range fields {
+			if strings.EqualFold(f, "AS") && i+1 < len(fields) && strings.EqualFold(fields[i+1], "builder") {
+				isBuilder = true
+				break
+			}
+		}
+		if !isBuilder {
+			continue
+		}
+		image := fields[1]
+		if idx := strings.LastIndex(image, ":"); idx != -1 {
+			return image[idx+1:]
+		}
+	}
+	return ""
 }
 
 // checkImageSync checks Quay.io for the existence and age of container images

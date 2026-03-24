@@ -83,6 +83,13 @@ func runRepoChecks(spec RepoSpec, checks []Check, client *GitHubClient) RepoStat
 	}
 	imageStoreMu.Unlock()
 
+	// Propagate Konflux info from the store
+	konfluxStoreMu.Lock()
+	if info, ok := konfluxStore[spec.FullName()]; ok {
+		status.Konflux = info
+	}
+	konfluxStoreMu.Unlock()
+
 	return status
 }
 

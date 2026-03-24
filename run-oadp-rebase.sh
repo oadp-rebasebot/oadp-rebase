@@ -84,6 +84,11 @@ get_config_name() {
 
         # === OADP CLI ===
         oadp-cli-oadp-dev) echo "migtools_oadp_cli_oadp-dev" ;;
+        oadp-cli-oadp-1.6) echo "migtools_oadp_cli_oadp-1.6" ;;
+
+        # === OADP VMDP ===
+        oadp-vmdp-oadp-dev) echo "migtools_oadp_vmdp_oadp-dev" ;;
+        oadp-vmdp-oadp-1.6) echo "migtools_oadp_vmdp_oadp-1.6" ;;
 
         # === Unknown ===
         *) return 1 ;;
@@ -99,7 +104,7 @@ get_wave_repos() {
     # Special case for udistribution: always include main in wave 1
     if [ "$wave" -eq 1 ]; then
         if [ "$branch" = "oadp-dev" ] || [ "$branch" = "main" ]; then
-            echo "udistribution-main kopia-oadp-dev restic-oadp-dev kubevirt-velero-plugin-main filebrowser-oadp-dev"
+            echo "udistribution-main kopia-oadp-dev restic-oadp-dev kubevirt-velero-plugin-main filebrowser-oadp-dev oadp-vmdp-oadp-dev"
             return 0
         fi
     fi
@@ -123,11 +128,11 @@ get_wave_repos() {
         esac
     elif [ "$branch" = "oadp-1.6" ]; then
         case "$wave" in
-            1) echo "kopia-oadp-1.6 restic-oadp-1.6 filebrowser-oadp-1.6" ;;
+            1) echo "kopia-oadp-1.6 restic-oadp-1.6 filebrowser-oadp-1.6 oadp-vmdp-oadp-1.6" ;;
             2) echo "velero-oadp-1.6" ;;
             3) echo "oadp-operator-oadp-1.6 velero-plugin-for-aws-oadp-1.6 velero-plugin-for-legacy-aws-oadp-1.6 velero-plugin-for-microsoft-azure-oadp-1.6 velero-plugin-for-gcp-oadp-1.6" ;;
             4) echo "oadp-non-admin-oadp-1.6 openshift-velero-plugin-oadp-1.6 kubevirt-datamover-controller-oadp-1.6 oadp-vm-file-restore-oadp-1.6" ;;
-            5) echo "oadp-must-gather-oadp-1.6 kubevirt-datamover-plugin-oadp-1.6" ;;
+            5) echo "oadp-must-gather-oadp-1.6 oadp-cli-oadp-1.6 kubevirt-datamover-plugin-oadp-1.6" ;;
             *) return 1 ;;
         esac
     else
