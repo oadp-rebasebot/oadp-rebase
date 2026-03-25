@@ -35,7 +35,7 @@ var allRepos = []RepoDef{
 	{Org: "openshift", Repo: "restic", Wave: 1},
 	{Org: "migtools", Repo: "filebrowser", Wave: 1},
 	{Org: "migtools", Repo: "udistribution", Wave: 1, MainOnly: true},
-	{Org: "migtools", Repo: "kubevirt-velero-plugin", Wave: 1, MainOnly: true},
+	{Org: "migtools", Repo: "kubevirt-velero-plugin", Wave: 3},
 	{Org: "migtools", Repo: "oadp-vmdp", Wave: 1},
 
 	// Wave 2 — velero
