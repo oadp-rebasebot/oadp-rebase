@@ -7,3 +7,5 @@ HOOK_SCRIPTS="--post-rebase-hook \
   ${HOOK_SCRIPTS_LOCATION}/go-replace_velero_oadp-1.6.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-mod-tidy-and-commit.sh \
   "
+
+EXTRA_REBASEBOT_ARGS="--always-run-hooks"
