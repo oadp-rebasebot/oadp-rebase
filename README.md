@@ -56,13 +56,8 @@ The second wave rebases Velero and integrates with the kopia and restic dependen
 The third wave rebases and updates Velero plugins and updates the OADP operator:
 
 - [`openshift/velero`](https://github.com/openshift/velero)  
- └─🔵─ [`migtools/kubevirt-velero-plugin`](https://github.com/migtools/kubevirt-velero-plugin)
-
-- [`openshift/velero`](https://github.com/openshift/velero)  
-  [`migtools/kopia`](https://github.com/migtools/kopia)  
- └─🔵─ [`openshift/velero-plugin-for-csi`](https://github.com/openshift/velero-plugin-for-csi)
-
-- [`openshift/velero`](https://github.com/openshift/velero)  
+ ├─🔵─ [`migtools/kubevirt-velero-plugin`](https://github.com/migtools/kubevirt-velero-plugin)  
+ ├─🔵─ [`openshift/velero-plugin-for-csi`](https://github.com/openshift/velero-plugin-for-csi) *(also requires [`migtools/kopia`](https://github.com/migtools/kopia))*  
  ├─🟠─ [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator)  
  ├─🔵─ [`openshift/velero-plugin-for-aws`](https://github.com/openshift/velero-plugin-for-aws)  
  ├─🔵─ [`openshift/velero-plugin-for-gcp`](https://github.com/openshift/velero-plugin-for-gcp)  
