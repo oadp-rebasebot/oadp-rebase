@@ -27,14 +27,15 @@ The first wave focuses on independent core dependencies without requiring `go.mo
 
 - [`openshift/docker-distribution`](https://github.com/openshift/docker-distribution)  
  └─🟠─ [`migtools/udistribution`](https://github.com/migtools/udistribution)
-- 🔵 [`migtools/kopia`](https://github.com/migtools/kopia)
+- 🔵 [`migtools/kopia`](https://github.com/migtools/kopia)  
+ └─🔵─ [`migtools/oadp-vmdp`](https://github.com/migtools/oadp-vmdp)
 - 🔵 [`openshift/restic`](https://github.com/openshift/restic)
-- 🔵 [`migtools/kubevirt-velero-plugin`](https://github.com/migtools/kubevirt-velero-plugin)
 - 🔵 [`migtools/filebrowser`](https://github.com/migtools/filebrowser)
 
 
 > **Note:** [`migtools/udistribution`](https://github.com/migtools/udistribution) requires only a tag update.
 > **Note:** [`migtools/kopia`](https://github.com/migtools/kopia) repository must be rebased from the same upstream branch or tag referenced in Velero's `go.mod`. This alignment is automatically handled by the relevant scripts in the [`rebase-configs`](./rebase-configs) directory.
+> **Note:** [`migtools/oadp-vmdp`](https://github.com/migtools/oadp-vmdp) is rebased directly from the downstream `migtools/kopia` fork.
 
 ---
 
@@ -53,6 +54,9 @@ The second wave rebases Velero and integrates with the kopia and restic dependen
 ## 🌊 III Wave
 
 The third wave rebases and updates Velero plugins and updates the OADP operator:
+
+- [`openshift/velero`](https://github.com/openshift/velero)  
+ └─🔵─ [`migtools/kubevirt-velero-plugin`](https://github.com/migtools/kubevirt-velero-plugin)
 
 - [`openshift/velero`](https://github.com/openshift/velero)  
   [`migtools/kopia`](https://github.com/migtools/kopia)  
@@ -87,13 +91,20 @@ The fourth wave focuses on Non-Admin OADP components:
   [`openshift/docker-distribution/v3`](https://github.com/openshift/docker-distribution)  
  └─🟠─ [`openshift/openshift-velero-plugin`](https://github.com/openshift/openshift-velero-plugin)# `go.mod` replace + update
 
+
+- [`openshift/velero`](https://github.com/openshift/velero)  
+ └─🟠─ [`migtools/kubevirt-datamover-controller`](https://github.com/migtools/kubevirt-datamover-controller)
+
+- [`openshift/velero`](https://github.com/openshift/velero)  
+ └─🟠─ [`migtools/oadp-vm-file-restore`](https://github.com/migtools/oadp-vm-file-restore)
+
 > **Note:** This wave is blocked only by the [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator) update from Wave III.
 
 ---
 
 ## 🌊 V Wave
 
-The final wave updates the OADP Must-Gather components:
+The final wave updates the OADP Must-Gather and CLI components:
 
 - [`openshift/velero`](https://github.com/openshift/velero)  
  └─🟠─ [`openshift/oadp-must-gather`](https://github.com/openshift/oadp-must-gather)
@@ -101,6 +112,16 @@ The final wave updates the OADP Must-Gather components:
 - [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator)  
   [`migtools/oadp-non-admin`](https://github.com/migtools/oadp-non-admin)  
  └─🟢─ [`openshift/oadp-must-gather`](https://github.com/openshift/oadp-must-gather)
+
+- [`openshift/velero`](https://github.com/openshift/velero)  
+  [`migtools/kopia`](https://github.com/migtools/kopia)  
+  [`migtools/oadp-non-admin`](https://github.com/migtools/oadp-non-admin)  
+  [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator)  
+ └─🟠─ [`migtools/oadp-cli`](https://github.com/migtools/oadp-cli)
+
+- [`openshift/velero`](https://github.com/openshift/velero)  
+  [`migtools/kubevirt-datamover-controller`](https://github.com/migtools/kubevirt-datamover-controller)  
+ └─🟠─ [`migtools/kubevirt-datamover-plugin`](https://github.com/migtools/kubevirt-datamover-plugin)
 
 > **Note:** This wave is effectively gated only by the [`migtools/oadp-non-admin`](https://github.com/migtools/oadp-non-admin) update from previous IV Wave; all other components are already ready.
 
