@@ -16,7 +16,9 @@ var DefaultChecks = []Check{
 	{ID: "ci_config", Header: "Prow Cfg", Run: checkCIConfig},
 	{ID: "dep_sync", Header: "Deps", Run: checkDepSync},
 	{ID: "konflux", Header: "Konflux", Run: checkKonflux},
-	{ID: "image_sync", Header: "Image", Run: checkImageSync},
+	{ID: "upstream_image", Header: "Quay", Run: checkUpstreamImage},
+	{ID: "art_config", Header: "ART Cfg", Run: checkArtConfig},
+	{ID: "productized", Header: "Bundle", Run: checkProductized},
 }
 
 // downstreamModules maps Go module paths of downstream forks to their
@@ -58,12 +60,18 @@ var (
 
 	// quayClient is set by main before running checks
 	quayClient *QuayClient
+
+	artConfigStore   = map[string][]*ArtBuildConfig{}
+	artConfigStoreMu sync.Mutex
 )
 
 // ---------- Individual checks ----------
 
 // checkConfig verifies a rebase config file exists for this repo/branch.
 func checkConfig(client *GitHubClient, spec *RepoSpec) *CheckResult {
+	if spec.NoRebase {
+		return &CheckResult{StatusNA, "", "not managed by rebasebot"}
+	}
 	if spec.HasConfig {
 		return &CheckResult{StatusOK, "", ""}
 	}
@@ -90,6 +98,9 @@ func checkBranch(client *GitHubClient, spec *RepoSpec) *CheckResult {
 
 // checkRebasebotBranch verifies the oadp-rebasebot scratch branch exists.
 func checkRebasebotBranch(client *GitHubClient, spec *RepoSpec) *CheckResult {
+	if spec.NoRebase {
+		return &CheckResult{StatusNA, "", "not managed by rebasebot"}
+	}
 	if spec.RebasebotRepo == "" {
 		// No config → try the default naming convention
 		defaultRepo := "oadp-rebasebot/" + spec.Repo
@@ -146,6 +157,9 @@ func checkGoVersion(client *GitHubClient, spec *RepoSpec) *CheckResult {
 
 // checkCIConfig checks if ci-operator config exists in openshift/release.
 func checkCIConfig(client *GitHubClient, spec *RepoSpec) *CheckResult {
+	if spec.NoRebase {
+		return &CheckResult{StatusNA, "", "not managed by rebasebot"}
+	}
 	ciOrg := spec.Org
 	ciRepo := spec.Repo
 
@@ -240,11 +254,41 @@ func parseKonfluxBuilder(dockerfile string) string {
 	return ""
 }
 
-// checkImageSync checks Quay.io for the existence and age of container images
-// tagged with the repo's branch name.
-func checkImageSync(client *GitHubClient, spec *RepoSpec) *CheckResult {
-	images, ok := repoImages[spec.FullName()]
-	if !ok || len(images) == 0 {
+// checkUpstreamImage checks Quay.io for the existence and age of container images
+// tagged with the repo's branch name. Merges images from image-references and the
+// hardcoded repoImages map so all known images for a repo are checked and visible.
+func checkUpstreamImage(client *GitHubClient, spec *RepoSpec) *CheckResult {
+	// Collect images from both sources, deduplicating by quay repo name
+	seen := map[string]bool{}
+	var quayChecks []QuayImage
+
+	// Source 1: image-references (data-driven)
+	if currentReleaseData != nil {
+		if refs := currentReleaseData.ImageRefsFor(spec.FullName()); len(refs) > 0 {
+			for _, ref := range refs {
+				if ref.Namespace != "" && ref.QuayRepo != "" && !seen[ref.QuayRepo] {
+					seen[ref.QuayRepo] = true
+					quayChecks = append(quayChecks, QuayImage{
+						Namespace: ref.Namespace,
+						Repo:     ref.QuayRepo,
+						Name:     ref.QuayRepo,
+					})
+				}
+			}
+		}
+	}
+
+	// Source 2: hardcoded repoImages (fills gaps not covered by image-references)
+	if images, ok := repoImages[spec.FullName()]; ok {
+		for _, img := range images {
+			if !seen[img.Repo] {
+				seen[img.Repo] = true
+				quayChecks = append(quayChecks, img)
+			}
+		}
+	}
+
+	if len(quayChecks) == 0 {
 		return &CheckResult{StatusNA, "", "no images defined"}
 	}
 
@@ -252,15 +296,11 @@ func checkImageSync(client *GitHubClient, spec *RepoSpec) *CheckResult {
 		return &CheckResult{StatusWarn, "err", "quay client not initialized"}
 	}
 
-	tag := spec.Branch
-	// oadp-dev and main branches publish to :latest tag
-	if tag == "oadp-dev" || tag == "main" {
-		tag = "latest"
-	}
+	tag := imageTag(spec.Branch)
 	var infos []ImageInfo
 	missing := 0
 
-	for _, img := range images {
+	for _, img := range quayChecks {
 		info := ImageInfo{
 			Name:      img.Name,
 			Namespace: img.Namespace,
@@ -289,11 +329,11 @@ func checkImageSync(client *GitHubClient, spec *RepoSpec) *CheckResult {
 
 	if missing == len(infos) {
 		return &CheckResult{StatusFail, fmt.Sprintf("0/%d", len(infos)),
-			fmt.Sprintf("no images found with tag %s", tag)}
+			fmt.Sprintf("no images found with tag %s on quay.io; push upstream images", tag)}
 	}
 	if missing > 0 {
 		return &CheckResult{StatusWarn, fmt.Sprintf("%d/%d", len(infos)-missing, len(infos)),
-			fmt.Sprintf("%d image(s) missing tag %s", missing, tag)}
+			fmt.Sprintf("%d image(s) missing tag %s on quay.io", missing, tag)}
 	}
 
 	// All present — show age of oldest
@@ -304,6 +344,183 @@ func checkImageSync(client *GitHubClient, spec *RepoSpec) *CheckResult {
 		}
 	}
 	return &CheckResult{StatusOK, FormatAge(oldest), ""}
+}
+
+// checkArtConfig checks if ocp-build-data has build config(s) for this repo.
+// Repos that produce multiple images (e.g. oadp-vm-file-restore) need multiple configs.
+func checkArtConfig(client *GitHubClient, spec *RepoSpec) *CheckResult {
+	if currentReleaseData == nil || !currentReleaseData.HasArtBranch {
+		return &CheckResult{StatusNA, "", "no ocp-build-data branch for this release"}
+	}
+
+	key := spec.FullName()
+	cfgs := currentReleaseData.ArtConfigsFor(key)
+	if len(cfgs) == 0 {
+		if !repoProducesImages(key) {
+			return &CheckResult{StatusNA, "", "repo does not produce container images"}
+		}
+		return &CheckResult{
+			StatusFail, "",
+			fmt.Sprintf("no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/%s/images",
+				spec.Branch),
+		}
+	}
+
+	// Store for rendering
+	artConfigStoreMu.Lock()
+	artConfigStore[key] = cfgs
+	artConfigStoreMu.Unlock()
+
+	// Check if we have enough configs for the expected image count
+	expectedCount := expectedImageCount(key)
+	if expectedCount > 0 && len(cfgs) < expectedCount {
+		return &CheckResult{
+			StatusWarn,
+			fmt.Sprintf("%d/%d", len(cfgs), expectedCount),
+			fmt.Sprintf("only %d of %d expected ocp-build-data configs; add missing YAML to https://github.com/openshift-eng/ocp-build-data/tree/%s/images",
+				len(cfgs), expectedCount, spec.Branch),
+		}
+	}
+
+	// Cross-reference: verify image-references names match ocp-build-data names
+	if currentReleaseData != nil && currentReleaseData.HasImageRefs {
+		if mismatches := crossRefImageArt(key, cfgs, currentReleaseData.ImageRefsFor(key), spec.Branch); mismatches != "" {
+			summary := ""
+			if len(cfgs) == 1 && cfgs[0].Dockerfile != "" {
+				summary = cfgs[0].Dockerfile
+			} else if len(cfgs) > 1 {
+				summary = fmt.Sprintf("%d cfgs", len(cfgs))
+			}
+			return &CheckResult{StatusWarn, summary, mismatches}
+		}
+	}
+
+	summary := ""
+	if len(cfgs) == 1 && cfgs[0].Dockerfile != "" {
+		summary = cfgs[0].Dockerfile
+	} else if len(cfgs) > 1 {
+		summary = fmt.Sprintf("%d cfgs", len(cfgs))
+	}
+
+	return &CheckResult{StatusOK, summary, ""}
+}
+
+// crossRefImageArt verifies that image-references names match ocp-build-data names.
+// Each image-references entry's ARTName should have a matching ART config, and vice versa.
+// Returns an error message describing mismatches, or "" if everything is in sync.
+func crossRefImageArt(orgRepo string, cfgs []*ArtBuildConfig, refs []*ImageRefEntry, branch string) string {
+	if len(refs) == 0 || len(cfgs) == 0 {
+		return ""
+	}
+
+	// Build lookup sets
+	artNames := make(map[string]bool, len(cfgs))
+	for _, cfg := range cfgs {
+		artNames[cfg.ARTName()] = true
+	}
+
+	refNames := make(map[string]bool, len(refs))
+	for _, ref := range refs {
+		if ref.ARTName != "" {
+			refNames[ref.ARTName] = true
+		}
+	}
+
+	// Check for image-references entries without matching ART config
+	var missingInArt []string
+	for name := range refNames {
+		if !artNames[name] {
+			missingInArt = append(missingInArt, name)
+		}
+	}
+
+	// Check for ART configs without matching image-references entry
+	var missingInRefs []string
+	for name := range artNames {
+		if !refNames[name] {
+			missingInRefs = append(missingInRefs, name)
+		}
+	}
+
+	if len(missingInArt) == 0 && len(missingInRefs) == 0 {
+		return ""
+	}
+
+	var parts []string
+	if len(missingInArt) > 0 {
+		parts = append(parts, fmt.Sprintf(
+			"image-references name(s) %v not found in ocp-build-data/%s/images",
+			missingInArt, branch))
+	}
+	if len(missingInRefs) > 0 {
+		parts = append(parts, fmt.Sprintf(
+			"ocp-build-data name(s) %v not found in image-references",
+			missingInRefs))
+	}
+	return strings.Join(parts, "; ")
+}
+
+// expectedImageCount returns the number of images a repo is expected to produce,
+// based on image-references entries and the hardcoded repoImages map.
+func expectedImageCount(orgRepo string) int {
+	// Prefer image-references count (data-driven)
+	if currentReleaseData != nil {
+		if refs := currentReleaseData.ImageRefsFor(orgRepo); len(refs) > 0 {
+			return len(refs)
+		}
+	}
+	// Fall back to hardcoded map
+	if images, ok := repoImages[orgRepo]; ok {
+		return len(images)
+	}
+	return 0
+}
+
+// checkProductized checks if the repo's image is active in bundle/image-references.
+func checkProductized(client *GitHubClient, spec *RepoSpec) *CheckResult {
+	if currentReleaseData == nil || !currentReleaseData.HasImageRefs {
+		return &CheckResult{StatusNA, "", "no bundle/image-references for this release"}
+	}
+
+	key := spec.FullName()
+	refs := currentReleaseData.ImageRefsFor(key)
+	if len(refs) == 0 {
+		if !repoProducesImages(key) {
+			return &CheckResult{StatusNA, "", "repo does not produce container images"}
+		}
+		return &CheckResult{
+			StatusWarn, "",
+			fmt.Sprintf("not in image-references; add entry to https://github.com/openshift/oadp-operator/blob/%s/bundle/image-references",
+				spec.Branch),
+		}
+	}
+
+	// Count active vs commented entries
+	active := 0
+	for _, ref := range refs {
+		if !ref.CommentedOut {
+			active++
+		}
+	}
+
+	if active == 0 {
+		return &CheckResult{
+			StatusWarn,
+			fmt.Sprintf("0/%d", len(refs)),
+			fmt.Sprintf("all %d entries commented out in image-references; uncomment in https://github.com/openshift/oadp-operator/blob/%s/bundle/image-references when ready",
+				len(refs), spec.Branch),
+		}
+	}
+
+	if active < len(refs) {
+		return &CheckResult{
+			StatusWarn,
+			fmt.Sprintf("%d/%d", active, len(refs)),
+			fmt.Sprintf("%d of %d entries still commented out", len(refs)-active, len(refs)),
+		}
+	}
+
+	return &CheckResult{StatusOK, fmt.Sprintf("%d/%d", active, len(refs)), ""}
 }
 
 // checkDepSync verifies that go.mod references to internal OADP dependencies

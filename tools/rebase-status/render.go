@@ -37,8 +37,97 @@ var (
 	cCyan   = ansi("\033[36m")
 )
 
+// quayGroupResult computes the combined Quay column result with custom priority:
+//   - ❌ = quay image missing (regardless of image-references)
+//   - ⚠️ = quay image exists but NOT in image-references (or commented out)
+//   - ✅ = quay image exists AND in image-references
+//   - — = no images expected
+func quayGroupResult(checks map[string]*CheckResult) *CheckResult {
+	imgCheck := checks["upstream_image"]
+	prodCheck := checks["productized"]
+
+	// If upstream_image is N/A, the whole column is N/A
+	if imgCheck == nil || imgCheck.Status == StatusNA {
+		return &CheckResult{StatusNA, "", ""}
+	}
+
+	// If quay image is missing → always ❌
+	if imgCheck.Status == StatusFail {
+		return &CheckResult{StatusFail, imgCheck.Summary, imgCheck.Detail}
+	}
+
+	// Quay image exists (OK or Warn) — check productized status
+	if prodCheck != nil && prodCheck.Status != StatusNA && prodCheck.Status != StatusOK {
+		// Image exists but image-references is not OK → ⚠️
+		summary := imgCheck.Summary
+		if summary == "" {
+			summary = prodCheck.Summary
+		}
+		return &CheckResult{StatusWarn, summary, prodCheck.Detail}
+	}
+
+	// Both OK (or productized is N/A)
+	return &CheckResult{imgCheck.Status, imgCheck.Summary, imgCheck.Detail}
+}
+
+// groupResult combines multiple individual check results into one display result.
+// Fail beats Warn beats OK. Summary prefers the worst-status check's summary;
+// falls back to the best non-empty summary so useful info (like builder tags) isn't lost.
+func groupResult(checks map[string]*CheckResult, checkIDs []string) *CheckResult {
+	var worst Status = StatusNA
+	var worstSummary string // summary from the check that set worst status
+	var bestSummary string  // first non-empty summary from any check
+	allSkipNA := true
+
+	for _, id := range checkIDs {
+		r, ok := checks[id]
+		if !ok {
+			continue
+		}
+		switch r.Status {
+		case StatusFail:
+			if worst != StatusFail {
+				worstSummary = r.Summary
+			}
+			worst = StatusFail
+			allSkipNA = false
+		case StatusWarn:
+			if worst != StatusFail {
+				if worst != StatusWarn {
+					worstSummary = r.Summary
+				}
+				worst = StatusWarn
+			}
+			allSkipNA = false
+		case StatusOK:
+			if worst != StatusFail && worst != StatusWarn {
+				if worst != StatusOK {
+					worstSummary = r.Summary
+				}
+				worst = StatusOK
+			}
+			allSkipNA = false
+		}
+		if r.Summary != "" && bestSummary == "" {
+			bestSummary = r.Summary
+		}
+	}
+
+	if allSkipNA {
+		return &CheckResult{StatusNA, "", ""}
+	}
+
+	// Prefer worst-status summary; only fall back to best available when all OK
+	summary := worstSummary
+	if summary == "" && worst == StatusOK {
+		summary = bestSummary
+	}
+
+	return &CheckResult{worst, summary, ""}
+}
+
 // RenderTable prints the status report as a formatted terminal table.
-func RenderTable(w io.Writer, statuses []RepoStatus, checks []Check, branch string) {
+func RenderTable(w io.Writer, statuses []RepoStatus, branch string) {
 	// Header
 	fmt.Fprintf(w, "\n%s%sOADP Rebase Status: %s%s\n", cBold, cCyan, branch, cReset)
 	fmt.Fprintf(w, "%s%s%s\n", cDim, time.Now().Format("2006-01-02 15:04 MST"), cReset)
@@ -67,14 +156,14 @@ func RenderTable(w io.Writer, statuses []RepoStatus, checks []Check, branch stri
 
 		// Print column headers
 		fmt.Fprintf(w, "  %-*s", nameWidth, "Repo")
-		for _, chk := range checks {
-			fmt.Fprintf(w, "  %-7s", chk.Header)
+		for _, dg := range DisplayGroups {
+			fmt.Fprintf(w, "  %-7s", dg.Header)
 		}
 		fmt.Fprintln(w)
 
 		// Print separator
 		fmt.Fprintf(w, "  %s%s", cDim, strings.Repeat("─", nameWidth))
-		for range checks {
+		for range DisplayGroups {
 			fmt.Fprintf(w, "  %s", strings.Repeat("─", 7))
 		}
 		fmt.Fprintf(w, "%s\n", cReset)
@@ -86,13 +175,14 @@ func RenderTable(w io.Writer, statuses []RepoStatus, checks []Check, branch stri
 				continue
 			}
 
-			// Repo name + check columns
+			// Repo name + display group columns
 			fmt.Fprintf(w, "  %-*s", nameWidth, r.Spec.FullName())
-			for _, chk := range checks {
-				result, ok := r.Checks[chk.ID]
-				if !ok {
-					fmt.Fprintf(w, "  %-7s", "?")
-					continue
+			for _, dg := range DisplayGroups {
+				var result *CheckResult
+				if dg.ID == "quay" {
+					result = quayGroupResult(r.Checks)
+				} else {
+					result = groupResult(r.Checks, dg.CheckIDs)
 				}
 				cell := formatCell(result)
 				fmt.Fprintf(w, "  %s", colorCell(cell, result.Status, 7))
@@ -105,26 +195,8 @@ func RenderTable(w io.Writer, statuses []RepoStatus, checks []Check, branch stri
 				fmt.Fprintf(w, "  %*s  %s→ %s%s\n", nameWidth, "", cDim, upstream, cReset)
 			}
 
-			// Dep sync sub-lines (only show out-of-sync ones to reduce noise)
-			for _, ds := range r.DepSyncs {
-				if ds.InSync {
-					continue
-				}
-				fmt.Fprintf(w, "  %*s  %s⚡ %s/%s: %s%s → %s%s\n",
-					nameWidth, "",
-					cRed, ds.Org, ds.Repo,
-					cYellow, short(ds.HaveHash), short(ds.HeadHash),
-					cReset)
-				// Show commit details when available
-				for _, c := range ds.Commits {
-					fmt.Fprintf(w, "  %*s    %s%s %s%s\n",
-						nameWidth, "",
-						cDim, short(c.SHA), c.Message, cReset)
-				}
-			}
-
-			// Image sub-lines (show details when >1 image or any missing)
-			if len(r.Images) > 1 || (len(r.Images) > 0 && !r.Images[0].Exists) {
+			// Image sub-lines — always show so it's clear which images each repo produces
+			if len(r.Images) > 0 {
 				for _, img := range r.Images {
 					if img.Exists {
 						fmt.Fprintf(w, "  %*s  %s📦 %s: %s%s\n",
@@ -138,37 +210,59 @@ func RenderTable(w io.Writer, statuses []RepoStatus, checks []Check, branch stri
 				}
 			}
 
+			// Dep sync sub-lines (only show out-of-sync ones to reduce noise)
+			for _, ds := range r.DepSyncs {
+				if ds.InSync {
+					continue
+				}
+				fmt.Fprintf(w, "  %*s    %s⚡ %s/%s: %s%s → %s%s\n",
+					nameWidth, "",
+					cRed, ds.Org, ds.Repo,
+					cYellow, short(ds.HaveHash), short(ds.HeadHash),
+					cReset)
+				// Show commit details when available
+				for _, c := range ds.Commits {
+					fmt.Fprintf(w, "  %*s      %s%s %s%s\n",
+						nameWidth, "",
+						cDim, short(c.SHA), c.Message, cReset)
+				}
+			}
+
 			allIssues = append(allIssues, r.Issues...)
 		}
 	}
 
 	// Issues summary
 	fmt.Fprintln(w)
+
+	// Filter out issues already shown inline (dep sync + image tags)
+	var filtered []Issue
+	for _, iss := range allIssues {
+		if isInlineIssue(iss) {
+			continue
+		}
+		filtered = append(filtered, iss)
+	}
+
+	// Count inline issues separately
+	inlineErrors := 0
+	for _, iss := range allIssues {
+		if isInlineIssue(iss) && iss.Severity == "error" {
+			inlineErrors++
+		}
+	}
+
 	if len(allIssues) == 0 {
 		fmt.Fprintf(w, "%s%sNo issues found. All checks passed!%s ✅\n", cBold, cGreen, cReset)
 	} else {
 		errors := 0
 		warnings := 0
-		for _, iss := range allIssues {
+		for _, iss := range filtered {
 			if iss.Severity == "error" {
 				errors++
 			} else {
 				warnings++
 			}
-		}
-		// Filter out issues already shown inline
-		var filtered []Issue
-		for _, iss := range allIssues {
-			if strings.Contains(iss.Message, "internal dep(s) out of sync") {
-				continue
-			}
-			if strings.Contains(iss.Message, "images") && strings.Contains(iss.Message, "tag") {
-				continue
-			}
-			if strings.Contains(iss.Message, "image(s) missing tag") {
-				continue
-			}
-			filtered = append(filtered, iss)
 		}
 
 		fmt.Fprintf(w, "%sIssues (%s%d errors%s, %s%d warnings%s):%s\n",
@@ -181,6 +275,9 @@ func RenderTable(w io.Writer, statuses []RepoStatus, checks []Check, branch stri
 				color = cYellow
 			}
 			fmt.Fprintf(w, "  %s  %-40s  %s%s%s\n", icon, iss.Repo, color, iss.Message, cReset)
+		}
+		if inlineErrors > 0 {
+			fmt.Fprintf(w, "\n%s(%d additional dep/image errors shown inline above with ⚡ and 📦)%s\n", cDim, inlineErrors, cReset)
 		}
 	}
 
@@ -235,7 +332,7 @@ func colorCell(text string, status Status, width int) string {
 }
 
 // RenderText prints a card-style text view — one block per repo, no table grid.
-func RenderText(w io.Writer, statuses []RepoStatus, checks []Check, branch string) {
+func RenderText(w io.Writer, statuses []RepoStatus, branch string) {
 	fmt.Fprintf(w, "\n%s%sOADP Rebase Status: %s%s\n", cBold, cCyan, branch, cReset)
 	fmt.Fprintf(w, "%s%s%s\n\n", cDim, time.Now().Format("2006-01-02 15:04 MST"), cReset)
 
@@ -292,13 +389,14 @@ func RenderText(w io.Writer, statuses []RepoStatus, checks []Check, branch strin
 
 			// Check badges on one line
 			fmt.Fprint(w, "    ")
-			for _, chk := range checks {
-				result, ok := r.Checks[chk.ID]
-				if !ok {
-					fmt.Fprintf(w, "%s%s%s:? ", cDim, chk.Header, cReset)
-					continue
+			for _, dg := range DisplayGroups {
+				var result *CheckResult
+				if dg.ID == "quay" {
+					result = quayGroupResult(r.Checks)
+				} else {
+					result = groupResult(r.Checks, dg.CheckIDs)
 				}
-				cell := chk.Header
+				cell := dg.Header
 				if result.Summary != "" {
 					cell += ":" + result.Summary
 				}
@@ -317,23 +415,8 @@ func RenderText(w io.Writer, statuses []RepoStatus, checks []Check, branch strin
 			}
 			fmt.Fprintln(w)
 
-			// Dep sync sub-lines
-			for _, ds := range r.DepSyncs {
-				if ds.InSync {
-					continue
-				}
-				fmt.Fprintf(w, "    %s⚡ %s/%s: %s%s → %s%s\n",
-					cRed, ds.Org, ds.Repo,
-					cYellow, short(ds.HaveHash), short(ds.HeadHash), cReset)
-				// Show commit details when available
-				for _, c := range ds.Commits {
-					fmt.Fprintf(w, "      %s%s %s%s\n",
-						cDim, short(c.SHA), c.Message, cReset)
-				}
-			}
-
-			// Image sub-lines
-			if len(r.Images) > 1 || (len(r.Images) > 0 && !r.Images[0].Exists) {
+			// Image sub-lines — always show
+			if len(r.Images) > 0 {
 				for _, img := range r.Images {
 					if img.Exists {
 						fmt.Fprintf(w, "    %s📦 %s: %s%s\n",
@@ -345,11 +428,22 @@ func RenderText(w io.Writer, statuses []RepoStatus, checks []Check, branch strin
 				}
 			}
 
-			for _, iss := range r.Issues {
-				if strings.Contains(iss.Message, "internal dep(s) out of sync") {
+			// Dep sync sub-lines
+			for _, ds := range r.DepSyncs {
+				if ds.InSync {
 					continue
 				}
-				if strings.Contains(iss.Message, "images") && strings.Contains(iss.Message, "tag") {
+				fmt.Fprintf(w, "      %s⚡ %s/%s: %s%s → %s%s\n",
+					cRed, ds.Org, ds.Repo,
+					cYellow, short(ds.HaveHash), short(ds.HeadHash), cReset)
+				for _, c := range ds.Commits {
+					fmt.Fprintf(w, "        %s%s %s%s\n",
+						cDim, short(c.SHA), c.Message, cReset)
+				}
+			}
+
+			for _, iss := range r.Issues {
+				if isInlineIssue(iss) {
 					continue
 				}
 				if iss.Severity == "error" {
@@ -363,7 +457,7 @@ func RenderText(w io.Writer, statuses []RepoStatus, checks []Check, branch strin
 }
 
 // RenderMarkdown outputs results as clean Markdown suitable for email or docs.
-func RenderMarkdown(w io.Writer, statuses []RepoStatus, checks []Check, branch string) {
+func RenderMarkdown(w io.Writer, statuses []RepoStatus, branch string) {
 	total, ready, errs, warns := scoreboard(statuses)
 
 	fmt.Fprintf(w, "# OADP Rebase Status: %s\n\n", branch)
@@ -416,14 +510,14 @@ func RenderMarkdown(w io.Writer, statuses []RepoStatus, checks []Check, branch s
 
 		// Table header
 		fmt.Fprint(w, "| Component | Upstream | Rebase CI |")
-		for _, chk := range checks {
-			fmt.Fprintf(w, " %s |", chk.Header)
+		for _, dg := range DisplayGroups {
+			fmt.Fprintf(w, " %s |", dg.Header)
 		}
 		fmt.Fprintln(w)
 
 		// Separator
 		fmt.Fprint(w, "| --- | --- | --- |")
-		for range checks {
+		for range DisplayGroups {
 			fmt.Fprint(w, " :---: |")
 		}
 		fmt.Fprintln(w)
@@ -434,7 +528,7 @@ func RenderMarkdown(w io.Writer, statuses []RepoStatus, checks []Check, branch s
 
 			if r.Spec.Skip {
 				fmt.Fprintf(w, "| %s | | — |", repoLink)
-				for range checks {
+				for range DisplayGroups {
 					fmt.Fprint(w, " SKIP |")
 				}
 				fmt.Fprintln(w)
@@ -444,27 +538,28 @@ func RenderMarkdown(w io.Writer, statuses []RepoStatus, checks []Check, branch s
 			upstream := mdUpstreamCell(r.Spec)
 			ciLink := mdCILink(r.Spec)
 			fmt.Fprintf(w, "| %s | %s | %s |", repoLink, upstream, ciLink)
-			for _, chk := range checks {
-				result, ok := r.Checks[chk.ID]
-				if !ok {
-					fmt.Fprint(w, " ? |")
-					continue
+			for _, dg := range DisplayGroups {
+				var gr *CheckResult
+				if dg.ID == "quay" {
+					gr = quayGroupResult(r.Checks)
+				} else {
+					gr = groupResult(r.Checks, dg.CheckIDs)
 				}
-				switch chk.ID {
-				case "image_sync":
-					fmt.Fprintf(w, " %s |", mdImgSyncCell(result, r.Images, r.Spec.Repo))
-				case "config":
-					fmt.Fprintf(w, " %s |", mdRebaseCfgCell(result, r.Spec))
-				case "ci_config":
-					fmt.Fprintf(w, " %s |", mdProwCfgCell(result, r.Spec))
-				case "rebasebot":
-					fmt.Fprintf(w, " %s |", mdRebasebotCell(result, r.Spec))
+				switch dg.ID {
+				case "rebase":
+					fmt.Fprintf(w, " %s |", mdRebaseGroupCell(gr, r.Spec))
 				case "go_version":
-					fmt.Fprintf(w, " %s |", mdGoVersionCell(result, r.Spec))
+					fmt.Fprintf(w, " %s |", mdGoVersionCell(r.Checks["go_version"], r.Spec))
+				case "ci_config":
+					fmt.Fprintf(w, " %s |", mdProwCfgCell(r.Checks["ci_config"], r.Spec))
+				case "dep_sync":
+					fmt.Fprintf(w, " %s |", formatCell(gr))
+				case "quay":
+					fmt.Fprintf(w, " %s |", mdImageGroupCell(gr, r.Images, r.Spec))
 				case "konflux":
-					fmt.Fprintf(w, " %s |", mdKonfluxCell(result, r.Spec, r.Konflux))
+					fmt.Fprintf(w, " %s |", mdBuildGroupCell(gr, r.Spec, r.Konflux, r.ArtConfigs))
 				default:
-					fmt.Fprintf(w, " %s |", formatCell(result))
+					fmt.Fprintf(w, " %s |", formatCell(gr))
 				}
 			}
 			fmt.Fprintln(w)
@@ -595,29 +690,27 @@ func RenderMarkdown(w io.Writer, statuses []RepoStatus, checks []Check, branch s
 	fmt.Fprintln(w, "| **Component** | Repository name (links to rebase PRs) |")
 	fmt.Fprintln(w, "| **Upstream** | Upstream repo and branch/tag being rebased from |")
 	fmt.Fprintln(w, "| **Rebase CI** | Prow rebasebot job status badge (links to job history) |")
-	fmt.Fprintln(w, "| **Rebase Cfg** | Rebase config file exists in oadp-rebase (links to file) |")
-	fmt.Fprintln(w, "| **Rebase** | Rebasebot scratch branch exists (links to branch) |")
+	fmt.Fprintln(w, "| **Rebase** | Rebase config + rebasebot scratch branch ready |")
 	fmt.Fprintln(w, "| **Go** | Go version detected in the repo |")
-	fmt.Fprintln(w, "| **Prow Cfg** | CI operator config exists in openshift/release (links to dir) |")
+	fmt.Fprintln(w, "| **CI** | CI operator config exists in openshift/release |")
 	fmt.Fprintln(w, "| **Deps** | Internal OADP dependency sync status |")
-	fmt.Fprintln(w, "| **Konflux** | Konflux build config (`.konflux/` dir or `konflux.Dockerfile`); shows builder image tag |")
-	fmt.Fprintln(w, "| **Image** | Container image tag on Quay (links to tags page) |")
+	fmt.Fprintln(w, "| **Quay** | Upstream [quay.io](https://quay.io/organization/konveyor) image tag + [bundle/image-references](https://github.com/openshift/oadp-operator) entry |")
+	fmt.Fprintln(w, "| **Konflux** | Build pipeline: `konflux.Dockerfile` + [ocp-build-data](https://github.com/openshift-eng/ocp-build-data) config |")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "</details>")
 }
 
+// isInlineIssue returns true if the issue is shown inline (⚡ dep sync).
+func isInlineIssue(iss Issue) bool {
+	if strings.Contains(iss.Message, "internal dep(s) out of sync") {
+		return true
+	}
+	return false
+}
+
 // mdShouldShowIssue returns true if the issue should appear in the details section.
 func mdShouldShowIssue(iss Issue) bool {
-	if strings.Contains(iss.Message, "internal dep(s) out of sync") {
-		return false
-	}
-	if strings.Contains(iss.Message, "images") && strings.Contains(iss.Message, "tag") {
-		return false
-	}
-	if strings.Contains(iss.Message, "image(s) missing tag") {
-		return false
-	}
-	return true
+	return !isInlineIssue(iss)
 }
 
 // mdUpstreamCell formats the upstream info as a linked markdown table cell.
@@ -779,6 +872,65 @@ func mdCILink(spec RepoSpec) string {
 	return fmt.Sprintf("[![%s](%s)](%s)", spec.Branch, badgeURL, historyURL)
 }
 
+// mdRebaseGroupCell formats the combined Rebase column (config + rebasebot).
+func mdRebaseGroupCell(result *CheckResult, spec RepoSpec) string {
+	cell := formatCell(result)
+	if result.Status != StatusOK {
+		return cell
+	}
+	// Link to the rebasebot branch
+	repo := spec.RebasebotRepo
+	branch := spec.RebasebotBranch
+	if repo == "" {
+		repo = "oadp-rebasebot/" + spec.Repo
+		branch = "rebase-bot-" + spec.Branch
+	}
+	branchURL := fmt.Sprintf("https://github.com/%s/tree/%s", repo, branch)
+	return fmt.Sprintf("[%s](%s)", cell, branchURL)
+}
+
+// mdBuildGroupCell formats the combined Build column (konflux + ART config).
+func mdBuildGroupCell(result *CheckResult, spec RepoSpec, konflux *KonfluxInfo, arts []*ArtBuildConfig) string {
+	cell := formatCell(result)
+	if result.Status == StatusNA {
+		return "—"
+	}
+	if result.Status != StatusOK {
+		return cell
+	}
+	// Link to konflux.Dockerfile when present
+	if konflux != nil && konflux.HasDockerfile {
+		url := fmt.Sprintf("https://github.com/%s/%s/blob/%s/konflux.Dockerfile",
+			spec.Org, spec.Repo, spec.Branch)
+		label := cell
+		if label == "" || label == result.Status.Icon() {
+			label = "Dockerfile"
+		}
+		return fmt.Sprintf("[%s](%s)", label, url)
+	}
+	if len(arts) == 1 {
+		url := fmt.Sprintf("https://github.com/openshift-eng/ocp-build-data/blob/%s/images/%s",
+			spec.Branch, arts[0].Filename)
+		return fmt.Sprintf("[%s](%s)", cell, url)
+	}
+	if len(arts) > 1 {
+		// Link to the images directory since there are multiple configs
+		url := fmt.Sprintf("https://github.com/openshift-eng/ocp-build-data/tree/%s/images",
+			spec.Branch)
+		return fmt.Sprintf("[%s](%s)", cell, url)
+	}
+	return cell
+}
+
+// mdImageGroupCell formats the combined Image column (quay + bundle).
+func mdImageGroupCell(result *CheckResult, images []ImageInfo, spec RepoSpec) string {
+	if result.Status == StatusNA {
+		return "—"
+	}
+	// Reuse the existing image sync cell logic for the quay part
+	return mdImgSyncCell(result, images, spec.Repo)
+}
+
 // RenderJSON outputs results as JSON (for scripting).
 func RenderJSON(w io.Writer, statuses []RepoStatus) {
 	fmt.Fprintln(w, "[")
@@ -845,6 +997,9 @@ func RenderJSON(w io.Writer, statuses []RepoStatus) {
 
 func formatCell(r *CheckResult) string {
 	if r.Summary != "" {
+		if r.Status == StatusWarn {
+			return "⚠️ " + r.Summary
+		}
 		return r.Summary
 	}
 	return r.Status.Icon()

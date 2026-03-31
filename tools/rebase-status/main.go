@@ -89,6 +89,13 @@ func main() {
 	// Create Quay client for image checks
 	quayClient = NewQuayClient()
 
+	// Fetch release data (image-references + ocp-build-data)
+	rd, rdErr := FetchReleaseData(client, branch)
+	if rdErr != nil {
+		fmt.Fprintf(os.Stderr, "warning: release data: %v\n", rdErr)
+	}
+	currentReleaseData = rd
+
 	// Run checks
 	results := RunAllChecks(specs, DefaultChecks, client)
 
@@ -101,11 +108,11 @@ func main() {
 	if jsonOutput {
 		RenderJSON(os.Stdout, results)
 	} else if format == "text" {
-		RenderText(os.Stdout, results, DefaultChecks, branch)
+		RenderText(os.Stdout, results, branch)
 	} else if format == "markdown" || format == "md" {
-		RenderMarkdown(os.Stdout, results, DefaultChecks, branch)
+		RenderMarkdown(os.Stdout, results, branch)
 	} else {
-		RenderTable(os.Stdout, results, DefaultChecks, branch)
+		RenderTable(os.Stdout, results, branch)
 	}
 
 	// Exit with error code if any failures

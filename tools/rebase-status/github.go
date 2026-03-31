@@ -162,6 +162,39 @@ func (c *GitHubClient) DirListing(org, repo, path string) ([]string, error) {
 	return names, nil
 }
 
+// DirListingRef returns the file/directory names in a repo path at a specific ref.
+// Returns nil, nil if the path does not exist.
+func (c *GitHubClient) DirListingRef(org, repo, path, ref string) ([]string, error) {
+	apiPath := fmt.Sprintf("/repos/%s/%s/contents/%s", org, repo, path)
+	if ref != "" {
+		apiPath += "?ref=" + ref
+	}
+
+	body, code, err := c.get(apiPath)
+	if err != nil {
+		return nil, err
+	}
+	if code == http.StatusNotFound {
+		return nil, nil
+	}
+	if code != http.StatusOK {
+		return nil, fmt.Errorf("GitHub API %s returned %d", apiPath, code)
+	}
+
+	var entries []struct {
+		Name string `json:"name"`
+	}
+	if err := json.Unmarshal(body, &entries); err != nil {
+		return nil, fmt.Errorf("parsing dir listing: %w", err)
+	}
+
+	names := make([]string, len(entries))
+	for i, e := range entries {
+		names[i] = e.Name
+	}
+	return names, nil
+}
+
 // DirExists checks if a directory path exists in a repo (optionally at a ref).
 func (c *GitHubClient) DirExists(org, repo, path, ref string) (bool, error) {
 	apiPath := fmt.Sprintf("/repos/%s/%s/contents/%s", org, repo, path)

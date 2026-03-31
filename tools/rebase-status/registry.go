@@ -24,7 +24,9 @@ type RepoDef struct {
 	Org      string
 	Repo     string
 	Wave     int
-	MainOnly bool // only tracks main, never branched (e.g. udistribution)
+	MainOnly bool   // only tracks main, never branched (e.g. udistribution)
+	NoRebase bool   // not managed by rebasebot; track deps/build only (e.g. hypershift-oadp-plugin)
+	Branch   string // override branch (default: use CLI branch, or "main" for MainOnly/NoRebase)
 }
 
 // allRepos is the complete catalog of OADP repositories.
@@ -42,6 +44,7 @@ var allRepos = []RepoDef{
 	{Org: "openshift", Repo: "velero", Wave: 2},
 
 	// Wave 3 — plugins + operator
+	{Org: "openshift", Repo: "hypershift-oadp-plugin", Wave: 3, NoRebase: true, Branch: "main"},
 	{Org: "openshift", Repo: "velero-plugin-for-csi", Wave: 3, MainOnly: true},
 	{Org: "openshift", Repo: "oadp-operator", Wave: 3},
 	{Org: "openshift", Repo: "velero-plugin-for-aws", Wave: 3},
@@ -59,6 +62,26 @@ var allRepos = []RepoDef{
 	{Org: "openshift", Repo: "oadp-must-gather", Wave: 5},
 	{Org: "migtools", Repo: "oadp-cli", Wave: 5},
 	{Org: "migtools", Repo: "kubevirt-datamover-plugin", Wave: 5},
+}
+
+// DisplayGroup defines a visual column in the output that combines
+// one or more individual check results. Individual checks still run
+// independently and generate granular issues; display groups only
+// control the table layout.
+type DisplayGroup struct {
+	ID       string   // column identifier
+	Header   string   // column header text
+	CheckIDs []string // which check IDs contribute to this column
+}
+
+// DisplayGroups defines the consolidated columns shown in table/text/markdown output.
+var DisplayGroups = []DisplayGroup{
+	{ID: "rebase", Header: "Rebase", CheckIDs: []string{"config", "rebasebot"}},
+	{ID: "go_version", Header: "Go", CheckIDs: []string{"go_version"}},
+	{ID: "ci_config", Header: "CI", CheckIDs: []string{"ci_config"}},
+	{ID: "dep_sync", Header: "Deps", CheckIDs: []string{"dep_sync"}},
+	{ID: "quay", Header: "Quay", CheckIDs: []string{"upstream_image", "productized"}},
+	{ID: "konflux", Header: "Konflux", CheckIDs: []string{"konflux", "art_config"}},
 }
 
 // QuayImage describes a container image on Quay.io.
@@ -85,12 +108,13 @@ var repoImages = map[string][]QuayImage{
 	"migtools/kubevirt-datamover-controller":       {{Namespace: "konveyor", Repo: "kubevirt-datamover-controller", Name: "kubevirt-datamover-controller"}},
 	"migtools/kubevirt-datamover-plugin":           {{Namespace: "konveyor", Repo: "kubevirt-datamover-plugin", Name: "kubevirt-datamover-plugin"}},
 	"migtools/oadp-vmdp":                          {{Namespace: "konveyor", Repo: "oadp-vmdp-binaries", Name: "oadp-vmdp-binaries"}},
-	// oadp-vm-file-restore produces 4 images from one repo
+	// filebrowser repo builds the vmfr-access-filebrowser sidecar container
+	"migtools/filebrowser":                         {{Namespace: "konveyor", Repo: "oadp-vmfr-access-filebrowser", Name: "oadp-vmfr-access-filebrowser"}},
+	// oadp-vm-file-restore produces 3 images from one repo
 	"migtools/oadp-vm-file-restore": {
 		{Namespace: "konveyor", Repo: "oadp-vm-file-restore", Name: "oadp-vm-file-restore"},
 		{Namespace: "konveyor", Repo: "oadp-vmfr-access", Name: "oadp-vmfr-access"},
 		{Namespace: "konveyor", Repo: "oadp-vmfr-access-sshd", Name: "oadp-vmfr-access-sshd"},
-		{Namespace: "konveyor", Repo: "oadp-vmfr-access-filebrowser", Name: "oadp-vmfr-access-filebrowser"},
 	},
 }
 
@@ -155,6 +179,16 @@ func LoadSpecs(configDir, branch string) ([]RepoSpec, error) {
 		// For main-only repos, the actual branch is "main"
 		if def.MainOnly {
 			spec.Branch = "main"
+		}
+
+		// NoRebase repos: set flag and use explicit branch (default "main")
+		if def.NoRebase {
+			spec.NoRebase = true
+			if def.Branch != "" {
+				spec.Branch = def.Branch
+			} else {
+				spec.Branch = "main"
+			}
 		}
 
 		// Enrich with config file data if available

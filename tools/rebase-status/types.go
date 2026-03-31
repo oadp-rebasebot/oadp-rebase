@@ -45,6 +45,7 @@ type RepoSpec struct {
 	Wave      int
 	Skip      bool   // SKIP_REPO=true in config
 	HasConfig bool   // whether a rebase config file exists
+	NoRebase  bool   // not managed by rebasebot; track-only
 	Upstream  string // e.g. "vmware-tanzu/velero:release-1.18" or "" for downstream-only
 	// Derived from REBASE_REPO config
 	RebasebotRepo   string // e.g. "oadp-rebasebot/velero"
@@ -62,7 +63,9 @@ type RepoStatus struct {
 	Issues   []Issue
 	DepSyncs []DepSync    // internal dependency sync details
 	Images   []ImageInfo  // container image tag status
-	Konflux  *KonfluxInfo // Konflux build config details
+	Konflux      *KonfluxInfo    // Konflux build config details
+	ImageRefData []*ImageRefEntry // from bundle/image-references
+	ArtConfigs   []*ArtBuildConfig // from ocp-build-data (may be multiple per repo)
 }
 
 // ImageInfo describes the status of a container image tag on Quay.
@@ -104,6 +107,54 @@ type Issue struct {
 	Severity string // "error" or "warning"
 	Repo     string
 	Message  string
+}
+
+// ImageRefEntry represents one entry from bundle/image-references.
+type ImageRefEntry struct {
+	ARTName      string // e.g. "oadp-velero-plugin-for-gcp-rhel9"
+	ImageRef     string // e.g. "quay.io/konveyor/velero-plugin-for-gcp:oadp-1.6"
+	Namespace    string // e.g. "konveyor"
+	QuayRepo     string // e.g. "velero-plugin-for-gcp"
+	Tag          string // e.g. "oadp-1.6"
+	CommentedOut bool   // true if entry was commented out
+}
+
+// ArtBuildConfig represents a parsed ocp-build-data image config.
+type ArtBuildConfig struct {
+	Filename     string   // e.g. "oadp-velero-plugin-for-gcp.yml"
+	Name         string   // e.g. "oadp/oadp-velero-plugin-for-gcp-rhel9"
+	SourceWeb    string   // e.g. "https://github.com/openshift/velero-plugin-for-gcp"
+	SourceURL    string   // e.g. "git@github.com:openshift-priv/velero-plugin-for-gcp.git"
+	BranchTarget string   // e.g. "oadp-1.6"
+	Dockerfile   string   // e.g. "konflux.Dockerfile"
+	Component    string   // e.g. "oadp-velero-plugin-for-gcp-container"
+	Dependents   []string // e.g. ["oadp-operator"]
+}
+
+// ReleaseData holds release-level metadata fetched once per branch.
+type ReleaseData struct {
+	ImageRefs    []ImageRefEntry
+	ArtConfigs   []*ArtBuildConfig
+	HasImageRefs bool
+	HasArtBranch bool
+	repoImageRefs map[string][]*ImageRefEntry // "org/repo" -> entries
+	repoArtConfigs map[string][]*ArtBuildConfig // "org/repo" -> configs (one per image)
+}
+
+// ImageRefsFor returns the image-references entries for a repo.
+func (rd *ReleaseData) ImageRefsFor(orgRepo string) []*ImageRefEntry {
+	if rd == nil {
+		return nil
+	}
+	return rd.repoImageRefs[orgRepo]
+}
+
+// ArtConfigsFor returns all ART build configs for a repo (may be multiple per repo).
+func (rd *ReleaseData) ArtConfigsFor(orgRepo string) []*ArtBuildConfig {
+	if rd == nil {
+		return nil
+	}
+	return rd.repoArtConfigs[orgRepo]
 }
 
 // Check is a registered check that can run against a repo.

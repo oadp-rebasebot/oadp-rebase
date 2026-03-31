@@ -90,6 +90,22 @@ func runRepoChecks(spec RepoSpec, checks []Check, client *GitHubClient) RepoStat
 	}
 	konfluxStoreMu.Unlock()
 
+	// Propagate ART configs from the store
+	artConfigStoreMu.Lock()
+	if cfgs, ok := artConfigStore[spec.FullName()]; ok {
+		status.ArtConfigs = cfgs
+	}
+	artConfigStoreMu.Unlock()
+
+	// Propagate release data
+	if currentReleaseData != nil {
+		key := spec.FullName()
+		status.ImageRefData = currentReleaseData.ImageRefsFor(key)
+		if len(status.ArtConfigs) == 0 {
+			status.ArtConfigs = currentReleaseData.ArtConfigsFor(key)
+		}
+	}
+
 	return status
 }
 
