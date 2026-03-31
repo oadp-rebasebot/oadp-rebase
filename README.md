@@ -73,25 +73,14 @@ The third wave rebases and updates Velero plugins and updates the OADP operator:
 The fourth wave focuses on Non-Admin OADP components:
 
 - [`openshift/velero`](https://github.com/openshift/velero)  
- └─🟠─ [`migtools/oadp-non-admin`](https://github.com/migtools/oadp-non-admin)# `go.mod` replace + update
+ ├─🟠─ [`migtools/oadp-non-admin`](https://github.com/migtools/oadp-non-admin)# `go.mod` replace + update  
+ ├─🟠─ [`openshift/openshift-velero-plugin`](https://github.com/openshift/openshift-velero-plugin) *(also requires [`openshift/docker-distribution/v3`](https://github.com/openshift/docker-distribution))*# `go.mod` replace + update  
+ ├─🟠─ [`migtools/kubevirt-datamover-controller`](https://github.com/migtools/kubevirt-datamover-controller)  
+ └─🟠─ [`migtools/oadp-vm-file-restore`](https://github.com/migtools/oadp-vm-file-restore)  
 
 - [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator)  
- └─🟢─ [`migtools/oadp-non-admin`](https://github.com/migtools/oadp-non-admin)# only tag update
-
-- [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator)  
-  [`migtools/udistribution`](https://github.com/migtools/udistribution)  
- └─🟢─ [`openshift/openshift-velero-plugin`](https://github.com/openshift/openshift-velero-plugin)# only tag update
-
-- [`openshift/velero`](https://github.com/openshift/velero)  
-  [`openshift/docker-distribution/v3`](https://github.com/openshift/docker-distribution)  
- └─🟠─ [`openshift/openshift-velero-plugin`](https://github.com/openshift/openshift-velero-plugin)# `go.mod` replace + update
-
-
-- [`openshift/velero`](https://github.com/openshift/velero)  
- └─🟠─ [`migtools/kubevirt-datamover-controller`](https://github.com/migtools/kubevirt-datamover-controller)
-
-- [`openshift/velero`](https://github.com/openshift/velero)  
- └─🟠─ [`migtools/oadp-vm-file-restore`](https://github.com/migtools/oadp-vm-file-restore)
+ ├─🟢─ [`migtools/oadp-non-admin`](https://github.com/migtools/oadp-non-admin)# only tag update  
+ └─🟢─ [`openshift/openshift-velero-plugin`](https://github.com/openshift/openshift-velero-plugin) *(also requires [`migtools/udistribution`](https://github.com/migtools/udistribution))*# only tag update  
 
 > **Note:** This wave is blocked only by the [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator) update from Wave III.
 
@@ -102,21 +91,13 @@ The fourth wave focuses on Non-Admin OADP components:
 The final wave updates the OADP Must-Gather and CLI components:
 
 - [`openshift/velero`](https://github.com/openshift/velero)  
- └─🟠─ [`openshift/oadp-must-gather`](https://github.com/openshift/oadp-must-gather)
+ ├─🟠─ [`openshift/oadp-must-gather`](https://github.com/openshift/oadp-must-gather)  
+ ├─🟠─ [`migtools/oadp-cli`](https://github.com/migtools/oadp-cli) *(also requires [`migtools/kopia`](https://github.com/migtools/kopia), [`migtools/oadp-non-admin`](https://github.com/migtools/oadp-non-admin), [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator))*  
+ └─🟠─ [`migtools/kubevirt-datamover-plugin`](https://github.com/migtools/kubevirt-datamover-plugin) *(also requires [`migtools/kubevirt-datamover-controller`](https://github.com/migtools/kubevirt-datamover-controller))*  
 
 - [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator)  
   [`migtools/oadp-non-admin`](https://github.com/migtools/oadp-non-admin)  
- └─🟢─ [`openshift/oadp-must-gather`](https://github.com/openshift/oadp-must-gather)
-
-- [`openshift/velero`](https://github.com/openshift/velero)  
-  [`migtools/kopia`](https://github.com/migtools/kopia)  
-  [`migtools/oadp-non-admin`](https://github.com/migtools/oadp-non-admin)  
-  [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator)  
- └─🟠─ [`migtools/oadp-cli`](https://github.com/migtools/oadp-cli)
-
-- [`openshift/velero`](https://github.com/openshift/velero)  
-  [`migtools/kubevirt-datamover-controller`](https://github.com/migtools/kubevirt-datamover-controller)  
- └─🟠─ [`migtools/kubevirt-datamover-plugin`](https://github.com/migtools/kubevirt-datamover-plugin)
+ └─🟢─ [`openshift/oadp-must-gather`](https://github.com/openshift/oadp-must-gather)  
 
 > **Note:** This wave is effectively gated only by the [`migtools/oadp-non-admin`](https://github.com/migtools/oadp-non-admin) update from previous IV Wave; all other components are already ready.
 
