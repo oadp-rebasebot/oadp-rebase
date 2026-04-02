@@ -1,0 +1,2119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OADP Prow Merge Bot Audit</title>
+  <style>
+    :root {
+      --bg: #0d1117; --surface: #161b22; --surface2: #1c2129;
+      --border: #30363d; --text: #c9d1d9; --muted: #8b949e;
+      --red: #f85149; --yellow: #d29922; --green: #3fb950;
+      --blue: #58a6ff; --cyan: #79c0ff;
+      --red-bg: rgba(248,81,73,.12); --yellow-bg: rgba(210,153,34,.12);
+      --green-bg: rgba(63,185,80,.12); --blue-bg: rgba(88,166,255,.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      padding: 2rem; max-width: 1200px; margin: 0 auto;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code { background: var(--surface2); padding: .1em .4em; border-radius: 4px; font-size: .9em; }
+    h1 { font-size: 1.5rem; margin-bottom: .25rem; }
+    .subtitle { color: var(--muted); font-size: .875rem; margin-bottom: 1rem; }
+    .controls {
+      display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-bottom: .25rem;
+    }
+    input[type="password"], select {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      padding: .4rem .6rem; border-radius: 6px; font-size: .8rem;
+    }
+    input:focus { border-color: var(--blue); outline: none; }
+    button {
+      background: #238636; color: #fff; border: none; padding: .4rem 1rem;
+      border-radius: 6px; cursor: pointer; font-size: .8rem; font-weight: 600;
+    }
+    button:hover { background: #2ea043; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    label { display: flex; align-items: center; gap: .4rem; font-size: .8rem; color: var(--muted); }
+    .hint { font-size: .7rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+    .summary-bar {
+      display: flex; gap: 1.5rem; padding: .75rem 1rem; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; align-items: center;
+    }
+    .summary-item .num { font-size: 1.5rem; font-weight: 700; }
+    .summary-item .lbl { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .summary-meta { margin-left: auto; font-size: .75rem; color: var(--muted); text-align: right; }
+
+    .section {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; margin-bottom: .75rem; overflow: hidden;
+    }
+    .section-hdr {
+      padding: .6rem 1rem; font-weight: 600; font-size: .9rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between; user-select: none;
+    }
+    .section-hdr:hover { background: rgba(255,255,255,.02); }
+    .section-hdr:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+    .section-hdr .arrow { transition: transform .2s; color: var(--muted); font-size: .7rem; }
+    .section.collapsed .section-body { display: none; }
+    .section.collapsed .arrow { transform: rotate(-90deg); }
+    .section-body { padding: .5rem 1rem; border-top: 1px solid var(--border); }
+    .section-desc { color: var(--muted); font-size: .8rem; margin-bottom: .5rem; }
+    .entry { padding: .35rem 0; border-bottom: 1px solid var(--border); font-size: .8rem; }
+    .entry:last-child { border-bottom: none; }
+    .badge {
+      display: inline-block; padding: .05rem .45rem; border-radius: 4px;
+      font-size: .65rem; font-weight: 700; text-transform: uppercase; vertical-align: middle;
+    }
+    .b-issue { background: var(--red-bg); color: var(--red); }
+    .b-warn { background: var(--yellow-bg); color: var(--yellow); }
+    .b-info { background: var(--blue-bg); color: var(--blue); }
+    .b-ok { background: var(--green-bg); color: var(--green); }
+    .b-new { background: var(--red-bg); color: var(--red); }
+    .b-fixed { background: var(--green-bg); color: var(--green); }
+    .entry.fixed { opacity: 0.6; text-decoration: line-through; }
+    .diff-summary { display: inline-block; font-size: .75rem; color: var(--muted); margin-left: .5rem; }
+    .severity-icon { display: inline-block; width: 1.2em; text-align: center; font-size: .85rem; vertical-align: middle; }
+    .config-link { color: var(--muted); text-decoration: none; margin-left: .3em; font-size: .75rem; vertical-align: middle; }
+    .config-link:hover { color: var(--cyan); }
+    .repo { font-weight: 600; color: var(--cyan); }
+    .field { color: var(--muted); }
+    .pr-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      padding: .6rem; margin: .4rem 0;
+    }
+    .pr-title { font-weight: 600; font-size: .85rem; display: inline; }
+    .pr-toggle { cursor: pointer; user-select: none; display: flex; align-items: center; }
+    .pr-toggle .pr-arrow {
+      transition: transform .2s; display: inline-block; font-size: .6rem;
+      margin-right: .3rem; color: var(--muted); flex-shrink: 0;
+    }
+    .pr-card.pr-collapsed .pr-checks { display: none; }
+    .pr-card.pr-collapsed .pr-arrow { transform: rotate(-90deg); }
+    .pr-meta { font-size: .75rem; color: var(--muted); margin-top: .15rem; }
+    .pr-checks { margin-top: .4rem; }
+    .chk { display: inline-flex; align-items: center; gap: .2rem; font-size: .75rem; margin: .1rem .3rem; }
+    .progress-msg { color: var(--blue); font-size: .85rem; padding: 1rem; }
+    .none { color: var(--muted); font-style: italic; }
+    .btn-sm {
+      background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+      padding: .2rem .6rem; border-radius: 4px; font-size: .7rem; font-weight: 600;
+      cursor: pointer; vertical-align: middle;
+    }
+    .btn-sm:hover { background: var(--border); }
+    .btn-sm:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-check-all {
+      background: #238636; color: #fff; border: none; padding: .25rem .75rem;
+      border-radius: 4px; font-size: .7rem; font-weight: 600; cursor: pointer;
+      margin-left: .5rem;
+    }
+    .btn-check-all:hover { background: #2ea043; }
+    .btn-check-all:disabled { opacity: .5; cursor: not-allowed; }
+    .sort-bar { display: flex; align-items: center; gap: .4rem; margin-bottom: .5rem; font-size: .75rem; }
+    .sort-bar span { color: var(--muted); font-weight: 600; }
+    .sort-btn {
+      background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+      padding: .2rem .6rem; border-radius: 4px; font-size: .7rem; font-weight: 600;
+      cursor: pointer;
+    }
+    .sort-btn:hover { background: var(--border); }
+    .sort-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .queue-result { margin-top: .3rem; }
+    .healthy-hidden { display: none !important; }
+    .healthy-summary { color: var(--green); padding: .5rem 0; font-size: .8rem; font-style: italic; }
+    .rate-pill {
+      position: fixed; top: 1rem; right: 1rem; z-index: 999;
+      background: rgba(22,27,34,.95); border: 1px solid var(--border); border-radius: 6px;
+      padding: .3rem .7rem; font-size: .75rem; color: var(--muted);
+      box-shadow: 0 2px 8px rgba(0,0,0,.4);
+    }
+    .rate-banner {
+      background: rgba(30,10,10,.95); border: 1px solid var(--red); color: var(--red);
+      padding: .6rem 1rem; border-radius: 8px; font-size: .85rem;
+      display: none; align-items: center; gap: .5rem;
+      position: fixed; top: 1rem; left: 50%; transform: translateX(-50%);
+      max-width: 800px; width: calc(100% - 2rem); z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,.5);
+    }
+    .rate-banner.visible { display: flex; }
+    .rate-banner .dismiss { margin-left: auto; cursor: pointer; background: none; border: none; color: var(--red); font-size: 1rem; padding: 0 .3rem; }
+    /* Tab bar */
+    .tab-bar {
+      display: flex; gap: 0; margin-bottom: 1rem; border-bottom: 2px solid var(--border);
+      overflow-x: auto;
+    }
+    .tab-bar button {
+      background: none; color: var(--muted); border: none; border-bottom: 2px solid transparent;
+      padding: .5rem 1rem; font-size: .85rem; font-weight: 600; cursor: pointer;
+      margin-bottom: -2px; white-space: nowrap; transition: color .15s, border-color .15s;
+    }
+    .tab-bar button:hover { color: var(--text); background: rgba(255,255,255,.03); }
+    .tab-bar button.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab-bar .hotkey { font-size: .65rem; color: var(--muted); margin-right: .25rem; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .compare-consistent { display: none; }
+    .compare-full .compare-consistent { display: block; }
+    .compare-toolbar { margin-bottom: .5rem; display: flex; align-items: center; gap: .5rem; }
+    .help-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6);
+      z-index: 9999; align-items: center; justify-content: center;
+    }
+    .help-overlay.visible { display: flex; }
+    .help-content {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.5rem 2rem; max-width: 420px; width: 90%; color: var(--text);
+    }
+    .help-content h3 { margin: 0 0 1rem; color: var(--blue); font-size: 1rem; }
+    .help-content table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .help-content td { padding: .3rem .5rem; }
+    .help-content td:first-child {
+      font-family: monospace; color: var(--cyan, #8be9fd); white-space: nowrap; width: 90px;
+    }
+    .help-content .help-close {
+      margin-top: 1rem; text-align: center; color: var(--muted); font-size: .75rem;
+    }
+    .search-bar {
+      position: relative; display: inline-flex; align-items: center;
+    }
+    .search-bar input[type="text"] {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      padding: .4rem 1.8rem .4rem .6rem; border-radius: 6px; font-size: .8rem; width: 220px;
+    }
+    .search-bar input[type="text"]:focus { border-color: var(--blue); outline: none; }
+    .search-bar .search-clear {
+      position: absolute; right: .4rem; background: none; border: none; color: var(--muted);
+      font-size: 1rem; cursor: pointer; padding: 0 .2rem; line-height: 1; display: none;
+    }
+    .search-bar .search-clear:hover { color: var(--text); }
+    .search-bar.has-query .search-clear { display: block; }
+    .search-hidden { display: none !important; }
+    mark.search-highlight { background: rgba(210,153,34,.3); color: inherit; border-radius: 2px; }
+    .search-count { font-size: .7rem; color: var(--muted); margin-left: .25rem; }
+    .ci-repo { margin: .3rem 0; }
+    .ci-repo-hdr {
+      display: flex; align-items: center; gap: .5rem; cursor: pointer; user-select: none;
+      padding: .35rem 0; border-bottom: 1px solid var(--border); font-size: .8rem;
+    }
+    .ci-repo-hdr:last-child { border-bottom: none; }
+    .ci-repo-hdr .ci-arrow { transition: transform .2s; color: var(--muted); font-size: .6rem; }
+    .ci-repo.collapsed .ci-arrow { transform: rotate(-90deg); }
+    .ci-repo.collapsed .ci-details { display: none; }
+    .ci-details { padding: .25rem 0 .25rem 1.2rem; }
+    .ci-job { padding: .2rem 0; font-size: .75rem; display: flex; align-items: baseline; gap: .4rem; flex-wrap: wrap; }
+    .ci-job-name { font-weight: 600; color: var(--cyan); word-break: break-all; }
+    .ci-job-meta { color: var(--muted); font-size: .7rem; }
+    .ci-trigger { display: inline-block; padding: .05rem .35rem; border-radius: 3px; font-size: .6rem;
+      background: var(--surface2); color: var(--muted); margin: 0 .1rem; }
+    .ci-branch-hdr {
+      cursor: pointer; user-select: none; padding: .2rem 0; font-size: .75rem;
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .ci-test-preview {
+      color: var(--muted); font-size: .7rem; margin-left: .25rem;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;
+    }
+    .ci-branch.collapsed .ci-branch-tests { display: none; }
+    .ci-branch.collapsed .ci-arrow { transform: rotate(-90deg); }
+    .ci-branch-tests { padding-left: 1rem; }
+    .ci-branch-tests .ci-job { color: var(--muted); }
+    .ci-section-label { font-size: .7rem; color: var(--muted); text-transform: uppercase;
+      letter-spacing: .05em; margin-top: .4rem; margin-bottom: .15rem; }
+    .copy-btn {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      padding: .1rem .35rem; border-radius: 4px; font-size: .65rem; cursor: pointer;
+      margin-left: .4rem; vertical-align: middle; line-height: 1;
+    }
+    .copy-btn:hover { background: var(--surface2); color: var(--text); }
+    .section-hdr .copy-btn { float: right; margin-right: .3rem; }
+    .entry .copy-btn { opacity: 0; transition: opacity .15s; }
+    .entry:hover .copy-btn { opacity: 1; }
+    .status-bar {
+      display: flex; gap: 1rem; align-items: center; padding: .4rem .75rem;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      font-size: .75rem; color: var(--muted); margin-bottom: .75rem; min-height: 1.8rem;
+    }
+    .status-bar .status-activity { color: var(--blue); }
+    .status-bar .status-time { margin-left: auto; }
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      padding: .35rem .9rem; border-radius: 6px; font-size: .75rem; font-weight: 600;
+      z-index: 9999; pointer-events: none;
+      animation: toastFade 2s ease-out forwards;
+    }
+    .toast-success { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); }
+    .toast-info { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue); }
+    .toast-warn { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow); }
+    @keyframes toastFade { 0%,70% { opacity: 1; } 100% { opacity: 0; } }
+    .fix-block { margin: .2rem 0 .4rem 1.2rem; }
+    .fix-toggle {
+      cursor: pointer; font-size: .75rem; color: var(--blue); user-select: none;
+      display: inline-flex; align-items: center; gap: .3rem;
+    }
+    .fix-toggle:hover { text-decoration: underline; }
+    .fix-toggle .fix-arrow { transition: transform .2s; display: inline-block; font-size: .6rem; }
+    .fix-block.collapsed .fix-content { display: none; }
+    .fix-block.collapsed .fix-arrow { transform: rotate(-90deg); }
+    .fix-content { position: relative; margin-top: .3rem; }
+    .fix-content pre {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      padding: .6rem .8rem; font-size: .75rem; line-height: 1.5; overflow-x: auto;
+      margin: 0; color: var(--text);
+    }
+    .fix-content .copy-btn {
+      position: absolute; top: .3rem; right: .3rem;
+      background: var(--surface2); padding: .15rem .5rem; margin-left: 0;
+      opacity: 1;
+    }
+    .watch-controls {
+      display: inline-flex; align-items: center; gap: .4rem; margin-left: .25rem;
+      border-left: 1px solid var(--border); padding-left: .75rem;
+    }
+    .watch-controls select {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      padding: .2rem .4rem; border-radius: 4px; font-size: .7rem;
+    }
+    .watch-status {
+      font-size: .7rem; color: var(--muted); display: inline-flex; align-items: center; gap: .3rem;
+    }
+    .watch-dot {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green); animation: watchPulse 2s ease-in-out infinite;
+    }
+    .watch-dot.paused { background: var(--yellow); animation: none; }
+    @keyframes watchPulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
+    .flash-msg {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      padding: .3rem .8rem; border-radius: 6px; font-size: .75rem; font-weight: 600;
+      z-index: 9999; pointer-events: none;
+      animation: toastFade 1.5s ease-out forwards;
+    }
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .controls { flex-direction: column; align-items: stretch; }
+      .tab-bar button { padding: .4rem .6rem; font-size: .75rem; }
+      .search-bar input[type="text"] { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>OADP Prow Merge Bot Configuration Audit</h1>
+    <div class="subtitle">
+      Audits Prow configs from <a href="https://github.com/openshift/release">openshift/release</a>
+      for OADP ecosystem repositories
+    </div>
+    <div class="controls">
+      <input type="password" id="token" placeholder="GitHub token (optional, raises API rate limit)" size="45">
+      <label>openshift/release branch: <select id="branch"><option value="main">main</option></select></label>
+      <button id="runBtn" onclick="runAudit()">Run Audit</button>
+      <span class="search-bar" id="searchBar">
+        <input type="text" id="searchInput" placeholder="Filter results... ( / )" aria-label="Filter audit results">
+        <button class="search-clear" id="searchClear" aria-label="Clear filter">&times;</button>
+      </span>
+      <span class="search-count" id="searchCount"></span>
+      <button class="btn-sm" id="copyAllBtn" title="Copy all audit results" style="display:none" onclick="copyAllAudit()">Copy All</button>
+      <span class="watch-controls" id="watchControls" style="display:none">
+        <button class="btn-sm" id="watchToggle" onclick="toggleWatch()">Auto-refresh</button>
+        <select id="watchInterval" onchange="onWatchIntervalChange()" title="Refresh interval">
+          <option value="60">1m</option>
+          <option value="120">2m</option>
+          <option value="300" selected>5m</option>
+          <option value="600">10m</option>
+          <option value="1800">30m</option>
+        </select>
+        <button class="btn-sm" id="watchPauseBtn" onclick="toggleWatchPause()" style="display:none" title="Pause/resume auto-refresh (p)">⏸</button>
+        <span class="watch-status" id="watchStatus"></span>
+      </span>
+    </div>
+    <div class="hint">Token stored in sessionStorage only. Merge queue checks use the GitHub API (60 req/hr without token, 5000 with).
+      Token needs <code>public_repo</code> scope (classic) or <code>repo:status</code> + <code>read:org</code> (fine-grained).
+      Or paste output of <code>gh auth token</code>.
+      <button onclick="window.open('https://github.com/settings/personal-access-tokens/new','_blank','noopener,noreferrer')" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);padding:.15rem .5rem;border-radius:4px;font-size:.7rem;cursor:pointer;vertical-align:middle">Get token</button></div>
+  </header>
+  <div class="status-bar" id="statusBar">
+    <span class="status-activity" id="statusActivity"></span>
+    <span class="status-time" id="statusTime"></span>
+  </div>
+  <div class="rate-pill" id="rate-counter" aria-label="GitHub API rate limit counter"></div>
+  <div class="rate-banner" id="rate-banner">
+    <span class="rate-msg">Rate limited. GitHub API limit exceeded. Provide a token to raise the limit to 5,000 req/hr.</span>
+    <button class="dismiss" aria-label="Dismiss rate limit warning" onclick="document.getElementById('rate-banner').classList.remove('visible')">&times;</button>
+  </div>
+  <div class="tab-bar" id="tab-bar" style="display:none">
+    <button class="active" onclick="switchTab(0)"><span class="hotkey">[1]</span>Config Audit</button>
+    <button onclick="switchTab(1)"><span class="hotkey">[2]</span>Merge Queue</button>
+    <button onclick="switchTab(2)"><span class="hotkey">[3]</span>Field Compare</button>
+    <button onclick="switchTab(3)"><span class="hotkey">[4]</span>Tide Branches</button>
+    <button onclick="switchTab(4)"><span class="hotkey">[5]</span>CI</button>
+  </div>
+  <div id="app"></div>
+
+  <div class="help-overlay" id="helpOverlay" onclick="if(event.target===this)toggleHelp()">
+    <div class="help-content">
+      <h3>Keyboard Shortcuts</h3>
+      <table>
+        <tr><td>1 &ndash; 5</td><td>Switch tabs</td></tr>
+        <tr><td>Tab</td><td>Next tab (Shift+Tab = prev)</td></tr>
+        <tr><td>/</td><td>Focus search</td></tr>
+        <tr><td>Esc</td><td>Clear search / close help</td></tr>
+        <tr><td>r</td><td>Refresh audit</td></tr>
+        <tr><td>p</td><td>Pause/resume auto-refresh</td></tr>
+        <tr><td>e</td><td>Expand all sections</td></tr>
+        <tr><td>c</td><td>Collapse all sections</td></tr>
+        <tr><td>a</td><td>Toggle healthy repos (Queue tab)</td></tr>
+        <tr><td>s</td><td>Cycle queue sort (name / PR count / blocked)</td></tr>
+        <tr><td>?</td><td>Toggle this help</td></tr>
+      </table>
+      <div class="help-close">Press <strong>?</strong> or <strong>Esc</strong> to close</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"
+          integrity="sha384-+pxiN6T7yvpryuJmE1gM9PX7yQit15auDb+ZwwvJOd/4be2Cie5/IuVXgQb/S9du"
+          crossorigin="anonymous"></script>
+  <script>
+'use strict';
+
+// ── Constants ──────────────────────────────────────────────────
+const RAW = 'https://raw.githubusercontent.com/openshift/release';
+const API = 'https://api.github.com';
+const PROW = 'https://prow.ci.openshift.org';
+
+const GROUPS = {
+  'upstream-rebase': {
+    label: 'Upstream Rebase Repos (allow_force_pushes expected)',
+    desc: 'Forks of upstream projects managed by rebasebot. Intentionally allow force pushes and typically lack strict branch protection.',
+    repos: [
+      'openshift/velero','openshift/velero-plugin-for-aws','openshift/velero-plugin-for-legacy-aws',
+      'openshift/velero-plugin-for-gcp','openshift/velero-plugin-for-microsoft-azure',
+      'openshift/velero-plugin-for-csi','openshift/restic',
+    ]
+  },
+  'oadp-owned-openshift': {
+    label: 'OADP-Owned Repos (openshift/ org)',
+    desc: 'Should have enforce_admins, required_approving_review_count: 2, and dismiss_stale_reviews.',
+    repos: [
+      'openshift/oadp-operator','openshift/oadp-must-gather',
+      'openshift/openshift-velero-plugin','openshift/hypershift-oadp-plugin',
+    ]
+  },
+  'oadp-owned-migtools': {
+    label: 'OADP-Owned Repos (migtools/ org)',
+    desc: 'Should have enforce_admins, review count, and dismiss_stale_reviews. List plugins explicitly (no org-level inheritance).',
+    repos: [
+      'migtools/filebrowser','migtools/kubevirt-datamover-controller','migtools/kubevirt-datamover-plugin',
+      'migtools/kubevirt-velero-plugin','migtools/oadp-cli','migtools/oadp-non-admin',
+      'migtools/oadp-vm-file-restore','migtools/udistribution',
+      'migtools/velero-plugin-for-vsm','migtools/volume-snapshot-mover',
+      'migtools/oadp-vmdp','migtools/kopia',
+    ]
+  }
+};
+
+// ── State ──────────────────────────────────────────────────────
+let cfgs = {};       // { 'org/repo': { plugin: obj|null, prow: obj|null } }
+let results = [];    // { repo, level, msg, field, suggestedFix }
+let counts = { issues: 0, warnings: 0, info: 0 };
+let fixMap = {};     // { fixId: suggestedFixText } for clipboard copy
+let fixCounter = 0;
+let queue = {};      // { 'org/repo': entry }
+let queueSortMode = 0; // 0=name, 1=prCount, 2=blocked
+let ciData = {};     // { 'org/repo': { prowJobs, actionsWorkflows, ciOperatorBranches, goVersion, error } }
+let prevResults = null; // Previous audit findings for diff-on-refresh
+let auditDone = false;
+let activeTab = 0;
+let hideHealthyRepos = true;
+const TAB_COUNT = 5;
+const TAB_IDS = ['tab-audit', 'tab-queue', 'tab-compare', 'tab-tide', 'tab-ci'];
+
+// ── Watch / Auto-refresh State ───────────────────────────────
+const WATCH_STORAGE_KEY = 'prow-audit-watch';
+let watchPaused = false;
+let watchActive = false;
+let watchCountdown = 0;
+let countdownTimerId = null;
+let isAuditRunning = false;
+
+function loadWatchSettings() {
+  try {
+    const s = localStorage.getItem(WATCH_STORAGE_KEY);
+    if (s) return JSON.parse(s);
+  } catch {}
+  return { interval: 300 };
+}
+
+function saveWatchSettings() {
+  const sel = document.getElementById('watchInterval');
+  try { localStorage.setItem(WATCH_STORAGE_KEY, JSON.stringify({ interval: parseInt(sel.value) })); } catch {}
+}
+
+function getWatchIntervalSecs() {
+  return parseInt(document.getElementById('watchInterval').value) || 300;
+}
+
+function showFlash(msg) {
+  const el = document.createElement('div');
+  el.className = 'flash-msg';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+
+function updateWatchUI() {
+  const toggle = document.getElementById('watchToggle');
+  const pauseBtn = document.getElementById('watchPauseBtn');
+  const status = document.getElementById('watchStatus');
+  if (!toggle) return;
+
+  if (watchActive) {
+    toggle.textContent = 'Stop';
+    toggle.style.borderColor = 'var(--green)';
+    pauseBtn.style.display = '';
+    if (watchPaused) {
+      pauseBtn.textContent = '▶';
+      pauseBtn.title = 'Resume auto-refresh (p)';
+      status.innerHTML = '<span class="watch-dot paused"></span> paused';
+    } else {
+      pauseBtn.textContent = '⏸';
+      pauseBtn.title = 'Pause auto-refresh (p)';
+      const m = Math.floor(watchCountdown / 60);
+      const s = watchCountdown % 60;
+      const timeStr = m > 0 ? `${m}m ${s}s` : `${s}s`;
+      status.innerHTML = `<span class="watch-dot"></span> next in ${timeStr}`;
+    }
+  } else {
+    toggle.textContent = 'Auto-refresh';
+    toggle.style.borderColor = '';
+    pauseBtn.style.display = 'none';
+    status.innerHTML = '';
+  }
+}
+
+function startCountdown() {
+  stopCountdown();
+  watchCountdown = getWatchIntervalSecs();
+  updateWatchUI();
+  countdownTimerId = setInterval(() => {
+    if (watchPaused) return;
+    watchCountdown--;
+    updateWatchUI();
+    if (watchCountdown <= 0) {
+      triggerWatchRefresh();
+    }
+  }, 1000);
+}
+
+function stopCountdown() {
+  if (countdownTimerId) { clearInterval(countdownTimerId); countdownTimerId = null; }
+}
+
+function triggerWatchRefresh() {
+  if (isAuditRunning || watchPaused) return;
+  // Check rate limit — auto-pause if exhausted
+  if (rateLimit.remaining <= 0 && rateLimit.resetEpoch && Math.floor(Date.now() / 1000) < rateLimit.resetEpoch) {
+    watchPaused = true;
+    showFlash('Auto-refresh paused — rate limit exhausted');
+    updateWatchUI();
+    return;
+  }
+  runAudit();
+  // Restart countdown after audit (handled in runAudit's finally block)
+}
+
+function toggleWatch() {
+  if (!auditDone) return;
+  watchActive = !watchActive;
+  if (watchActive) {
+    watchPaused = false;
+    startCountdown();
+    showFlash('Auto-refresh started');
+  } else {
+    watchPaused = false;
+    stopCountdown();
+    showFlash('Auto-refresh stopped');
+  }
+  updateWatchUI();
+}
+
+function toggleWatchPause() {
+  if (!watchActive) return;
+  watchPaused = !watchPaused;
+  if (watchPaused) {
+    showFlash('Auto-refresh paused');
+  } else {
+    showFlash('Auto-refresh resumed');
+    // Reset countdown on resume
+    watchCountdown = getWatchIntervalSecs();
+  }
+  updateWatchUI();
+}
+
+function onWatchIntervalChange() {
+  saveWatchSettings();
+  if (watchActive && !watchPaused) {
+    // Restart countdown with new interval
+    watchCountdown = getWatchIntervalSecs();
+    updateWatchUI();
+  }
+}
+
+function switchTab(idx) {
+  activeTab = idx;
+  const bar = document.getElementById('tab-bar');
+  if (!bar) return;
+  const btns = bar.querySelectorAll('button');
+  btns.forEach((b, i) => b.classList.toggle('active', i === idx));
+  TAB_IDS.forEach((id, i) => {
+    const panel = document.getElementById(id);
+    if (panel) panel.classList.toggle('active', i === idx);
+  });
+  const copyAll = document.getElementById('copyAllBtn');
+  if (copyAll) copyAll.style.display = idx === 0 ? '' : 'none';
+}
+
+// ── Compare View Toggle ────────────────────────────────────────
+function toggleCompareView() {
+  const panel = document.getElementById('tab-compare');
+  const btn = document.getElementById('compareToggle');
+  if (!panel || !btn) return;
+  panel.classList.toggle('compare-full');
+  btn.textContent = panel.classList.contains('compare-full') ? 'Show outliers only' : 'Show all fields';
+}
+
+// ── Help Overlay ────────────────────────────────────────────────
+function toggleHelp() {
+  document.getElementById('helpOverlay').classList.toggle('visible');
+}
+
+// ── Expand / Collapse All Sections in Active Tab ───────────────
+function setAllSections(expand) {
+  const panel = document.getElementById(TAB_IDS[activeTab]);
+  if (!panel) return;
+  panel.querySelectorAll('.section').forEach(s => {
+    if (expand) {
+      s.classList.remove('collapsed');
+    } else {
+      s.classList.add('collapsed');
+    }
+    const hdr = s.querySelector('.section-hdr');
+    if (hdr) hdr.setAttribute('aria-expanded', String(expand));
+  });
+  saveCollapseState();
+}
+
+// ── Hide / Show Healthy Repos in Queue ──────────────────────
+function toggleHealthyRepos() {
+  hideHealthyRepos = !hideHealthyRepos;
+  applyHealthyFilter();
+}
+
+function applyHealthyFilter() {
+  const panel = document.getElementById('tab-queue');
+  if (!panel) return;
+  let hiddenCount = 0;
+  panel.querySelectorAll('.repo-group').forEach(g => {
+    const healthy = g.getAttribute('data-healthy') === 'true';
+    g.classList.toggle('healthy-hidden', hideHealthyRepos && healthy);
+    if (hideHealthyRepos && healthy) hiddenCount++;
+  });
+  let summary = panel.querySelector('.healthy-summary');
+  if (hideHealthyRepos && hiddenCount > 0) {
+    const label = hiddenCount === 1 ? 'repo' : 'repos';
+    const text = `\u2713 ${hiddenCount} healthy ${label} hidden (press a to show)`;
+    if (!summary) {
+      summary = document.createElement('div');
+      summary.className = 'healthy-summary';
+      const body = panel.querySelector('.section-body');
+      if (body) body.insertBefore(summary, body.firstChild);
+    }
+    summary.textContent = text;
+  } else if (summary) {
+    summary.remove();
+  }
+}
+
+// Keyboard navigation for tabs and shortcuts
+document.addEventListener('keydown', e => {
+  // Help overlay close on Escape (always, regardless of audit state)
+  if (e.key === 'Escape' && document.getElementById('helpOverlay').classList.contains('visible')) {
+    toggleHelp();
+    return;
+  }
+  // ? toggles help (unless in input)
+  const tag = document.activeElement?.tagName;
+  if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+    if (e.key === '?') { toggleHelp(); return; }
+  }
+  if (!auditDone) return;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if (e.key >= '1' && e.key <= '5') { switchTab(parseInt(e.key) - 1); return; }
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    switchTab(e.shiftKey ? (activeTab - 1 + TAB_COUNT) % TAB_COUNT : (activeTab + 1) % TAB_COUNT);
+    return;
+  }
+  if (e.key === 'r') { runAudit(); return; }
+  if (e.key === 's' && activeTab === 1) { queueSortMode = (queueSortMode + 1) % 3; renderQueue(); return; }
+  if (e.key === 'p') { toggleWatchPause(); return; }
+  if (e.key === 'e') { setAllSections(true); return; }
+  if (e.key === 'c') { setAllSections(false); return; }
+  if (e.key === 'a' && TAB_IDS[activeTab] === 'tab-queue') { toggleHealthyRepos(); return; }
+});
+
+// ── Collapse State Persistence ───────────────────────────────
+const COLLAPSE_STORAGE_KEY = 'prow-audit-collapse-state';
+
+function saveCollapseState() {
+  try {
+    const state = {};
+    document.querySelectorAll('[data-sec-id]').forEach(el => {
+      state[el.dataset.secId] = el.classList.contains('collapsed');
+    });
+    document.querySelectorAll('.ci-repo[id]').forEach(el => {
+      state[el.id] = el.classList.contains('collapsed');
+    });
+    document.querySelectorAll('.ci-branch[id]').forEach(el => {
+      state[el.id] = el.classList.contains('collapsed');
+    });
+    localStorage.setItem(COLLAPSE_STORAGE_KEY, JSON.stringify(state));
+  } catch {}
+}
+
+function restoreCollapseState() {
+  try {
+    const saved = localStorage.getItem(COLLAPSE_STORAGE_KEY);
+    if (!saved) return;
+    const state = JSON.parse(saved);
+    document.querySelectorAll('[data-sec-id]').forEach(el => {
+      const id = el.dataset.secId;
+      if (id in state) {
+        el.classList.toggle('collapsed', state[id]);
+        const hdr = el.querySelector('.section-hdr');
+        if (hdr) hdr.setAttribute('aria-expanded', String(!state[id]));
+      }
+    });
+    document.querySelectorAll('.ci-repo[id]').forEach(el => {
+      if (el.id in state) el.classList.toggle('collapsed', state[el.id]);
+    });
+    document.querySelectorAll('.ci-branch[id]').forEach(el => {
+      if (el.id in state) el.classList.toggle('collapsed', state[el.id]);
+    });
+  } catch {}
+}
+
+// ── Rate Limit Tracking ──────────────────────────────────────
+const RL_STORAGE_KEY = 'prow-audit-ratelimit';
+
+function loadRateLimit() {
+  try {
+    const saved = localStorage.getItem(RL_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Discard if the reset window has passed
+      if (parsed.resetEpoch && Math.floor(Date.now() / 1000) < parsed.resetEpoch) return parsed;
+    }
+  } catch {}
+  return { used: 0, limit: 60, remaining: 60, resetEpoch: 0 };
+}
+
+function saveRateLimit() {
+  try { localStorage.setItem(RL_STORAGE_KEY, JSON.stringify(rateLimit)); } catch {}
+}
+
+let rateLimit = loadRateLimit();
+
+async function apiFetch(url, opts) {
+  updateRateDisplay();
+  const resp = await fetch(url, opts);
+  // Update from GitHub's actual rate limit headers
+  const rlLimit = resp.headers.get('X-RateLimit-Limit');
+  const rlRemaining = resp.headers.get('X-RateLimit-Remaining');
+  const rlUsed = resp.headers.get('X-RateLimit-Used');
+  const rlReset = resp.headers.get('X-RateLimit-Reset');
+  if (rlLimit !== null) {
+    const pInt = (v, fallback) => { const n = parseInt(v); return isNaN(n) ? fallback : n; };
+    rateLimit.limit = pInt(rlLimit, rateLimit.limit);
+    rateLimit.remaining = pInt(rlRemaining, rateLimit.remaining);
+    rateLimit.used = pInt(rlUsed, rateLimit.used);
+    rateLimit.resetEpoch = pInt(rlReset, rateLimit.resetEpoch);
+    saveRateLimit();
+  }
+  updateRateDisplay();
+  if (resp.status === 403) {
+    const banner = document.getElementById('rate-banner');
+    if (banner) {
+      const resetTime = rateLimit.resetEpoch ? new Date(rateLimit.resetEpoch * 1000).toLocaleTimeString() : 'unknown';
+      banner.querySelector('.rate-msg').textContent =
+        `Rate limited. GitHub API limit exceeded. Resets at ${resetTime}. Provide a token to raise the limit to 5,000 req/hr.`;
+      banner.classList.add('visible');
+    }
+  }
+  return resp;
+}
+
+function updateRateDisplay() {
+  const el = document.getElementById('rate-counter');
+  if (!el) return;
+  // If reset window has passed, clear stored state
+  if (rateLimit.resetEpoch && Math.floor(Date.now() / 1000) >= rateLimit.resetEpoch) {
+    rateLimit = { used: 0, limit: rateLimit.limit, remaining: rateLimit.limit, resetEpoch: 0 };
+    saveRateLimit();
+  }
+  const used = rateLimit.used;
+  const limit = rateLimit.limit;
+  let resetStr = '';
+  if (rateLimit.resetEpoch) {
+    const secsLeft = Math.max(0, rateLimit.resetEpoch - Math.floor(Date.now() / 1000));
+    const mins = Math.ceil(secsLeft / 60);
+    const resetTime = new Date(rateLimit.resetEpoch * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    resetStr = `resets in ${mins}m at ${resetTime}`;
+  }
+  const color = rateLimit.remaining <= 0 ? 'var(--red)' : rateLimit.remaining <= limit * 0.2 ? 'var(--yellow)' : 'var(--muted)';
+  const notifyPending = !!localStorage.getItem(NOTIFY_KEY);
+  let notifyBtn = '';
+  if (rateLimit.remaining <= 0 && rateLimit.resetEpoch) {
+    notifyBtn = notifyPending
+      ? ` <button class="btn-sm" id="notify-btn" disabled>Scheduled</button>`
+      : ` <button class="btn-sm" onclick="scheduleResetNotify()" id="notify-btn" title="Get notified when rate limit resets">Notify me</button>`;
+  }
+  el.innerHTML = `<span style="color:${color}">${used}/${limit}</span> API reqs${resetStr ? ` (${resetStr})` : ''}${notifyBtn}`;
+}
+
+let resetNotifyTimer = null;
+const NOTIFY_KEY = 'prow-audit-notify-reset';
+
+function scheduleResetNotify() {
+  if (!rateLimit.resetEpoch) return;
+  // Request permission if needed
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(p => { if (p === 'granted') scheduleResetNotify(); });
+    return;
+  }
+  if (Notification.permission !== 'granted') {
+    alert('Notification permission denied. Enable it in your browser settings.');
+    return;
+  }
+  // Persist so it survives refresh/reopen
+  localStorage.setItem(NOTIFY_KEY, String(rateLimit.resetEpoch));
+  startNotifyTimer(rateLimit.resetEpoch);
+}
+
+function startNotifyTimer(resetEpoch) {
+  if (resetNotifyTimer) clearTimeout(resetNotifyTimer);
+  const msLeft = resetEpoch * 1000 - Date.now();
+  const btn = document.getElementById('notify-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Scheduled'; }
+  if (msLeft <= 0) {
+    // Already passed — fire now
+    fireResetNotification();
+    return;
+  }
+  resetNotifyTimer = setTimeout(fireResetNotification, msLeft);
+}
+
+function fireResetNotification() {
+  localStorage.removeItem(NOTIFY_KEY);
+  resetNotifyTimer = null;
+  if (Notification.permission === 'granted') {
+    new Notification('GitHub API rate limit reset', {
+      body: 'Your rate limit has reset. You can resume merge queue checks.',
+      icon: 'https://github.githubassets.com/favicons/favicon.svg',
+    });
+  }
+  rateLimit = { used: 0, limit: rateLimit.limit, remaining: rateLimit.limit, resetEpoch: 0 };
+  saveRateLimit();
+  updateRateDisplay();
+  const banner = document.getElementById('rate-banner');
+  if (banner) banner.classList.remove('visible');
+}
+
+function restoreNotifyTimer() {
+  const saved = localStorage.getItem(NOTIFY_KEY);
+  if (!saved) return;
+  const resetEpoch = parseInt(saved);
+  if (isNaN(resetEpoch)) { localStorage.removeItem(NOTIFY_KEY); return; }
+  startNotifyTimer(resetEpoch);
+}
+
+// ── Helpers ────────────────────────────────────────────────────
+const split = n => { const [o, r] = n.split('/'); return { org: o, repo: r }; };
+const hdrs = () => {
+  const h = { Accept: 'application/vnd.github.v3+json' };
+  const t = document.getElementById('token').value.trim();
+  if (t) h.Authorization = `token ${t}`;
+  return h;
+};
+const log = m => { const el = document.getElementById('progress'); if (el) el.textContent = m; };
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const safeHref = u => { try { const p = new URL(String(u)); return ['https:','http:'].includes(p.protocol) ? esc(u) : '#'; } catch { return '#'; } };
+const badge = (cls, txt) => `<span class="badge b-${cls}">${esc(txt || cls)}</span>`;
+
+// ── Diff helpers ──────────────────────────────────────────────
+const findingKey = e => `${e.repo}|${e.level}|${e.msg}`;
+
+function computeDiff(current, previous) {
+  const prevKeys = new Set(previous.map(findingKey));
+  const curKeys = new Set(current.map(findingKey));
+  const newFindings = new Set();
+  for (const k of curKeys) { if (!prevKeys.has(k)) newFindings.add(k); }
+  const fixedFindings = previous.filter(f => f.level !== 'ok' && !curKeys.has(findingKey(f)));
+  return { newFindings, fixedFindings };
+}
+
+function formatDiffSummary(newCount, fixedCount) {
+  if (!newCount && !fixedCount) return '';
+  const parts = [];
+  if (newCount) parts.push(`+${newCount} new`);
+  if (fixedCount) parts.push(`-${fixedCount} fixed`);
+  return '[' + parts.join(', ') + ']';
+}
+
+// ── YAML Fetch ─────────────────────────────────────────────────
+async function fetchYaml(url) {
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return { parsed: null, raw: null };
+    const text = await r.text();
+    return { parsed: jsyaml.load(text), raw: text };
+  } catch { return { parsed: null, raw: null }; }
+}
+
+async function fetchAllConfigs(branch) {
+  const all = Object.values(GROUPS).flatMap(g => g.repos);
+  let done = 0;
+  await Promise.all(all.map(async name => {
+    const { org, repo } = split(name);
+    const base = `${RAW}/${branch}/core-services/prow/02_config/${org}/${repo}`;
+    const [pluginResult, prowResult] = await Promise.all([
+      fetchYaml(`${base}/_pluginconfig.yaml`),
+      fetchYaml(`${base}/_prowconfig.yaml`),
+    ]);
+    cfgs[name] = { plugin: pluginResult.parsed, prow: prowResult.parsed, pluginRaw: pluginResult.raw, prowRaw: prowResult.raw };
+    log(`Fetching configs... ${++done}/${all.length}`);
+  }));
+}
+
+// ── Config Extraction ──────────────────────────────────────────
+function hasConfig(n) { const c = cfgs[n]; return c && (c.plugin || c.prow); }
+
+function pluginField(n, section, field) {
+  const c = cfgs[n]?.plugin;
+  if (!c) return 'MISSING_FILE';
+  const arr = c[section];
+  if (!Array.isArray(arr)) return 'NOT_SET';
+  for (const e of arr) {
+    if (e.repos?.includes(n) && e[field] !== undefined) return String(e[field]);
+  }
+  return 'NOT_SET';
+}
+
+function hasApproveSection(n) { const c = cfgs[n]?.plugin; return c && Array.isArray(c.approve); }
+function hasLgtmSection(n) { const c = cfgs[n]?.plugin; return c && Array.isArray(c.lgtm); }
+function hasApprovePlugin(n) {
+  const c = cfgs[n]?.plugin;
+  if (!c?.plugins) return false;
+  const rp = c.plugins[n];
+  return rp?.plugins?.includes('approve') || false;
+}
+
+// bpMaps returns branch-protection config maps from most specific to least:
+// branch-level -> repo-level -> org-level -> global-level.
+// Mirrors branchProtectionMaps() in tui/config.go.
+function bpMaps(n) {
+  const c = cfgs[n]?.prow;
+  if (!c) return [];
+  const bp = c['branch-protection'];
+  if (!bp || typeof bp !== 'object') return [];
+  const { org, repo } = split(n);
+  const maps = [];
+  // Branch-level (most specific)
+  const repoObj = bp?.orgs?.[org]?.repos?.[repo];
+  if (repoObj?.branches && typeof repoObj.branches === 'object') {
+    for (const branchMap of Object.values(repoObj.branches)) {
+      if (branchMap && typeof branchMap === 'object') maps.push(branchMap);
+    }
+  }
+  // Repo-level
+  if (repoObj && typeof repoObj === 'object') maps.push(repoObj);
+  // Org-level
+  const orgObj = bp?.orgs?.[org];
+  if (orgObj && typeof orgObj === 'object') maps.push(orgObj);
+  // Global-level
+  maps.push(bp);
+  return maps;
+}
+
+function bpField(n, f) {
+  const c = cfgs[n]?.prow;
+  if (!c) return 'MISSING_FILE';
+  const maps = bpMaps(n);
+  if (maps.length === 0) return 'NOT_SET';
+  for (const m of maps) {
+    if (f === 'enforce_admins' && m.enforce_admins !== undefined) return String(m.enforce_admins);
+    if (f === 'allow_force_pushes' && m.allow_force_pushes !== undefined) return String(m.allow_force_pushes);
+    if (f === 'dismiss_stale_reviews') {
+      const rev = m.required_pull_request_reviews;
+      if (rev?.dismiss_stale_reviews !== undefined) return String(rev.dismiss_stale_reviews);
+    }
+    if (f === 'review_count') {
+      const rev = m.required_pull_request_reviews;
+      if (rev?.required_approving_review_count !== undefined) return String(rev.required_approving_review_count);
+    }
+  }
+  return 'NOT_SET';
+}
+
+function mergeMethod(n) {
+  const c = cfgs[n]?.prow;
+  if (!c) return 'MISSING_FILE';
+  return c?.tide?.merge_method?.[n] || 'NOT_SET';
+}
+
+function tideBranches(n) {
+  const qs = cfgs[n]?.prow?.tide?.queries || [];
+  const result = new Set();
+  for (const q of qs) { if (q.repos?.includes(n)) for (const b of (q.includedBranches || [])) result.add(b); }
+  return [...result];
+}
+
+function tideRequiredLabels(n) {
+  const qs = cfgs[n]?.prow?.tide?.queries || [];
+  const result = new Set();
+  for (const q of qs) { if (q.repos?.includes(n)) for (const l of (q.labels || [])) result.add(l); }
+  return result.size > 0 ? [...result] : ['approved', 'lgtm']; // fallback
+}
+
+function tideMissingLabels(n) {
+  const qs = cfgs[n]?.prow?.tide?.queries || [];
+  const result = new Set();
+  for (const q of qs) { if (q.repos?.includes(n)) for (const l of (q.missingLabels || [])) result.add(l); }
+  return [...result];
+}
+
+// ── CI Data Fetching ──────────────────────────────────────────
+const BUILDER_IMAGE_RE = /quay\.io\/konveyor\/builder:[\w-]*v(\d+\.\d+)/;
+const SETUP_GO_RE = /go-version[:\s]*['"]?(\d+\.\d+[\.\d]*)['"]?/;
+const GO_MOD_RE = /^go\s+(\d+\.\d+)/m;
+
+function extractProwJobs(repo) {
+  const prow = cfgs[repo]?.prow;
+  if (!prow) return [];
+  const jobs = [];
+  for (const section of ['presubmits', 'postsubmits']) {
+    const type = section === 'presubmits' ? 'presubmit' : 'postsubmit';
+    const repoJobs = prow[section]?.[repo];
+    if (!Array.isArray(repoJobs)) continue;
+    for (const j of repoJobs) {
+      const pj = { name: j.name || '', type, alwaysRun: !!j.always_run, runIfChanged: j.run_if_changed || '', imageRef: '', goVersion: '' };
+      const containers = j.spec?.containers;
+      if (Array.isArray(containers)) {
+        for (const c of containers) {
+          if (c.image) {
+            pj.imageRef = c.image;
+            const m = BUILDER_IMAGE_RE.exec(c.image);
+            if (m) { pj.goVersion = m[1]; break; }
+          }
+        }
+      }
+      jobs.push(pj);
+    }
+  }
+  return jobs;
+}
+
+async function fetchActionsWorkflows(repo) {
+  const { org, repo: repoName } = split(repo);
+  try {
+    const resp = await apiFetch(`${API}/repos/${org}/${repoName}/contents/.github/workflows`, { headers: hdrs() });
+    if (!resp.ok) return [];
+    const entries = await resp.json();
+    if (!Array.isArray(entries)) return [];
+    const yamlFiles = entries.filter(e => e.type === 'file' && (e.name.endsWith('.yaml') || e.name.endsWith('.yml')));
+    const workflows = await Promise.all(yamlFiles.map(async f => {
+      try {
+        const r = await fetch(`https://raw.githubusercontent.com/${org}/${repoName}/HEAD/.github/workflows/${f.name}`);
+        if (!r.ok) return null;
+        const text = await r.text();
+        const parsed = jsyaml.load(text);
+        const wf = { filename: f.name, name: parsed?.name || f.name, triggers: [], goVersion: '' };
+        const on = parsed?.on || parsed?.true; // yaml parses bare 'on' as boolean key sometimes
+        if (typeof on === 'string') wf.triggers = [on];
+        else if (Array.isArray(on)) wf.triggers = on.map(String);
+        else if (on && typeof on === 'object') wf.triggers = Object.keys(on);
+        if (text.includes('actions/setup-go')) {
+          const m = SETUP_GO_RE.exec(text);
+          if (m) wf.goVersion = m[1];
+        }
+        return wf;
+      } catch { return null; }
+    }));
+    return workflows.filter(Boolean);
+  } catch { return []; }
+}
+
+function extractBranchFromFilename(org, repo, filename) {
+  const name = filename.replace(/\.(yaml|yml)$/, '');
+  const prefix = org + '-' + repo + '-';
+  return name.startsWith(prefix) ? name.slice(prefix.length) : name;
+}
+
+async function fetchCIOperatorConfigs(repo) {
+  const { org, repo: repoName } = split(repo);
+  try {
+    const resp = await apiFetch(`${API}/repos/openshift/release/contents/ci-operator/config/${org}/${repoName}`, { headers: hdrs() });
+    if (!resp.ok) return [];
+    const entries = await resp.json();
+    if (!Array.isArray(entries)) return [];
+    const yamlFiles = entries.filter(e => e.type === 'file' && (e.name.endsWith('.yaml') || e.name.endsWith('.yml')));
+    const branches = await Promise.all(yamlFiles.map(async f => {
+      const branch = extractBranchFromFilename(org, repoName, f.name);
+      try {
+        const r = await fetch(`https://raw.githubusercontent.com/openshift/release/main/ci-operator/config/${org}/${repoName}/${f.name}`);
+        if (!r.ok) return { branch, tests: [] };
+        const text = await r.text();
+        const parsed = jsyaml.load(text);
+        const tests = [];
+        if (Array.isArray(parsed?.tests)) for (const t of parsed.tests) { if (t.as) tests.push(t.as); }
+        if (Array.isArray(parsed?.images)) for (const img of parsed.images) { if (img.to) tests.push('[image] ' + img.to); }
+        return { branch, tests };
+      } catch { return { branch, tests: [] }; }
+    }));
+    return branches.sort((a, b) => a.branch.localeCompare(b.branch));
+  } catch { return []; }
+}
+
+async function fetchGoModVersion(repo) {
+  const { org, repo: repoName } = split(repo);
+  try {
+    const r = await fetch(`https://raw.githubusercontent.com/${org}/${repoName}/HEAD/go.mod`);
+    if (!r.ok) return '';
+    const text = await r.text();
+    const m = GO_MOD_RE.exec(text);
+    return m ? m[1] : '';
+  } catch { return ''; }
+}
+
+function inferGoVersion(ci) {
+  for (const j of ci.prowJobs) { if (j.goVersion) return j.goVersion; }
+  for (const w of ci.actionsWorkflows) { if (w.goVersion) return w.goVersion; }
+  return ci._goModVersion || '';
+}
+
+async function fetchAllCIData() {
+  const all = Object.values(GROUPS).flatMap(g => g.repos);
+  ciData = {};
+  let done = 0;
+  await Promise.all(all.map(async repo => {
+    const ci = { prowJobs: [], actionsWorkflows: [], ciOperatorBranches: [], goVersion: '', error: '' };
+    try {
+      ci.prowJobs = extractProwJobs(repo);
+      const hasProwJobs = ci.prowJobs.length > 0;
+      const [actions, ciOp, goMod] = await Promise.all([
+        fetchActionsWorkflows(repo),
+        hasProwJobs ? Promise.resolve([]) : fetchCIOperatorConfigs(repo),
+        fetchGoModVersion(repo),
+      ]);
+      ci.actionsWorkflows = actions;
+      ci.ciOperatorBranches = ciOp;
+      ci._goModVersion = goMod;
+      ci.goVersion = inferGoVersion(ci);
+    } catch (e) { ci.error = e.message; }
+    ciData[repo] = ci;
+    log(`Fetching CI data... ${++done}/${all.length}`);
+  }));
+}
+
+// ── Severity & Config URL Helpers ─────────────────────────────
+function severityIcon(level) {
+  switch(level) {
+    case 'ok': return '\u2713';
+    case 'info': return '\u2139';
+    case 'warn': return '\u26A0';
+    case 'issue': return '\u2717';
+    default: return '\u2022';
+  }
+}
+
+function fieldURL(repoName, fieldName) {
+  const {org, repo} = split(repoName);
+  const c = cfgs[repoName];
+  if (!c) return '';
+  let raw, filename;
+  if (['require_self_approval','review_acts_as_lgtm','approve_section','lgtm_section','approve_plugin'].includes(fieldName)) {
+    raw = c.pluginRaw; filename = '_pluginconfig.yaml';
+  } else {
+    raw = c.prowRaw; filename = '_prowconfig.yaml';
+  }
+  if (!raw) return '';
+  let key = fieldName;
+  if (fieldName === 'approve_section') key = 'approve:';
+  else if (fieldName === 'lgtm_section') key = 'lgtm:';
+  else if (fieldName === 'approve_plugin') key = '- approve';
+  const lines = raw.split('\n');
+  const lineNum = lines.findIndex(l => l.trimStart().startsWith(key) || l.includes(key + ':'));
+  if (lineNum < 0) return '';
+  const branch = document.getElementById('branch').value;
+  return `https://github.com/openshift/release/blob/${branch}/core-services/prow/02_config/${org}/${repo}/${filename}#L${lineNum + 1}`;
+}
+
+// ── Audit Logic ────────────────────────────────────────────────
+function add(repo, level, msg, suggestedFix = '', field = '') {
+  results.push({ repo, level, msg, suggestedFix, field });
+  if (level === 'issue') counts.issues++;
+  else if (level === 'warn') counts.warnings++;
+  else if (level === 'info') counts.info++;
+}
+
+function auditRepo(name, type) {
+  if (!hasConfig(name)) { add(name, 'issue', 'No prow config found in openshift/release'); return; }
+
+  const {org, repo: repoName} = split(name);
+
+  // Plugin checks
+  if (!hasApproveSection(name)) add(name, 'issue', "Missing top-level 'approve:' config section in _pluginconfig.yaml",
+    `# Add to _pluginconfig.yaml\napprove:\n- repos:\n  - ${org}/${repoName}\n  require_self_approval: false`, 'approve_section');
+  if (!hasLgtmSection(name)) add(name, 'issue', "Missing top-level 'lgtm:' config section in _pluginconfig.yaml",
+    `# Add to _pluginconfig.yaml\nlgtm:\n- repos:\n  - ${org}/${repoName}\n  review_acts_as_lgtm: false`, 'lgtm_section');
+  if (!hasApprovePlugin(name)) add(name, 'issue', "'approve' not listed in plugins",
+    `# Add to _pluginconfig.yaml under plugins:\nplugins:\n  ${org}/${repoName}:\n    plugins:\n    - approve\n    - lgtm`, 'approve_plugin');
+
+  const selfApproveFix = `# In _pluginconfig.yaml approve section:\napprove:\n- repos:\n  - ${org}/${repoName}\n  require_self_approval: false`;
+  const selfApprove = pluginField(name, 'approve', 'require_self_approval');
+  if (selfApprove === 'MISSING_FILE') add(name, 'issue', '_pluginconfig.yaml not found', selfApproveFix, 'require_self_approval');
+  else if (selfApprove === 'NOT_SET') add(name, 'warn', 'require_self_approval not explicitly set (defaults vary)', selfApproveFix, 'require_self_approval');
+  else if (selfApprove !== 'false') add(name, 'info', `require_self_approval=${selfApprove} (most OADP repos use false)`, selfApproveFix, 'require_self_approval');
+
+  const reviewLgtm = pluginField(name, 'lgtm', 'review_acts_as_lgtm');
+  if (reviewLgtm === 'true') add(name, 'info', 'review_acts_as_lgtm=true (GitHub Approve review counts as /lgtm)', '', 'review_acts_as_lgtm');
+
+  // Branch protection
+  const enforce = bpField(name, 'enforce_admins');
+  const reviewCount = bpField(name, 'review_count');
+  const forcePush = bpField(name, 'allow_force_pushes');
+  const dismissStale = bpField(name, 'dismiss_stale_reviews');
+  const mm = mergeMethod(name);
+
+  if (type === 'upstream-rebase') {
+    if (forcePush !== 'true') add(name, 'warn', 'Upstream rebase repo missing allow_force_pushes=true (needed for rebasebot)',
+      `# In _prowconfig.yaml branch-protection:\nbranch-protection:\n  orgs:\n    ${org}:\n      repos:\n        ${repoName}:\n          branches:\n            main:\n              protect: true\n              allow-force-pushes: true`, 'allow_force_pushes');
+    else add(name, 'ok', 'allow_force_pushes=true (expected for upstream rebase repo)', '', 'allow_force_pushes');
+    if (enforce === 'true') add(name, 'info', 'enforce_admins=true on upstream rebase repo (unusual — may block rebasebot)', '', 'enforce_admins');
+    if (reviewCount !== 'NOT_SET') add(name, 'info', `required_approving_review_count=${reviewCount} on upstream rebase repo (may block rebasebot PRs)`, '', 'required_approving_review_count');
+  } else {
+    if (enforce !== 'true') add(name, 'warn', 'Missing enforce_admins=true — Tide bypasses review count without it (prow#134)',
+      `# In _prowconfig.yaml branch-protection:\nbranch-protection:\n  orgs:\n    ${org}:\n      repos:\n        ${repoName}:\n          enforce_admins: true`, 'enforce_admins');
+    if (reviewCount === 'NOT_SET') add(name, 'warn', 'Missing required_approving_review_count (expected for OADP-owned repo)',
+      `# In _prowconfig.yaml branch-protection:\nbranch-protection:\n  orgs:\n    ${org}:\n      repos:\n        ${repoName}:\n          required_pull_request_reviews:\n            required_approving_review_count: 2`, 'required_approving_review_count');
+    else if (reviewCount !== '2') add(name, 'info', `required_approving_review_count=${reviewCount} (most OADP repos use 2)`, '', 'required_approving_review_count');
+    if (dismissStale !== 'true') add(name, 'warn', 'Missing dismiss_stale_reviews=true (expected for OADP-owned repo)',
+      `# In _prowconfig.yaml branch-protection:\nbranch-protection:\n  orgs:\n    ${org}:\n      repos:\n        ${repoName}:\n          required_pull_request_reviews:\n            dismiss_stale_reviews: true`, 'dismiss_stale_reviews');
+    if (forcePush === 'true') add(name, 'warn', 'allow_force_pushes=true on OADP-owned repo (unexpected unless rebasebot also manages this repo)',
+      `# In _prowconfig.yaml, remove or set:\nbranch-protection:\n  orgs:\n    ${org}:\n      repos:\n        ${repoName}:\n          branches:\n            main:\n              allow-force-pushes: false`, 'allow_force_pushes');
+  }
+
+  if (mm !== 'NOT_SET' && mm !== 'MISSING_FILE' && mm) add(name, 'info', `merge_method=${mm}`, '', 'merge_method');
+  if (tideMissingLabels(name).includes('keep-main-query-separate'))
+    add(name, 'info', 'Uses keep-main-query-separate label in Tide missingLabels');
+}
+
+// ── Cross-repo comparison ──────────────────────────────────────
+function compareField(fieldName, repos) {
+  const vals = {};
+  for (const r of repos) {
+    if (!hasConfig(r)) continue;
+    switch (fieldName) {
+      case 'require_self_approval': vals[r] = pluginField(r, 'approve', 'require_self_approval'); break;
+      case 'review_acts_as_lgtm': vals[r] = pluginField(r, 'lgtm', 'review_acts_as_lgtm'); break;
+      case 'enforce_admins': vals[r] = bpField(r, 'enforce_admins'); break;
+      case 'review_count': vals[r] = bpField(r, 'review_count'); break;
+      case 'allow_force_pushes': vals[r] = bpField(r, 'allow_force_pushes'); break;
+      case 'dismiss_stale_reviews': vals[r] = bpField(r, 'dismiss_stale_reviews'); break;
+      case 'merge_method': vals[r] = mergeMethod(r); break;
+    }
+  }
+  const freq = {};
+  for (const v of Object.values(vals)) freq[v] = (freq[v] || 0) + 1;
+  const majority = Object.entries(freq).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const outliers = Object.entries(vals).filter(([, v]) => v !== majority);
+  return { fieldName, majority, outliers };
+}
+
+// ── Merge Queue ────────────────────────────────────────────────
+async function checkMergeQueue(repos) {
+  const out = [];
+  const h = hdrs();
+  for (const name of repos) {
+    if (!hasConfig(name)) continue;
+    log(`Checking merge queue: ${name}...`);
+    try {
+      const requiredLabels = tideRequiredLabels(name);
+      const blockerLabels = tideMissingLabels(name);
+
+      const resp = await apiFetch(`${API}/repos/${name}/pulls?state=open&per_page=100`, { headers: h });
+      if (resp.status === 403) { out.push({ repo: name, error: 'Rate limited — provide a GitHub token' }); break; }
+      if (!resp.ok) { out.push({ repo: name, error: `API error ${resp.status}` }); continue; }
+      const prs = await resp.json();
+      const matched = prs.filter(p => {
+        const lbls = p.labels.map(l => l.name);
+        return requiredLabels.every(rl => lbls.includes(rl));
+      });
+      if (!matched.length) continue;
+
+      const reqReviews = bpField(name, 'review_count');
+      const enforce = bpField(name, 'enforce_admins');
+      const { org, repo } = split(name);
+      const details = [];
+
+      for (const pr of matched) {
+        const [revResp, chkResp, stResp] = await Promise.all([
+          apiFetch(`${API}/repos/${name}/pulls/${pr.number}/reviews`, { headers: h }),
+          apiFetch(`${API}/repos/${name}/commits/${pr.head.sha}/check-runs?per_page=100`, { headers: h }),
+          apiFetch(`${API}/repos/${name}/commits/${pr.head.sha}/status`, { headers: h }),
+        ]);
+        const reviews = revResp.ok ? await revResp.json() : [];
+        const chkData = chkResp.ok ? await chkResp.json() : { check_runs: [] };
+        const stData = stResp.ok ? await stResp.json() : { statuses: [] };
+
+        // Unique approvers — only count latest review per author
+        const latestByUser = new Map();
+        for (const rv of reviews) {
+          if (!rv.user?.login || !rv.submitted_at) continue;
+          const prev = latestByUser.get(rv.user.login);
+          if (!prev || new Date(rv.submitted_at) > new Date(prev.submitted_at))
+            latestByUser.set(rv.user.login, rv);
+        }
+        const approvers = new Set(
+          [...latestByUser.values()].filter(rv => rv.state === 'APPROVED').map(rv => rv.user.login)
+        );
+
+        // Normalize checks
+        const checks = [];
+        for (const c of chkData.check_runs) {
+          checks.push({
+            name: c.name,
+            state: c.status === 'completed' ? (c.conclusion?.toUpperCase() || 'UNKNOWN')
+                 : c.status === 'in_progress' ? 'IN_PROGRESS' : 'PENDING',
+          });
+        }
+        for (const s of stData.statuses) {
+          checks.push({ name: s.context, state: s.state.toUpperCase() });
+        }
+
+        const failing = checks.filter(c => c.state === 'FAILURE' && c.name !== 'tide');
+        const errored = checks.filter(c => c.state === 'ERROR' && c.name !== 'tide');
+        const pending = checks.filter(c => c.state === 'PENDING' && c.name !== 'tide');
+        const running = checks.filter(c => c.state === 'IN_PROGRESS' && c.name !== 'tide');
+        const tide = checks.find(c => c.name === 'tide');
+        const tideBlocked = tide ? tide.state !== 'SUCCESS' : false;
+        const prLabels = pr.labels.map(l => l.name);
+        const prBlockerLabels = blockerLabels.filter(b => prLabels.includes(b));
+
+        let missingReviews = false, reviewsShort = 0;
+        const reqNum = parseInt(reqReviews);
+        if (!isNaN(reqNum) && enforce === 'true' && approvers.size < reqNum) {
+          missingReviews = true;
+          reviewsShort = reqNum - approvers.size;
+        }
+
+        const hasBlockers = prBlockerLabels.length > 0 || failing.length > 0 || errored.length > 0
+          || pending.length > 0 || running.length > 0 || missingReviews || tideBlocked;
+
+        const encBranch = encodeURIComponent(pr.head.ref);
+        details.push({
+          number: pr.number, title: pr.title, author: pr.user.login,
+          branch: pr.head.ref, base: pr.base.ref, url: pr.html_url, labels: prLabels,
+          blockerLabels: prBlockerLabels, approvalCount: approvers.size,
+          requiredReviews: isNaN(reqNum) ? null : reqNum, enforce,
+          missingReviews, reviewsShort,
+          failing, errored, pending, running,
+          tide: tide?.state || 'NOT_REPORTED', tideBlocked: !!tideBlocked, hasBlockers,
+          prowUrl: `${PROW}/pr?query=is%3Apr+repo%3A${org}%2F${repo}+author%3A${pr.user.login}+head%3A${encBranch}`,
+        });
+      }
+
+      out.push({
+        repo: name, count: matched.length, requiredLabels, reqReviews, enforce, prs: details,
+        tideUrl: `${PROW}/tide?query=is%3Apr+state%3Aopen+repo%3A${org}%2F${repo}`,
+      });
+    } catch (e) { out.push({ repo: name, error: e.message }); }
+  }
+  return out;
+}
+
+let queueCheckInProgress = false;
+
+async function checkRepoQueue(repoName) {
+  if (queueCheckInProgress) return;
+  queueCheckInProgress = true;
+  updateStatus(`Checking queue: ${repoName}...`);
+  const btn = document.getElementById(`q-${repoName.replace('/', '-')}`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Checking...'; }
+  try {
+    const result = await checkMergeQueue([repoName]);
+    if (result.length) {
+      queue[repoName] = result[0];
+    } else {
+      queue[repoName] = { repo: repoName, count: 0, prs: [], noMatches: true, requiredLabels: tideRequiredLabels(repoName) };
+    }
+    showToast(`Queue checked: ${repoName}`, 'info');
+  } catch (e) {
+    queue[repoName] = { repo: repoName, error: e.message };
+  } finally {
+    queueCheckInProgress = false;
+    updateStatus('');
+    renderQueue();
+  }
+}
+
+async function checkAllQueues() {
+  if (queueCheckInProgress) return;
+  queueCheckInProgress = true;
+  updateStatus('Checking all queues...');
+  const btn = document.getElementById('check-all-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Checking all...'; }
+  const all = Object.values(GROUPS).flatMap(g => g.repos).filter(r => hasConfig(r));
+  for (const name of all) {
+    const repoBtn = document.getElementById(`q-${name.replace('/', '-')}`);
+    if (repoBtn) { repoBtn.disabled = true; repoBtn.textContent = 'Checking...'; }
+  }
+  try {
+    const results = await checkMergeQueue(all);
+    const rateLimited = results.length > 0 && results[results.length - 1].error?.includes('Rate limited');
+    const checkedRepos = new Set(results.map(r => r.repo));
+    for (const entry of results) queue[entry.repo] = entry;
+    for (const name of all) {
+      if (!queue[name]) {
+        if (rateLimited && !checkedRepos.has(name)) {
+          // Repo was never checked due to rate limiting — show warning, not "No PRs"
+          queue[name] = { repo: name, error: 'Skipped — rate limit hit before this repo was checked' };
+        } else {
+          queue[name] = { repo: name, count: 0, prs: [], noMatches: true, requiredLabels: tideRequiredLabels(name) };
+        }
+      }
+    }
+    showToast('All queues checked', 'info');
+  } catch (e) {
+    // partial results are kept
+  } finally {
+    queueCheckInProgress = false;
+    updateStatus('');
+    renderQueue();
+    // Expand the queue section and all PR cards after check all
+    const qSec = document.querySelector('[data-sec-id="queue-status"]');
+    if (qSec) {
+      qSec.classList.remove('collapsed');
+      const hdr = qSec.querySelector('.section-hdr');
+      if (hdr) hdr.setAttribute('aria-expanded', 'true');
+      saveCollapseState();
+    }
+    toggleAllPRCards(true);
+  }
+}
+
+// ── Rendering ──────────────────────────────────────────────────
+function sec(title, desc, content, collapsed, copyable, secId) {
+  const copyBtn = copyable ? `<button class="copy-btn" data-scope="group" onclick="event.stopPropagation();copyGroup(this)" title="Copy group findings">copy</button>` : '';
+  const idAttr = secId ? ` data-sec-id="${secId}"` : '';
+  return `<div class="section${collapsed ? ' collapsed' : ''}"${idAttr}>
+    <div class="section-hdr" role="button" tabindex="0" aria-expanded="${collapsed ? 'false' : 'true'}" onclick="this.parentElement.classList.toggle('collapsed');this.setAttribute('aria-expanded',this.getAttribute('aria-expanded')==='true'?'false':'true');saveCollapseState()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+      <span>${title}</span>${copyBtn}<span class="arrow">&#9660;</span>
+    </div>
+    <div class="section-body">${desc ? `<div class="section-desc">${desc}</div>` : ''}${content}</div>
+  </div>`;
+}
+
+function render() {
+  const branch = document.getElementById('branch').value;
+
+  // ── Tab 0: Config Audit ──
+  const diff = prevResults ? computeDiff(results, prevResults) : null;
+  let totalNew = 0, totalFixed = 0;
+  if (diff) { totalNew = diff.newFindings.size; totalFixed = diff.fixedFindings.length; }
+  const overallDiff = formatDiffSummary(totalNew, totalFixed);
+  let auditHtml = '';
+  auditHtml += `<div class="summary-bar">
+    <div class="summary-item"><div class="num" style="color:var(--red)">${counts.issues}</div><div class="lbl">Issues</div></div>
+    <div class="summary-item"><div class="num" style="color:var(--yellow)">${counts.warnings}</div><div class="lbl">Warnings</div></div>
+    <div class="summary-item"><div class="num" style="color:var(--blue)">${counts.info}</div><div class="lbl">Info</div></div>
+    <div class="summary-meta">Source: openshift/release @ ${esc(branch)}<br>${new Date().toISOString()}${overallDiff ? `<br><span class="diff-summary">${esc(overallDiff)}</span>` : ''}</div>
+  </div>`;
+  for (const [type, group] of Object.entries(GROUPS)) {
+    let c = '';
+    let groupNew = 0, groupFixed = 0;
+    for (const repo of group.repos) {
+      const entries = results.filter(r => r.repo === repo);
+      if (!entries.length) continue;
+      for (const e of entries) {
+        const isNew = diff && diff.newFindings.has(findingKey(e));
+        if (isNew) groupNew++;
+        const url = e.field ? fieldURL(repo, e.field) : '';
+        const link = url ? ` <a class="config-link" href="${safeHref(url)}" target="_blank" title="View in config file">\uD83D\uDCC4</a>` : '';
+        c += `<div class="entry"><span class="severity-icon b-${e.level}">${severityIcon(e.level)}</span> ${badge(e.level, e.level)} <span class="repo">${esc(repo)}</span>: ${esc(e.msg)}${link}${isNew ? ' ' + badge('new','NEW') : ''}<button class="copy-btn" onclick="copyEntry(this)" title="Copy finding">copy</button>`;
+        if (e.suggestedFix) {
+          const fixId = 'fix-' + (++fixCounter);
+          fixMap[fixId] = e.suggestedFix;
+          c += `<div class="fix-block collapsed">
+            <div class="fix-toggle" onclick="this.parentElement.classList.toggle('collapsed')">
+              <span class="fix-arrow">&#9660;</span> Suggested fix
+            </div>
+            <div class="fix-content">
+              <pre>${esc(e.suggestedFix)}</pre>
+              <button class="copy-btn" onclick="copyFix('${fixId}',this)">Copy</button>
+            </div>
+          </div>`;
+        }
+        c += `</div>`;
+      }
+    }
+    // Append FIXED rows for findings that were resolved
+    if (diff) {
+      for (const f of diff.fixedFindings) {
+        if (!group.repos.includes(f.repo)) continue;
+        groupFixed++;
+        c += `<div class="entry fixed">${badge('fixed','FIXED')} <span class="repo">${esc(f.repo)}</span>: ${esc(f.msg)}</div>`;
+      }
+    }
+    if (!c) c = '<div class="entry none">No findings</div>';
+    const groupDiff = formatDiffSummary(groupNew, groupFixed);
+    const titleWithDiff = group.label + (groupDiff ? ` <span class="diff-summary">${esc(groupDiff)}</span>` : '');
+    auditHtml += sec(titleWithDiff, group.desc, c, false, true, 'audit-' + type);
+  }
+
+  // ── Tab 1: Merge Queue ──
+  let queueHtml = '<div id="queue-section"></div>';
+
+  // ── Tab 2: Field Compare ──
+  const compFields = ['require_self_approval','review_acts_as_lgtm','enforce_admins',
+    'review_count','dismiss_stale_reviews','allow_force_pushes','merge_method'];
+  let compareHtml = '<div class="compare-toolbar"><button class="btn-sm" id="compareToggle" onclick="toggleCompareView()">Show all fields</button></div>';
+  for (const [type, group] of Object.entries(GROUPS)) {
+    if (!group.repos.length) continue;
+    const fields = type === 'upstream-rebase'
+      ? ['require_self_approval','review_acts_as_lgtm','allow_force_pushes','merge_method']
+      : compFields;
+    let c = '';
+    for (const f of fields) {
+      const r = compareField(f, group.repos);
+      if (r.outliers.length) {
+        c += `<div class="entry"><span class="field">${esc(r.fieldName)}</span> (majority: <code>${esc(r.majority)}</code>)`;
+        for (const [repo, val] of r.outliers)
+          c += `<br>&nbsp;&nbsp;${badge('warn','differs')} <span class="repo">${esc(repo)}</span>: <code>${esc(val)}</code>`;
+        c += '</div>';
+      } else {
+        c += `<div class="entry compare-consistent">${badge('ok','OK')} <span class="field">${esc(r.fieldName)}</span> (all: <code>${esc(r.majority)}</code>)</div>`;
+      }
+    }
+    compareHtml += sec(`Comparison: ${group.label}`, 'Fields where a repo differs from the majority value', c, undefined, undefined, 'compare-' + type);
+  }
+
+  // ── Tab 3: Tide Branches ──
+  let tideHtml = '';
+  for (const [type, group] of Object.entries(GROUPS)) {
+    if (!group.repos.length) continue;
+    let bc = '';
+    for (const repo of group.repos) {
+      if (!hasConfig(repo)) continue;
+      const branches = tideBranches(repo);
+      bc += `<div class="entry"><span class="repo">${esc(repo)}</span>: `;
+      bc += branches.length
+        ? branches.map(b => `<code>${esc(b)}</code>`).join(', ')
+        : `${badge('warn','warn')} No includedBranches (uses excludedBranches or all-branch query)`;
+      bc += '</div>';
+    }
+    tideHtml += sec(group.label, 'Branches included in Tide merge queries', bc, undefined, undefined, 'tide-' + type);
+  }
+
+  // ── Tab 4: CI ──
+  let ciHtml = '';
+  for (const [type, group] of Object.entries(GROUPS)) {
+    if (!group.repos.length) continue;
+    let gc = '';
+    for (const repo of group.repos) {
+      const ci = ciData[repo];
+      if (!ci) { gc += `<div class="entry none"><span class="repo">${esc(repo)}</span>: No CI data</div>`; continue; }
+      if (ci.error) { gc += `<div class="entry">${badge('warn','error')} <span class="repo">${esc(repo)}</span>: ${esc(ci.error)}</div>`; continue; }
+      const hasProw = ci.prowJobs.length > 0 || ci.ciOperatorBranches.length > 0;
+      const hasActions = ci.actionsWorkflows.length > 0;
+      const hasDetails = ci.prowJobs.length > 0 || ci.ciOperatorBranches.length > 0 || hasActions;
+      const { org, repo: repoName } = split(repo);
+      // Summary badges
+      let summary = `<span class="repo">${esc(repo)}</span>`;
+      if (ci.goVersion) summary += ` <code>Go ${esc(ci.goVersion)}</code>`;
+      if (hasProw) {
+        if (ci.ciOperatorBranches.length > 0 && ci.prowJobs.length === 0)
+          summary += ` ${badge('ok','Prow (ci-operator, ' + ci.ciOperatorBranches.length + ' configs)')}`;
+        else
+          summary += ` ${badge('ok','Prow')}`;
+      } else {
+        summary += ` ${badge('issue','No Prow')}`;
+      }
+      summary += hasActions ? ` ${badge('ok','Actions')}` : ` ${badge('warn','No Actions')}`;
+
+      if (!hasDetails) {
+        gc += `<div class="entry">${summary}</div>`;
+        continue;
+      }
+
+      const repoId = repo.replace(/[^a-zA-Z0-9]/g, '-');
+      gc += `<div class="ci-repo collapsed" id="ci-${esc(repoId)}">`;
+      gc += `<div class="ci-repo-hdr" onclick="this.parentElement.classList.toggle('collapsed');saveCollapseState()"><span class="ci-arrow">&#9660;</span> ${summary}</div>`;
+      gc += '<div class="ci-details">';
+
+      // Prow jobs
+      if (ci.prowJobs.length > 0) {
+        gc += '<div class="ci-section-label">Prow Jobs</div>';
+        const prowConfigUrl = `https://github.com/openshift/release/tree/main/core-services/prow/02_config/${org}/${repoName}/_prowconfig.yaml`;
+        for (const j of ci.prowJobs) {
+          const runInfo = j.alwaysRun ? 'always_run' : (j.runIfChanged ? 'run_if_changed' : '');
+          gc += `<div class="ci-job"><span class="ci-job-name">${esc(j.name)}</span> <span class="ci-job-meta">${esc(j.type)}${runInfo ? ' (' + esc(runInfo) + ')' : ''}${j.goVersion ? ' Go ' + esc(j.goVersion) : ''}</span></div>`;
+        }
+        gc += `<div class="ci-job"><a href="${safeHref(prowConfigUrl)}" target="_blank" rel="noopener noreferrer">View config</a></div>`;
+      }
+
+      // ci-operator branches
+      if (ci.ciOperatorBranches.length > 0 && ci.prowJobs.length === 0) {
+        gc += '<div class="ci-section-label">ci-operator Configs</div>';
+        const ciOpUrl = `https://github.com/openshift/release/tree/main/ci-operator/config/${org}/${repoName}`;
+        for (const br of ci.ciOperatorBranches) {
+          const brId = (repo + ':' + br.branch).replace(/[^a-zA-Z0-9]/g, '-');
+          if (br.tests.length > 0) {
+            gc += `<div class="ci-branch collapsed" id="ci-br-${esc(brId)}">`;
+            const branchUrl = `https://github.com/${org}/${repoName}/tree/${encodeURIComponent(br.branch)}`;
+            const testPreview = br.tests.map(t => esc(t)).join(' &middot; ');
+            gc += `<div class="ci-branch-hdr" onclick="this.parentElement.classList.toggle('collapsed');saveCollapseState()"><span class="ci-arrow">&#9660;</span> <a href="${safeHref(branchUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${esc(br.branch)}</a> (${br.tests.length} test${br.tests.length !== 1 ? 's' : ''}) <span class="ci-test-preview">${testPreview}</span></div>`;
+            gc += '<div class="ci-branch-tests">';
+            for (const t of br.tests) gc += `<div class="ci-job">${esc(t)}</div>`;
+            gc += '</div></div>';
+          } else {
+            const branchUrl2 = `https://github.com/${org}/${repoName}/tree/${encodeURIComponent(br.branch)}`;
+            gc += `<div class="ci-job"><a href="${safeHref(branchUrl2)}" target="_blank" rel="noopener noreferrer">${esc(br.branch)}</a></div>`;
+          }
+        }
+        gc += `<div class="ci-job"><a href="${safeHref(ciOpUrl)}" target="_blank" rel="noopener noreferrer">View configs</a></div>`;
+      }
+
+      // Actions workflows
+      if (hasActions) {
+        gc += '<div class="ci-section-label">GitHub Actions</div>';
+        for (const wf of ci.actionsWorkflows) {
+          const wfUrl = `https://github.com/${org}/${repoName}/blob/HEAD/.github/workflows/${wf.filename}`;
+          const displayName = wf.name !== wf.filename ? `${wf.filename} (${wf.name})` : wf.filename;
+          const triggers = wf.triggers.map(t => `<span class="ci-trigger">${esc(t)}</span>`).join('');
+          gc += `<div class="ci-job"><a href="${safeHref(wfUrl)}" target="_blank" rel="noopener noreferrer" class="ci-job-name">${esc(displayName)}</a> ${triggers}${wf.goVersion ? ' <span class="ci-job-meta">Go ' + esc(wf.goVersion) + '</span>' : ''}</div>`;
+        }
+      }
+
+      gc += '</div></div>';
+    }
+    ciHtml += sec(group.label, 'CI jobs and GitHub Actions workflows per repo', gc, undefined, undefined, 'ci-group-' + type);
+  }
+
+  // Assemble tab panels
+  let h = '';
+  h += `<div id="tab-audit" class="tab-panel${activeTab === 0 ? ' active' : ''}">${auditHtml}</div>`;
+  h += `<div id="tab-queue" class="tab-panel${activeTab === 1 ? ' active' : ''}">${queueHtml}</div>`;
+  h += `<div id="tab-compare" class="tab-panel${activeTab === 2 ? ' active' : ''}">${compareHtml}</div>`;
+  h += `<div id="tab-tide" class="tab-panel${activeTab === 3 ? ' active' : ''}">${tideHtml}</div>`;
+  h += `<div id="tab-ci" class="tab-panel${activeTab === 4 ? ' active' : ''}">${ciHtml}</div>`;
+
+  document.getElementById('app').innerHTML = h;
+  document.getElementById('tab-bar').style.display = 'flex';
+  restoreCollapseState();
+  renderQueue();
+  // Re-apply active search filter after re-render
+  const sq = document.getElementById('searchInput')?.value;
+  if (sq) filterResults(sq);
+}
+
+function repoIsHealthy(entry) {
+  if (!entry || entry.error) return false;
+  if (entry.noMatches) return true;
+  if (!entry.prs) return false;
+  return !entry.prs.some(pr => pr.hasBlockers);
+}
+
+function renderQueueEntry(entry) {
+  let qc = '';
+  if (entry.error) {
+    return `<div class="entry">${badge('warn','error')} <span class="repo">${esc(entry.repo)}</span>: ${esc(entry.error)}</div>`;
+  }
+  if (entry.noMatches) {
+    const lblStr = (entry.requiredLabels || ['approved','lgtm']).join('+');
+    return `<div class="entry">${badge('ok','OK')} <span class="repo">${esc(entry.repo)}</span>: No PRs with ${esc(lblStr)}</div>`;
+  }
+
+  const { org, repo } = split(entry.repo);
+  const lblStr = (entry.requiredLabels || ['approved','lgtm']).join('+');
+  qc += `<div class="entry"><span class="repo">${esc(entry.repo)}</span> (${entry.count} PRs with ${esc(lblStr)})`;
+  if (entry.reqReviews !== 'NOT_SET' && entry.reqReviews !== 'MISSING_FILE')
+    qc += ` — Required reviews: ${esc(entry.reqReviews)} (enforce_admins: ${esc(entry.enforce)})`;
+  qc += ` <a href="${safeHref(entry.tideUrl)}" target="_blank" rel="noopener noreferrer">Tide</a>`;
+
+  // Pre-compute review blockers per branch for this repo
+  const reviewBlockersByBranch = {};
+  if (entry.enforce === 'true' && entry.prs[0]?.requiredReviews) {
+    for (const pr of entry.prs) {
+      if (pr.missingReviews && pr.tide === 'SUCCESS') {
+        if (!reviewBlockersByBranch[pr.base]) reviewBlockersByBranch[pr.base] = [];
+        reviewBlockersByBranch[pr.base].push(pr);
+      }
+    }
+  }
+
+  // Sort PRs: tideErrLoopBlocker first, then other blocked, then ready
+  const isTideErrBlocker = pr => entry.enforce === 'true' && pr.missingReviews && !pr.labelBlockers?.length;
+  const sortedPrs = [...entry.prs].sort((a, b) => {
+    const aTE = isTideErrBlocker(a) ? 0 : 1;
+    const bTE = isTideErrBlocker(b) ? 0 : 1;
+    if (aTE !== bTE) return aTE - bTE;
+    const aBlk = a.hasBlockers ? 0 : 1;
+    const bBlk = b.hasBlockers ? 0 : 1;
+    return aBlk - bBlk;
+  });
+
+  for (const pr of sortedPrs) {
+    const color = pr.hasBlockers ? 'var(--red)' : 'var(--green)';
+    const collapsed = pr.hasBlockers ? '' : ' pr-collapsed';
+    qc += `<div class="pr-card${collapsed}">
+      <div class="pr-toggle" onclick="this.parentElement.classList.toggle('pr-collapsed')">
+        <span class="pr-arrow">▶</span>
+        <span class="pr-title" style="color:${color}">
+          <a href="${safeHref(pr.url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">#${pr.number}</a> [${esc(pr.base)}] ${esc(pr.title)}
+        </span>
+      </div>
+      <div class="pr-meta">Author: ${esc(pr.author)} · <a href="${safeHref(pr.prowUrl)}" target="_blank" rel="noopener noreferrer">Prow</a></div>
+      <div class="pr-checks">`;
+
+    for (const lbl of pr.blockerLabels)
+      qc += `<div class="chk">${badge('issue','BLOCKED')} ${esc(lbl)}</div>`;
+
+    if (pr.missingReviews) {
+      qc += `<div class="chk">${badge('issue','REVIEWS')} ${pr.approvalCount}/${pr.requiredReviews} approvals (need ${pr.reviewsShort} more)</div>`;
+      qc += `<div class="chk" style="color:var(--yellow)">Tide will attempt merge but GitHub will reject (enforce_admins + prow#134)</div>`;
+    } else if (pr.requiredReviews !== null) {
+      qc += `<div class="chk">${badge('ok','REVIEWS')} ${pr.approvalCount}/${pr.requiredReviews} approvals</div>`;
+    }
+
+    for (const c of pr.failing) qc += `<div class="chk">${badge('issue','FAILED')} ${esc(c.name)}</div>`;
+    for (const c of pr.errored) qc += `<div class="chk">${badge('issue','ERROR')} ${esc(c.name)}</div>`;
+    for (const c of pr.running) qc += `<div class="chk">${badge('warn','RUNNING')} ${esc(c.name)}</div>`;
+
+    if (pr.pending.length <= 5) {
+      for (const c of pr.pending) qc += `<div class="chk">${badge('warn','PENDING')} ${esc(c.name)}</div>`;
+    } else {
+      for (const c of pr.pending.slice(0, 3)) qc += `<div class="chk">${badge('warn','PENDING')} ${esc(c.name)}</div>`;
+      qc += `<div class="chk">${badge('warn','PENDING')} ... and ${pr.pending.length - 3} more</div>`;
+    }
+
+    if (pr.tideBlocked)
+      qc += `<div class="chk">${badge('issue','TIDE')} ${esc(pr.tide)}</div>`;
+    else if (pr.tide === 'SUCCESS')
+      qc += `<div class="chk">${badge('ok','TIDE')} merge criteria met — merging soon</div>`;
+    else if (pr.tide === 'PENDING') {
+      const branchBlockers = (reviewBlockersByBranch[pr.base] || [])
+        .filter(b => b.number !== pr.number)
+        .map(b => `<a href="${safeHref(b.url)}" target="_blank" rel="noopener noreferrer">#${b.number}</a> (needs ${b.reviewsShort} more review(s))`);
+      if (branchBlockers.length)
+        qc += `<div class="chk">${badge('info','TIDE')} waiting — review-blocked PRs ahead: ${branchBlockers.join(', ')}</div>`;
+      else
+        qc += `<div class="chk">${badge('info','TIDE')} waiting (another PR may be testing ahead in queue)</div>`;
+    }
+
+    if (!pr.hasBlockers) {
+      // Check for tideErrLoopBlocker PRs anywhere in the repo (blocks entire Tide queue).
+      const allTideErrBlockers = Object.values(reviewBlockersByBranch)
+        .flat()
+        .filter(b => b.number !== pr.number);
+      if (allTideErrBlockers.length) {
+        const blockerLinks = allTideErrBlockers.map(b =>
+          `<a href="${safeHref(b.url)}" target="_blank" rel="noopener noreferrer">#${b.number}</a>`);
+        qc += `<div class="chk" style="color:var(--red)">${badge('issue','⚠')} Tide may be blocked — tideErrLoopBlocker PRs in repo: ${blockerLinks.join(', ')} (enforce_admins + prow#134)</div>`;
+      }
+
+      const branchBlockers = (reviewBlockersByBranch[pr.base] || [])
+        .filter(b => b.number !== pr.number)
+        .map(b => `<a href="${safeHref(b.url)}" target="_blank" rel="noopener noreferrer">#${b.number}</a> (needs ${b.reviewsShort} more review(s))`);
+      if (branchBlockers.length)
+        qc += `<div class="chk">${badge('ok','READY')} All checks passed — but review-blocked PRs may delay merge: ${branchBlockers.join(', ')}</div>`;
+      else
+        qc += `<div class="chk">${badge('ok','READY')} All checks passed, no blocking labels — merge imminent</div>`;
+    }
+
+    qc += '</div></div>';
+  }
+  qc += '</div>';
+  return qc;
+}
+
+function sortQueueRepos(repos) {
+  const withData = repos.filter(r => queue[r]);
+  const withoutData = repos.filter(r => !queue[r]);
+  if (queueSortMode === 1) {
+    withData.sort((a, b) => {
+      const diff = (queue[b].count || 0) - (queue[a].count || 0);
+      return diff !== 0 ? diff : a.localeCompare(b);
+    });
+  } else if (queueSortMode === 2) {
+    const blockedCount = r => (queue[r]?.prs || []).filter(p => p.hasBlockers).length;
+    withData.sort((a, b) => {
+      const diff = blockedCount(b) - blockedCount(a);
+      return diff !== 0 ? diff : a.localeCompare(b);
+    });
+  } else if (queueSortMode === 3) {
+    const tideErrCount = r => {
+      const e = queue[r];
+      if (!e || e.error || e.noMatches || e.enforce !== 'true') return 0;
+      return (e.prs || []).filter(p => p.missingReviews && !p.labelBlockers?.length).length;
+    };
+    withData.sort((a, b) => {
+      const ca = tideErrCount(a), cb = tideErrCount(b);
+      // Repos with any tideErr blockers first
+      if ((ca > 0) !== (cb > 0)) return cb > 0 ? 1 : -1;
+      // Then by count descending
+      if (ca !== cb) return cb - ca;
+      return a.localeCompare(b);
+    });
+  } else {
+    withData.sort((a, b) => a.localeCompare(b));
+  }
+  withoutData.sort((a, b) => a.localeCompare(b));
+  return [...withData, ...withoutData];
+}
+
+const SORT_LABELS = ['Name', 'PR Count', 'Blocked', 'TideErr Blockers'];
+
+function renderQueue() {
+  const el = document.getElementById('queue-section');
+  if (!el || !auditDone) return;
+
+  const all = Object.values(GROUPS).flatMap(g => g.repos).filter(r => hasConfig(r));
+  const sorted = sortQueueRepos(all);
+
+  const sortBar = `<div class="sort-bar"><span>Sort:</span>${
+    SORT_LABELS.map((l, i) =>
+      `<button class="sort-btn${queueSortMode === i ? ' active' : ''}" onclick="queueSortMode=${i};renderQueue()">${l}</button>`
+    ).join('')
+  } <span style="color:var(--muted);font-weight:400">(or press <kbd>s</kbd>)</span></div>`;
+
+  let qc = sortBar;
+
+  for (const name of sorted) {
+    const btnId = `q-${name.replace('/', '-')}`;
+    const entry = queue[name];
+    const healthy = entry ? repoIsHealthy(entry) : false;
+    qc += `<div class="repo-group" data-healthy="${healthy}" data-repo="${esc(name)}">`;
+    if (entry) {
+      qc += renderQueueEntry(entry);
+      qc += `<div class="entry"><button class="btn-sm queue-btn" id="${btnId}" data-repo="${esc(name)}">Refresh</button></div>`;
+    } else {
+      qc += `<div class="entry"><span class="repo">${esc(name)}</span> `
+        + `<button class="btn-sm queue-btn" id="${btnId}" data-repo="${esc(name)}">Check queue</button></div>`;
+    }
+    qc += '</div>';
+  }
+
+  const hasToken = !!document.getElementById('token')?.value.trim();
+  const checkAllDisabled = hasToken ? '' : ' disabled title="Provide a GitHub token to enable (60 req/hr limit without token)"';
+  const title = `Merge Queue Status <button class="btn-check-all" id="check-all-btn"${checkAllDisabled}>Check all</button>`
+    + ` <button class="btn-sm" onclick="event.stopPropagation();toggleAllPRCards(true)">Expand all</button>`
+    + ` <button class="btn-sm" onclick="event.stopPropagation();toggleAllPRCards(false)">Collapse all</button>`;
+  el.innerHTML = sec(title,
+    'PRs with all required Tide labels that haven\'t merged yet. Click per-repo or "Check all" (uses GitHub API). Without a token the limit is 60 req/hr — only check repos you need.',
+    qc, undefined, undefined, 'queue-status');
+  restoreCollapseState();
+  // Re-apply healthy repos filter after queue re-render
+  applyHealthyFilter();
+  // Re-apply active search filter after queue re-render
+  const sq = document.getElementById('searchInput')?.value;
+  if (sq) filterResults(sq);
+}
+
+function toggleAllPRCards(expand) {
+  document.querySelectorAll('.pr-card').forEach(c => {
+    if (expand) c.classList.remove('pr-collapsed');
+    else c.classList.add('pr-collapsed');
+  });
+}
+
+// ── Search / Filter ───────────────────────────────────────────
+let searchTimeout = null;
+const origHTML = new Map(); // stores original innerHTML per element
+
+function filterResults(query) {
+  const app = document.getElementById('app');
+  if (!app) return;
+  const q = query.trim().toLowerCase();
+  const bar = document.getElementById('searchBar');
+  bar.classList.toggle('has-query', q.length > 0);
+
+  // Restore originals and clear hidden state
+  app.querySelectorAll('.search-hidden').forEach(el => el.classList.remove('search-hidden'));
+  origHTML.forEach((html, el) => { if (el.isConnected) el.innerHTML = html; });
+
+  if (!q) {
+    document.getElementById('searchCount').textContent = '';
+    restoreCollapseState();
+    return;
+  }
+
+  let matchCount = 0;
+
+  app.querySelectorAll('.section').forEach(section => {
+    let sectionHasMatch = false;
+    const body = section.querySelector('.section-body');
+    if (!body) return;
+
+    // Filter .entry elements
+    body.querySelectorAll('.entry').forEach(entry => {
+      const text = entry.textContent.toLowerCase();
+      if (text.includes(q)) {
+        sectionHasMatch = true;
+        matchCount++;
+        highlightElement(entry, q);
+      } else {
+        entry.classList.add('search-hidden');
+      }
+    });
+
+    // Filter .pr-card elements (merge queue)
+    body.querySelectorAll('.pr-card').forEach(card => {
+      const text = card.textContent.toLowerCase();
+      if (text.includes(q)) {
+        sectionHasMatch = true;
+        matchCount++;
+        highlightElement(card, q);
+      } else {
+        card.classList.add('search-hidden');
+      }
+    });
+
+    if (sectionHasMatch) {
+      section.classList.remove('collapsed');
+      const hdr = section.querySelector('.section-hdr');
+      if (hdr) hdr.setAttribute('aria-expanded', 'true');
+    } else {
+      section.classList.add('search-hidden');
+    }
+  });
+
+  document.getElementById('searchCount').textContent = matchCount + ' match' + (matchCount !== 1 ? 'es' : '');
+}
+
+function highlightElement(el, query) {
+  if (!origHTML.has(el)) origHTML.set(el, el.innerHTML);
+  // Walk text nodes and wrap matches
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const nodesToReplace = [];
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    const idx = node.textContent.toLowerCase().indexOf(query);
+    if (idx !== -1) nodesToReplace.push(node);
+  }
+  for (const node of nodesToReplace) {
+    const text = node.textContent;
+    const frag = document.createDocumentFragment();
+    let lastIdx = 0;
+    let pos = text.toLowerCase().indexOf(query);
+    while (pos !== -1) {
+      if (pos > lastIdx) frag.appendChild(document.createTextNode(text.slice(lastIdx, pos)));
+      const mark = document.createElement('mark');
+      mark.className = 'search-highlight';
+      mark.textContent = text.slice(pos, pos + query.length);
+      frag.appendChild(mark);
+      lastIdx = pos + query.length;
+      pos = text.toLowerCase().indexOf(query, lastIdx);
+    }
+    if (lastIdx < text.length) frag.appendChild(document.createTextNode(text.slice(lastIdx)));
+    node.parentNode.replaceChild(frag, node);
+  }
+}
+
+// Debounced input handler
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => filterResults(e.target.value), 150);
+});
+
+document.getElementById('searchClear').addEventListener('click', () => {
+  const input = document.getElementById('searchInput');
+  input.value = '';
+  filterResults('');
+  input.focus();
+});
+
+// Keyboard shortcuts: "/" to focus, Escape to clear
+document.addEventListener('keydown', e => {
+  const input = document.getElementById('searchInput');
+  if (e.key === '/' && !e.ctrlKey && !e.metaKey && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
+    e.preventDefault();
+    input.focus();
+  }
+  if (e.key === 'Escape' && document.activeElement === input) {
+    input.value = '';
+    filterResults('');
+    input.blur();
+  }
+});
+
+// Delegate queue button clicks on the app container (bound once)
+document.addEventListener('click', e => {
+  const qBtn = e.target.closest('.queue-btn');
+  if (qBtn) { e.stopPropagation(); checkRepoQueue(qBtn.dataset.repo); return; }
+  if (e.target.closest('#check-all-btn')) { e.stopPropagation(); checkAllQueues(); return; }
+});
+
+// ── Toast & Status ────────────────────────────────────────────
+function showToast(message, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = message;
+  document.body.appendChild(t);
+  t.addEventListener('animationend', () => t.remove());
+}
+
+function updateStatus(activity) {
+  const el = document.getElementById('statusActivity');
+  if (el) el.textContent = activity ? `⟳ ${activity}` : '';
+}
+
+function setStatusTime() {
+  const el = document.getElementById('statusTime');
+  if (el) el.textContent = `Last audit: ${new Date().toLocaleTimeString()}`;
+}
+
+// ── Copy-to-clipboard ─────────────────────────────────────────
+function clipCopy(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('Copied!'));
+}
+
+function entryText(el) {
+  // Extract text without the copy button
+  const clone = el.cloneNode(true);
+  clone.querySelectorAll('.copy-btn').forEach(b => b.remove());
+  return clone.textContent.trim();
+}
+
+function copyEntry(btn) {
+  const entry = btn.closest('.entry');
+  if (entry) clipCopy(entryText(entry));
+}
+
+function copyFix(id, btn) {
+  const text = fixMap[id];
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+function copyGroup(btn) {
+  const section = btn.closest('.section');
+  if (!section) return;
+  const hdr = section.querySelector('.section-hdr span');
+  const title = hdr ? hdr.textContent.trim() : '';
+  const entries = section.querySelectorAll('.section-body .entry:not(.none)');
+  const lines = Array.from(entries).map(e => '  ' + entryText(e));
+  if (!lines.length) return;
+  clipCopy(title + '\n' + lines.join('\n'));
+}
+
+function copyAllAudit() {
+  const panel = document.getElementById('tab-audit');
+  if (!panel) return;
+  const sections = panel.querySelectorAll('.section');
+  const parts = [];
+  for (const s of sections) {
+    const hdr = s.querySelector('.section-hdr span');
+    const title = hdr ? hdr.textContent.trim() : '';
+    const entries = s.querySelectorAll('.section-body .entry:not(.none)');
+    const lines = Array.from(entries).map(e => '  ' + entryText(e));
+    if (lines.length) parts.push(title + '\n' + lines.join('\n'));
+  }
+  if (parts.length) clipCopy(parts.join('\n\n'));
+}
+
+// ── Main ───────────────────────────────────────────────────────
+async function runAudit() {
+  if (isAuditRunning) return;
+  isAuditRunning = true;
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true; btn.textContent = 'Running...';
+  document.getElementById('app').innerHTML = '<div id="progress" class="progress-msg">Starting audit...</div>';
+  updateStatus('Fetching configs...');
+
+  prevResults = results.length ? [...results] : null;
+  cfgs = {}; results = []; counts = { issues: 0, warnings: 0, info: 0 }; queue = {}; ciData = {}; fixMap = {}; fixCounter = 0;
+  auditDone = false;
+  const branch = document.getElementById('branch').value;
+
+  try {
+    await fetchAllConfigs(branch);
+
+    // Fetch CI data (Prow jobs from configs + Actions workflows via API)
+    log('Fetching CI data...');
+    updateStatus('Fetching CI data...');
+    await fetchAllCIData();
+
+    // Audit each group
+    log('Running audit...');
+    updateStatus('Running audit...');
+    for (const [type, group] of Object.entries(GROUPS)) {
+      if (!group.repos.length) continue;
+      for (const repo of group.repos) auditRepo(repo, type);
+    }
+
+    auditDone = true;
+    updateStatus('');
+    setStatusTime();
+    render();
+    const copyAll = document.getElementById('copyAllBtn');
+    if (copyAll && activeTab === 0) copyAll.style.display = '';
+    showToast(`Audit complete — ${counts.issues} issues, ${counts.warnings} warnings`, 'info');
+
+    // Show watch controls after first successful audit
+    const wc = document.getElementById('watchControls');
+    if (wc) wc.style.display = '';
+
+    // Save token
+    const t = document.getElementById('token').value.trim();
+    if (t) sessionStorage.setItem('prow-audit-token', t);
+  } catch (e) {
+    updateStatus('');
+    document.getElementById('app').innerHTML = `<div style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  } finally {
+    isAuditRunning = false;
+    btn.disabled = false; btn.textContent = 'Run Audit';
+    // Restart countdown if watch is active
+    if (watchActive && !watchPaused) startCountdown();
+  }
+}
+
+// Restore token, rate display, and pending notification
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = sessionStorage.getItem('prow-audit-token');
+  if (saved) document.getElementById('token').value = saved;
+  updateRateDisplay();
+  restoreNotifyTimer();
+  // Refresh the reset countdown every minute
+  setInterval(updateRateDisplay, 60000);
+  // Restore watch interval setting (but don't auto-start)
+  const ws = loadWatchSettings();
+  const sel = document.getElementById('watchInterval');
+  if (sel) {
+    for (const opt of sel.options) {
+      if (parseInt(opt.value) === ws.interval) { opt.selected = true; break; }
+    }
+  }
+});
+  </script>
+</body>
+</html>

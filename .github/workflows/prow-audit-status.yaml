@@ -1,0 +1,99 @@
+name: Prow Audit Status
+
+on:
+  schedule:
+    - cron: '0 6 * * 1-5'   # Weekdays 6 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run prow config audit
+        id: audit
+        run: |
+          bash tools/prow-merge-bot-configs/audit.sh --skip-queue \
+            > /tmp/audit-output.txt 2>&1 || true
+          cat /tmp/audit-output.txt
+
+      - name: Parse results
+        id: parse
+        run: |
+          issues=$(grep "^Issues:" /tmp/audit-output.txt | awk '{print $NF}' || echo "0")
+          warnings=$(grep "^Warnings:" /tmp/audit-output.txt | awk '{print $NF}' || echo "0")
+          info=$(grep "^Info:" /tmp/audit-output.txt | awk '{print $NF}' || echo "0")
+
+          # Sanitize: strip any leftover ANSI codes
+          issues=$(echo "$issues" | sed 's/\x1b\[[0-9;]*m//g')
+          warnings=$(echo "$warnings" | sed 's/\x1b\[[0-9;]*m//g')
+          info=$(echo "$info" | sed 's/\x1b\[[0-9;]*m//g')
+
+          echo "issues=${issues:-0}" >> "$GITHUB_OUTPUT"
+          echo "warnings=${warnings:-0}" >> "$GITHUB_OUTPUT"
+          echo "info=${info:-0}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate badge and prepare pages
+        run: |
+          issues=${{ steps.parse.outputs.issues }}
+          warnings=${{ steps.parse.outputs.warnings }}
+
+          if [ "$issues" -gt 0 ]; then
+            color="red"
+            message="${issues} issues, ${warnings} warnings"
+          elif [ "$warnings" -gt 0 ]; then
+            color="yellow"
+            message="${warnings} warnings"
+          else
+            color="brightgreen"
+            message="all clear"
+          fi
+
+          mkdir -p _site
+          cp tools/prow-merge-bot-configs/index.html _site/
+
+          cat > _site/badge.json <<EOF
+          {
+            "schemaVersion": 1,
+            "label": "prow audit",
+            "message": "$message",
+            "color": "$color"
+          }
+          EOF
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v5
+
+      - name: Set workflow status
+        if: always()
+        run: |
+          issues=${{ steps.parse.outputs.issues }}
+          warnings=${{ steps.parse.outputs.warnings }}
+
+          if [ "$issues" -gt 0 ]; then
+            echo "::error::Prow audit found $issues issue(s)"
+            exit 1
+          fi
+
+          if [ "$warnings" -gt 0 ]; then
+            echo "::warning::Prow audit found $warnings warning(s)"
+          fi
