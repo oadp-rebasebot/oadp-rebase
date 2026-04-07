@@ -11,6 +11,7 @@ import (
 // artYAML mirrors the ocp-build-data image config YAML structure.
 type artYAML struct {
 	Name    string `yaml:"name"`
+	Mode    string `yaml:"mode"`
 	Content struct {
 		Source struct {
 			Dockerfile string `yaml:"dockerfile"`
@@ -111,6 +112,7 @@ func parseArtYAML(content string) *ArtBuildConfig {
 
 	return &ArtBuildConfig{
 		Name:         y.Name,
+		Mode:         y.Mode,
 		SourceWeb:    y.Content.Source.Git.Web,
 		SourceURL:    y.Content.Source.Git.URL,
 		BranchTarget: y.Content.Source.Git.Branch.Target,

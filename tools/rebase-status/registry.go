@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -27,6 +28,7 @@ type RepoDef struct {
 	MainOnly bool   // only tracks main, never branched (e.g. udistribution)
 	NoRebase bool   // not managed by rebasebot; track deps/build only (e.g. hypershift-oadp-plugin)
 	Branch   string // override branch (default: use CLI branch, or "main" for MainOnly/NoRebase)
+	MinBranch string // earliest release branch this repo appears in (e.g. "oadp-1.6"); empty = all branches
 }
 
 // allRepos is the complete catalog of OADP repositories.
@@ -35,10 +37,10 @@ var allRepos = []RepoDef{
 	// Wave 1 — base dependencies
 	{Org: "migtools", Repo: "kopia", Wave: 1},
 	{Org: "openshift", Repo: "restic", Wave: 1},
-	{Org: "migtools", Repo: "filebrowser", Wave: 1},
+	{Org: "migtools", Repo: "filebrowser", Wave: 1, MinBranch: "oadp-1.6"},
 	{Org: "migtools", Repo: "udistribution", Wave: 1, MainOnly: true},
 	{Org: "migtools", Repo: "kubevirt-velero-plugin", Wave: 3},
-	{Org: "migtools", Repo: "oadp-vmdp", Wave: 1},
+	{Org: "migtools", Repo: "oadp-vmdp", Wave: 1, MinBranch: "oadp-1.6"},
 
 	// Wave 2 — velero
 	{Org: "openshift", Repo: "velero", Wave: 2},
@@ -55,13 +57,13 @@ var allRepos = []RepoDef{
 	// Wave 4 — downstream controllers
 	{Org: "migtools", Repo: "oadp-non-admin", Wave: 4},
 	{Org: "openshift", Repo: "openshift-velero-plugin", Wave: 4},
-	{Org: "migtools", Repo: "kubevirt-datamover-controller", Wave: 4},
-	{Org: "migtools", Repo: "oadp-vm-file-restore", Wave: 4},
+	{Org: "migtools", Repo: "kubevirt-datamover-controller", Wave: 4, MinBranch: "oadp-1.6"},
+	{Org: "migtools", Repo: "oadp-vm-file-restore", Wave: 4, MinBranch: "oadp-1.6"},
 
 	// Wave 5 — final dependents
 	{Org: "openshift", Repo: "oadp-must-gather", Wave: 5},
-	{Org: "migtools", Repo: "oadp-cli", Wave: 5},
-	{Org: "migtools", Repo: "kubevirt-datamover-plugin", Wave: 5},
+	{Org: "migtools", Repo: "oadp-cli", Wave: 5, MinBranch: "oadp-1.6"},
+	{Org: "migtools", Repo: "kubevirt-datamover-plugin", Wave: 5, MinBranch: "oadp-1.6"},
 }
 
 // DisplayGroup defines a visual column in the output that combines
@@ -165,6 +167,11 @@ func LoadSpecs(configDir, branch string) ([]RepoSpec, error) {
 	for _, def := range allRepos {
 		// Skip main-only repos when checking a release branch
 		if def.MainOnly && branch != "oadp-dev" {
+			continue
+		}
+
+		// Skip repos that weren't introduced until a later release
+		if def.MinBranch != "" && !branchAtLeast(branch, def.MinBranch) {
 			continue
 		}
 
@@ -409,4 +416,37 @@ func FindConfigDir() (string, error) {
 		dir = parent
 	}
 	return "", fmt.Errorf("rebase-configs/ not found (searched from cwd upward)")
+}
+
+// parseBranchVersion extracts (major, minor) from an "oadp-X.Y" branch name.
+// Returns (-1, -1) for non-release branches like "oadp-dev" or "main".
+func parseBranchVersion(branch string) (int, int) {
+	rest := strings.TrimPrefix(branch, "oadp-")
+	if rest == branch {
+		return -1, -1 // not an oadp- branch
+	}
+	parts := strings.SplitN(rest, ".", 2)
+	if len(parts) != 2 {
+		return -1, -1
+	}
+	major, err1 := strconv.Atoi(parts[0])
+	minor, err2 := strconv.Atoi(parts[1])
+	if err1 != nil || err2 != nil {
+		return -1, -1
+	}
+	return major, minor
+}
+
+// branchAtLeast returns true if branch >= minBranch in version ordering.
+// Non-release branches (oadp-dev, main) always return true (they track tip).
+func branchAtLeast(branch, minBranch string) bool {
+	maj, min := parseBranchVersion(branch)
+	if maj < 0 {
+		return true // oadp-dev, main, etc. — always includes everything
+	}
+	minMaj, minMin := parseBranchVersion(minBranch)
+	if minMaj < 0 {
+		return true
+	}
+	return maj > minMaj || (maj == minMaj && min >= minMin)
 }

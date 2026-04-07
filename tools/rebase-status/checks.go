@@ -147,12 +147,18 @@ func checkGoVersion(client *GitHubClient, spec *RepoSpec) *CheckResult {
 		return &CheckResult{StatusWarn, "N/A", "go.mod not found on branch"}
 	}
 
-	goVer := parseGoVersion(string(content))
+	gomod := string(content)
+	goVer := parseGoVersion(gomod)
 	if goVer == "" {
 		return &CheckResult{StatusWarn, "?", "could not parse Go version from go.mod"}
 	}
 
-	return &CheckResult{StatusOK, goVer, ""}
+	summary := goVer
+	if tc := parseGoToolchain(gomod); tc != "" {
+		summary += " (tc " + tc + ")"
+	}
+
+	return &CheckResult{StatusOK, summary, ""}
 }
 
 // checkCIConfig checks if ci-operator config exists in openshift/release.
@@ -370,6 +376,22 @@ func checkArtConfig(client *GitHubClient, spec *RepoSpec) *CheckResult {
 	artConfigStoreMu.Lock()
 	artConfigStore[key] = cfgs
 	artConfigStoreMu.Unlock()
+
+	// Check for disabled configs
+	disabled := 0
+	for _, cfg := range cfgs {
+		if cfg.Disabled() {
+			disabled++
+		}
+	}
+	if disabled > 0 {
+		detail := fmt.Sprintf("%d of %d ART config(s) disabled; enable in https://github.com/openshift-eng/ocp-build-data/tree/%s/images",
+			disabled, len(cfgs), spec.Branch)
+		if disabled == len(cfgs) {
+			return &CheckResult{StatusFail, "disabled", detail}
+		}
+		return &CheckResult{StatusWarn, fmt.Sprintf("%d/%d disabled", disabled, len(cfgs)), detail}
+	}
 
 	// Check if we have enough configs for the expected image count
 	expectedCount := expectedImageCount(key)
@@ -700,9 +722,18 @@ var pseudoHashRe = regexp.MustCompile(`v\d+\.\d+\.\d+-(0\.)?\d{14}-[0-9a-f]{12}$
 // ---------- Parsing helpers ----------
 
 var goVersionRe = regexp.MustCompile(`(?m)^go\s+(\d+\.\d+(?:\.\d+)?)`)
+var goToolchainRe = regexp.MustCompile(`(?m)^toolchain\s+go(\d+\.\d+(?:\.\d+)?)`)
 
 func parseGoVersion(gomod string) string {
 	m := goVersionRe.FindStringSubmatch(gomod)
+	if m == nil {
+		return ""
+	}
+	return m[1]
+}
+
+func parseGoToolchain(gomod string) string {
+	m := goToolchainRe.FindStringSubmatch(gomod)
 	if m == nil {
 		return ""
 	}

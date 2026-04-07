@@ -123,12 +123,18 @@ type ImageRefEntry struct {
 type ArtBuildConfig struct {
 	Filename     string   // e.g. "oadp-velero-plugin-for-gcp.yml"
 	Name         string   // e.g. "oadp/oadp-velero-plugin-for-gcp-rhel9"
+	Mode         string   // e.g. "" (enabled), "disabled", "wip"
 	SourceWeb    string   // e.g. "https://github.com/openshift/velero-plugin-for-gcp"
 	SourceURL    string   // e.g. "git@github.com:openshift-priv/velero-plugin-for-gcp.git"
 	BranchTarget string   // e.g. "oadp-1.6"
 	Dockerfile   string   // e.g. "konflux.Dockerfile"
 	Component    string   // e.g. "oadp-velero-plugin-for-gcp-container"
 	Dependents   []string // e.g. ["oadp-operator"]
+}
+
+// Disabled returns true if the ART config has mode: disabled.
+func (a *ArtBuildConfig) Disabled() bool {
+	return a.Mode == "disabled"
 }
 
 // ReleaseData holds release-level metadata fetched once per branch.

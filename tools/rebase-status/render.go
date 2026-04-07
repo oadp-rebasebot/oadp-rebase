@@ -154,17 +154,40 @@ func RenderTable(w io.Writer, statuses []RepoStatus, branch string) {
 			}
 		}
 
+		// Compute per-column widths from headers and cell content
+		colWidths := make([]int, len(DisplayGroups))
+		for i, dg := range DisplayGroups {
+			colWidths[i] = len(dg.Header)
+		}
+		for _, r := range repos {
+			if r.Spec.Skip {
+				continue
+			}
+			for i, dg := range DisplayGroups {
+				var result *CheckResult
+				if dg.ID == "quay" {
+					result = quayGroupResult(r.Checks)
+				} else {
+					result = groupResult(r.Checks, dg.CheckIDs)
+				}
+				cell := formatCell(result)
+				if n := cellDisplayWidth(cell); n > colWidths[i] {
+					colWidths[i] = n
+				}
+			}
+		}
+
 		// Print column headers
 		fmt.Fprintf(w, "  %-*s", nameWidth, "Repo")
-		for _, dg := range DisplayGroups {
-			fmt.Fprintf(w, "  %-7s", dg.Header)
+		for i, dg := range DisplayGroups {
+			fmt.Fprintf(w, "  %-*s", colWidths[i], dg.Header)
 		}
 		fmt.Fprintln(w)
 
 		// Print separator
 		fmt.Fprintf(w, "  %s%s", cDim, strings.Repeat("─", nameWidth))
-		for range DisplayGroups {
-			fmt.Fprintf(w, "  %s", strings.Repeat("─", 7))
+		for i := range DisplayGroups {
+			fmt.Fprintf(w, "  %s", strings.Repeat("─", colWidths[i]))
 		}
 		fmt.Fprintf(w, "%s\n", cReset)
 
@@ -177,7 +200,7 @@ func RenderTable(w io.Writer, statuses []RepoStatus, branch string) {
 
 			// Repo name + display group columns
 			fmt.Fprintf(w, "  %-*s", nameWidth, r.Spec.FullName())
-			for _, dg := range DisplayGroups {
+			for i, dg := range DisplayGroups {
 				var result *CheckResult
 				if dg.ID == "quay" {
 					result = quayGroupResult(r.Checks)
@@ -185,7 +208,7 @@ func RenderTable(w io.Writer, statuses []RepoStatus, branch string) {
 					result = groupResult(r.Checks, dg.CheckIDs)
 				}
 				cell := formatCell(result)
-				fmt.Fprintf(w, "  %s", colorCell(cell, result.Status, 7))
+				fmt.Fprintf(w, "  %s", colorCell(cell, result.Status, colWidths[i]))
 			}
 			fmt.Fprintln(w)
 
@@ -313,6 +336,29 @@ func RenderTable(w io.Writer, statuses []RepoStatus, branch string) {
 	fmt.Fprintf(w, "%s\n", cReset)
 }
 
+// cellDisplayWidth returns the visual display width of a cell string,
+// accounting for multi-byte emoji characters that occupy more terminal columns.
+func cellDisplayWidth(s string) int {
+	w := 0
+	for _, r := range s {
+		switch {
+		case r == 0xFE0F: // variation selector (zero-width)
+			// don't count
+		case r >= 0x1F600 && r <= 0x1F64F, // emoticons
+			r >= 0x1F300 && r <= 0x1F5FF, // misc symbols
+			r >= 0x1F680 && r <= 0x1F6FF, // transport
+			r >= 0x1F900 && r <= 0x1F9FF, // supplemental
+			r >= 0x2600 && r <= 0x27BF,   // misc symbols (✅, ❌, ⚠, etc.)
+			r >= 0x2B50 && r <= 0x2B55,   // stars
+			r == 0x1F4E6:                  // 📦
+			w += 2
+		default:
+			w++
+		}
+	}
+	return w
+}
+
 // colorCell returns a fixed-width colored string for a table cell.
 func colorCell(text string, status Status, width int) string {
 	color := ""
@@ -326,9 +372,13 @@ func colorCell(text string, status Status, width int) string {
 	case StatusNA, StatusSkip:
 		color = cDim
 	}
-	// Pad to width, then wrap in color
-	padded := fmt.Sprintf("%-*s", width, text)
-	return color + padded + cReset
+	// Pad to width based on display width, not byte length
+	displayW := cellDisplayWidth(text)
+	pad := width - displayW
+	if pad < 0 {
+		pad = 0
+	}
+	return color + text + strings.Repeat(" ", pad) + cReset
 }
 
 // RenderText prints a card-style text view — one block per repo, no table grid.
