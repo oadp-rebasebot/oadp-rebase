@@ -3,13 +3,18 @@
 set -e  # Exit immediately if a command exits with a non-zero status
 set -o pipefail  # Return the exit status of the last command in the pipe that failed
 
-# Bypass the Go module proxy to resolve branch-based replace directives
-# to the latest commit on the branch, avoiding stale cached versions.
-export GOPROXY=direct
-# Skip checksum database verification for downstream fork modules that
-# are not published to the Go ecosystem (sum.golang.org returns 404).
-export GONOSUMDB='github.com/openshift/*,github.com/migtools/*'
-export GONOSUMCHECK='github.com/openshift/*,github.com/migtools/*'
+# Mark downstream fork modules as private so Go fetches them directly
+# (bypassing the module proxy for fresh branch resolution) and skips
+# the checksum database (sum.golang.org returns 404 for these).
+export GOPRIVATE='github.com/openshift/*,github.com/migtools/*'
+# Use the public proxy for all other modules (with direct fallback).
+# This avoids failures when upstream repos are moved/deleted (e.g.
+# lyft/protoc-gen-validate) since the proxy still has cached copies.
+export GOPROXY='https://proxy.golang.org,direct'
+# Skip checksum-database lookups for modules with known sumdb mismatches
+# (e.g. envoyproxy republished tags with different content).
+# openshift/* and migtools/* are already covered by GOPRIVATE above.
+export GONOSUMDB='github.com/envoyproxy/*'
 
 stage_and_commit(){
     # If commiter email and name is passed as environment variable then use it.
@@ -45,6 +50,12 @@ process_go_mod_updates() {
         # done
 
         pushd "$module_base_path"
+
+        # Remove go.sum before tidy to avoid "checksum mismatch" errors
+        # caused by upstream modules being re-published with different
+        # content (e.g. envoyproxy/go-control-plane). go mod tidy will
+        # regenerate go.sum with correct hashes.
+        rm -f go.sum
 
         echo "=== Running 'go mod tidy' in $module_base_path ==="
         if ! go mod tidy; then
