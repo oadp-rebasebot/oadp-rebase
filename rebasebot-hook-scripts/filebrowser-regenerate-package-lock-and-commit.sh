@@ -29,7 +29,7 @@ stage_and_commit(){
     fi
 
     if [[ -n $(git status --porcelain) ]]; then
-        git add -A
+        git add -- frontend/package-lock.json
         git commit "${author_flag[@]}" -q -m "UPSTREAM: <drop>: Regenerate frontend/package-lock.json"
     fi
 }

@@ -89,10 +89,17 @@ process_go_mod_updates() {
         fi
 
         echo "=== Running 'go vet' in $module_base_path ==="
-        if ! go vet ./...; then
-            echo "Unable to run 'go vet' in $module_base_path" >&2
-            exit 1
-        fi
+        # go vet exits non-zero when there are no packages to vet (e.g. doc-only modules).
+        # Detect that case and skip gracefully.
+        vet_output=$(go vet ./... 2>&1) || {
+            if echo "$vet_output" | grep -q "no packages to vet\|matched no packages"; then
+                echo "=== No Go packages to vet in $module_base_path — skipping ==="
+            else
+                echo "$vet_output" >&2
+                echo "Unable to run 'go vet' in $module_base_path" >&2
+                exit 1
+            fi
+        }
 
         popd
     done
