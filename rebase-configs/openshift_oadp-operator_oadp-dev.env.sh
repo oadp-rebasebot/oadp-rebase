@@ -11,4 +11,5 @@ HOOK_SCRIPTS="--post-rebase-hook \
   ${HOOK_SCRIPTS_LOCATION}/go-mod-tidy-and-commit.sh \
   ${HOOK_SCRIPTS_LOCATION}/oadp-operator-copy-crds-from-velero-and-commit_oadp-dev.sh \
   ${HOOK_SCRIPTS_LOCATION}/oadp-operator-run-make-bundle-and-commit.sh \
+  ${HOOK_SCRIPTS_LOCATION}/normalize-dockerfiles-and-commit.sh \
   "
