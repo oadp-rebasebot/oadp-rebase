@@ -15,4 +15,5 @@ HOOK_SCRIPTS="--post-rebase-hook \
   ${HOOK_SCRIPTS_LOCATION}/go-replace_velero_oadp-1.6.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-use-tag_kubevirt-datamover-controller_oadp-1.6.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-mod-tidy-and-commit.sh \
+  ${HOOK_SCRIPTS_LOCATION}/normalize-dockerfiles-and-commit.sh \
   "

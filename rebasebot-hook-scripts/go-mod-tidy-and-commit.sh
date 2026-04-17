@@ -16,6 +16,12 @@ export GOPROXY='https://proxy.golang.org,direct'
 # openshift/* and migtools/* are already covered by GOPRIVATE above.
 export GONOSUMDB='github.com/envoyproxy/*'
 
+# Use whatever Go binary is installed — do not auto-download a newer
+# toolchain and do not update the go or toolchain directives in go.mod.
+# The actual Go version (and its CVE fixes) is controlled by the builder
+# image, not by go.mod.
+export GOTOOLCHAIN=local
+
 stage_and_commit(){
     # If commiter email and name is passed as environment variable then use it.
     if [[ -z "$REBASEBOT_GIT_USERNAME" || -z "$REBASEBOT_GIT_EMAIL" ]]; then
@@ -51,6 +57,14 @@ process_go_mod_updates() {
 
         pushd "$module_base_path"
 
+        # Normalize go.mod: strip patch version from the go directive
+        # (e.g. "go 1.25.7" -> "go 1.25") and remove the toolchain
+        # directive entirely.  Combined with GOTOOLCHAIN=local this
+        # prevents go mod tidy from re-adding them.
+        echo "=== Normalizing go.mod in $module_base_path ==="
+        sed -i -E 's/^go ([0-9]+\.[0-9]+)\.[0-9]+$/go \1/' go.mod
+        sed -i '/^toolchain /d' go.mod
+
         # Remove go.sum before tidy to avoid "checksum mismatch" errors
         # caused by upstream modules being re-published with different
         # content (e.g. envoyproxy/go-control-plane). go mod tidy will
@@ -75,10 +89,17 @@ process_go_mod_updates() {
         fi
 
         echo "=== Running 'go vet' in $module_base_path ==="
-        if ! go vet ./...; then
-            echo "Unable to run 'go vet' in $module_base_path" >&2
-            exit 1
-        fi
+        # go vet exits non-zero when there are no packages to vet (e.g. doc-only modules).
+        # Detect that case and skip gracefully.
+        vet_output=$(go vet ./... 2>&1) || {
+            if echo "$vet_output" | grep -q "no packages to vet\|matched no packages"; then
+                echo "=== No Go packages to vet in $module_base_path — skipping ==="
+            else
+                echo "$vet_output" >&2
+                echo "Unable to run 'go vet' in $module_base_path" >&2
+                exit 1
+            fi
+        }
 
         popd
     done

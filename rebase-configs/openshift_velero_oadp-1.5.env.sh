@@ -44,4 +44,5 @@ HOOK_SCRIPTS="--post-rebase-hook \
   ${HOOK_SCRIPTS_LOCATION}/go-replace_kopia_oadp-1.5.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-mod-tidy-and-commit.sh \
   ${HOOK_SCRIPTS_LOCATION}/restic-submodule-and-commit_oadp-1.5.sh \
+  ${HOOK_SCRIPTS_LOCATION}/normalize-dockerfiles-and-commit.sh \
   "

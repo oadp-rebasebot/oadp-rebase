@@ -17,4 +17,5 @@ HOOK_SCRIPTS="--post-rebase-hook \
   ${HOOK_SCRIPTS_LOCATION}/go-use-tag_oadp-non-admin_oadp-1.6.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-use-tag_oadp-operator_oadp-1.6.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-mod-tidy-and-commit.sh \
+  ${HOOK_SCRIPTS_LOCATION}/normalize-dockerfiles-and-commit.sh \
   "
