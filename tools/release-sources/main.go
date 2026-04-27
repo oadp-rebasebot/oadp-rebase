@@ -8,8 +8,10 @@ import (
 
 func main() {
 	var jsonOutput bool
+	var mdOutput bool
 
 	flag.BoolVar(&jsonOutput, "json", false, "Output as JSON")
+	flag.BoolVar(&mdOutput, "md", false, "Output as Markdown (for wiki pages)")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: release-sources [flags] <branch>\n\n")
 		fmt.Fprintf(os.Stderr, "Compare OADP image definitions across release sources.\n\n")
@@ -22,7 +24,8 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Examples:\n")
 		fmt.Fprintf(os.Stderr, "  release-sources oadp-1.6\n")
 		fmt.Fprintf(os.Stderr, "  release-sources oadp-1.5\n")
-		fmt.Fprintf(os.Stderr, "  release-sources --json oadp-1.6\n\n")
+		fmt.Fprintf(os.Stderr, "  release-sources --json oadp-1.6\n")
+		fmt.Fprintf(os.Stderr, "  release-sources --md oadp-1.6 > wiki.md\n\n")
 		fmt.Fprintf(os.Stderr, "Flags:\n")
 		flag.PrintDefaults()
 	}
@@ -59,6 +62,8 @@ func main() {
 	// Render
 	if jsonOutput {
 		RenderJSON(os.Stdout, branch, src, repos, issues)
+	} else if mdOutput {
+		RenderMarkdown(os.Stdout, branch, src, repos, issues)
 	} else {
 		RenderTable(os.Stdout, branch, src, repos, issues)
 	}
