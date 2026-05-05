@@ -3,7 +3,7 @@
 fetch_github_api() {
     url="$1"
 
-    response=$(curl -s -L -w "%{http_code}" "$url")
+    response=$(curl -s -L -w "%{http_code}" ${GITHUB_TOKEN:+-H "Authorization: token $GITHUB_TOKEN"} "$url")
     http_code=$(printf "%s" "$response" | tail -c 3)
     body=$(printf "%s" "$response" | head -c $(($(printf "%s" "$response" | wc -c) - 3)))
 

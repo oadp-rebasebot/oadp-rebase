@@ -3,7 +3,7 @@
 fetch_github_api() {
     url="$1"
 
-    response=$(curl -s -L -w "%{http_code}" "$url")
+    response=$(curl -s -L -w "%{http_code}" ${GITHUB_TOKEN:+-H "Authorization: token $GITHUB_TOKEN"} "$url")
     http_code=$(printf "%s" "$response" | tail -c 3)
     body=$(printf "%s" "$response" | head -c $(($(printf "%s" "$response" | wc -c) - 3)))
 
@@ -27,7 +27,7 @@ fetch_github_api() {
 UPSTREAM_VELERO_BRANCH=main
 DESTINATION_DOWNSTREAM_VELERO_BRANCH=oadp-dev
 
-KOPIA_HASH=$(curl -s -L "https://raw.githubusercontent.com/velero-io/velero/$UPSTREAM_VELERO_BRANCH/go.mod" \
+KOPIA_HASH=$(curl -s -L ${GITHUB_TOKEN:+-H "Authorization: token $GITHUB_TOKEN"} "https://raw.githubusercontent.com/velero-io/velero/$UPSTREAM_VELERO_BRANCH/go.mod" \
   | grep 'replace github.com/kopia/kopia' \
   | awk '{print $NF}' \
   | awk -F'-' '{print $NF}')

@@ -3,7 +3,7 @@
 fetch_github_api() {
     url="$1"
 
-    response=$(curl -s -L -w "%{http_code}" "$url")
+    response=$(curl -s -L -w "%{http_code}" ${GITHUB_TOKEN:+-H "Authorization: token $GITHUB_TOKEN"} "$url")
     http_code=$(printf "%s" "$response" | tail -c 3)
     body=$(printf "%s" "$response" | head -c $(($(printf "%s" "$response" | wc -c) - 3)))
 
@@ -30,7 +30,7 @@ UPSTREAM_PLUGIN_REPO="velero-io/velero-plugin-for-aws"
 
 # Fetch the AWS plugin compatibility matrix from README
 README_URL="https://raw.githubusercontent.com/${UPSTREAM_PLUGIN_REPO}/refs/heads/main/README.md"
-README_CONTENT=$(curl -s -L "$README_URL")
+README_CONTENT=$(curl -s -L ${GITHUB_TOKEN:+-H "Authorization: token $GITHUB_TOKEN"} "$README_URL")
 
 # Extract plugin version for our Velero version from the compatibility matrix
 # The matrix format is: | v1.12.x | v1.16.x |
