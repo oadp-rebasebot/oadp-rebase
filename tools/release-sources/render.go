@@ -335,6 +335,127 @@ func RenderJSON(w io.Writer, branch string, src *Sources, repos []string, issues
 	enc.Encode(out)
 }
 
+// RenderMarkdown outputs the comparison as GitHub-flavored Markdown.
+func RenderMarkdown(w io.Writer, branch string, src *Sources, repos []string, issues []Issue) {
+	fmt.Fprintf(w, "# OADP Release Source Comparison\n\n")
+	fmt.Fprintf(w, "**Branch:** `%s` | **Generated:** %s\n\n", branch, time.Now().Format("2006-01-02 15:04 MST"))
+
+	// Sources summary
+	fmt.Fprintf(w, "## Sources\n\n")
+	fmt.Fprintf(w, "| Source | Repos | Detail |\n")
+	fmt.Fprintf(w, "|--------|------:|--------|\n")
+	for _, sd := range []struct {
+		data  *SourceData
+		label string
+	}{
+		{&src.Pyxis, "Pyxis (oadp.yaml)"},
+		{&src.OBD, "ocp-build-data"},
+		{&src.ImageRefs, "image-references"},
+		{&src.Stage, "Konflux stage"},
+		{&src.Prod, "Konflux prod"},
+	} {
+		avail := ""
+		if !sd.data.Available {
+			avail = " _(unavailable)_"
+		}
+		fmt.Fprintf(w, "| %s | %d | %s%s |\n", sd.label, len(sd.data.Repos), sd.data.Detail, avail)
+	}
+	fmt.Fprintf(w, "| **Union** | **%d** | %d skipped |\n\n", len(repos), len(exceptions))
+
+	// Pipeline
+	fmt.Fprintf(w, "## Source Pipeline\n\n")
+	fmt.Fprintf(w, "```\n")
+	fmt.Fprintf(w, "ocp-build-data ───┬──→ Pyxis          (container catalog)\n")
+	fmt.Fprintf(w, "(build configs)   ├──→ image-refs     (operator bundle)\n")
+	fmt.Fprintf(w, "                  └──→ Konflux ───┬──→ Stage  (advisory)\n")
+	fmt.Fprintf(w, "                                  └──→ Prod   (advisory)\n")
+	fmt.Fprintf(w, "```\n\n")
+
+	// Comparison matrix
+	fmt.Fprintf(w, "## Comparison Matrix\n\n")
+	fmt.Fprintf(w, "| # | Repository | Pyxis | Stage | Prod | OBD | Delivery | ImgRef | From |\n")
+	fmt.Fprintf(w, "|--:|------------|:-----:|:-----:|:----:|:---:|:--------:|:------:|------|\n")
+
+	for i, repo := range repos {
+		p := mdIcon(src.Pyxis, repo, noPyxis[repo])
+		s := mdIcon(src.Stage, repo, false)
+		pr := mdIcon(src.Prod, repo, false)
+		o := mdIcon(src.OBD, repo, false)
+		ir := mdIcon(src.ImageRefs, repo, false)
+
+		d := "—"
+		if delivery, ok := src.OBDDelivery[repo]; ok {
+			if deliveryMatch(delivery, repo) {
+				d = "✅"
+			} else {
+				d = "❌"
+			}
+		}
+
+		from := ""
+		if f, ok := src.ImgRefFrom[repo]; ok {
+			from = "`" + f + "`"
+		}
+
+		fmt.Fprintf(w, "| %d | `%s` | %s | %s | %s | %s | %s | %s | %s |\n",
+			i+1, repo, p, s, pr, o, d, ir, from)
+	}
+
+	// Issues
+	fmt.Fprintf(w, "\n## Issues\n\n")
+
+	errors := 0
+	warnings := 0
+	for _, iss := range issues {
+		if iss.Severity == "error" {
+			errors++
+		} else {
+			warnings++
+		}
+	}
+
+	if len(issues) == 0 {
+		fmt.Fprintf(w, "**No issues found. All sources are in sync!** ✅\n\n")
+	} else {
+		fmt.Fprintf(w, "**%d errors**, **%d warnings**\n\n", errors, warnings)
+		for _, iss := range issues {
+			if iss.Severity == "error" {
+				line := fmt.Sprintf("- ❌ **%s** — %s", iss.Repo, iss.Message)
+				if iss.InSources != "" {
+					line += fmt.Sprintf(" _(in: %s)_", iss.InSources)
+				}
+				fmt.Fprintln(w, line)
+			}
+		}
+		for _, iss := range issues {
+			if iss.Severity == "warning" {
+				fmt.Fprintf(w, "- ⚠️ **%s** — %s\n", iss.Repo, iss.Message)
+			}
+		}
+		fmt.Fprintln(w)
+	}
+
+	// Score
+	inSync := len(repos) - errors
+	fmt.Fprintf(w, "## Score\n\n")
+	if len(repos) > 0 {
+		fmt.Fprintf(w, "**%d/%d repos in sync (%d%%)**\n", inSync, len(repos), inSync*100/len(repos))
+	} else {
+		fmt.Fprintf(w, "**%d/%d repos in sync**\n", inSync, len(repos))
+	}
+}
+
+// mdIcon returns a plain emoji icon for Markdown output.
+func mdIcon(sd SourceData, repo string, exempt bool) string {
+	if !sd.Available || exempt {
+		return "—"
+	}
+	if sd.Repos[repo] {
+		return "✅"
+	}
+	return "❌"
+}
+
 // --- Rendering helpers ---
 
 // sourceIcon returns the display icon for a repo's presence in a source.
