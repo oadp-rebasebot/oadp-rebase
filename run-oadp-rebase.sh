@@ -350,9 +350,9 @@ run_container_rebase() {
     dry_run="$2"
     source_type="$3"
 
-    CONTAINER_ENGINE="$(command -v docker || true)"
-    [ -z "$CONTAINER_ENGINE" ] && CONTAINER_ENGINE="$(command -v podman || true)"
-    [ -z "$CONTAINER_ENGINE" ] && error_exit "No docker or podman found"
+    CONTAINER_ENGINE="$(command -v podman || true)"
+    [ -z "$CONTAINER_ENGINE" ] && CONTAINER_ENGINE="$(command -v docker || true)"
+    [ -z "$CONTAINER_ENGINE" ] && error_exit "No podman or docker found"
 
     log_section "Rebasing using recepit: $config"
     log_info "Dry run: $dry_run, Config source: $source_type"
