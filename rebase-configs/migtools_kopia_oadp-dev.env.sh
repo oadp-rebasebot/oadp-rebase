@@ -27,7 +27,7 @@ fetch_github_api() {
 UPSTREAM_VELERO_BRANCH=main
 DESTINATION_DOWNSTREAM_VELERO_BRANCH=oadp-dev
 
-KOPIA_HASH=$(curl -s -L "https://raw.githubusercontent.com/vmware-tanzu/velero/$UPSTREAM_VELERO_BRANCH/go.mod" \
+KOPIA_HASH=$(curl -s -L "https://raw.githubusercontent.com/velero-io/velero/$UPSTREAM_VELERO_BRANCH/go.mod" \
   | grep 'replace github.com/kopia/kopia' \
   | awk '{print $NF}' \
   | awk -F'-' '{print $NF}')

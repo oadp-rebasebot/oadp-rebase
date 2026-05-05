@@ -1,4 +1,4 @@
-SOURCE_UPSTREAM_REPO="https://github.com/kubevirt/kubevirt-velero-plugin:main"
+SOURCE_UPSTREAM_REPO="https://github.com/kubevirt/kubevirt-velero-plugin:v0.9.0"
 DESTINATION_DOWNSTREAM_REPO="migtools/kubevirt-velero-plugin:oadp-1.6"
 REBASE_REPO="oadp-rebasebot/kubevirt-velero-plugin:rebase-bot-oadp-1.6"
 

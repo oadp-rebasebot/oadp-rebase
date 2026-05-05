@@ -1,7 +1,7 @@
 UPSTREAM_PLUGIN_BRANCH=main
 DESTINATION_DOWNSTREAM_PLUGIN_BRANCH=oadp-dev
 
-SOURCE_UPSTREAM_REPO="https://github.com/vmware-tanzu/velero-plugin-for-microsoft-azure:$UPSTREAM_PLUGIN_BRANCH"
+SOURCE_UPSTREAM_REPO="https://github.com/velero-io/velero-plugin-for-microsoft-azure:$UPSTREAM_PLUGIN_BRANCH"
 DESTINATION_DOWNSTREAM_REPO="openshift/velero-plugin-for-microsoft-azure:$DESTINATION_DOWNSTREAM_PLUGIN_BRANCH"
 REBASE_REPO="oadp-rebasebot/velero-plugin-for-microsoft-azure:rebase-bot-$DESTINATION_DOWNSTREAM_PLUGIN_BRANCH"
 

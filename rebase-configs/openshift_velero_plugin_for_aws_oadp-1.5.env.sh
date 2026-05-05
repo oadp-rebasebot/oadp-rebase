@@ -26,7 +26,7 @@ fetch_github_api() {
 UPSTREAM_VELERO_MAJOR_VERSION=v1.16
 DESTINATION_DOWNSTREAM_VELERO_BRANCH=oadp-1.5
 
-UPSTREAM_PLUGIN_REPO="vmware-tanzu/velero-plugin-for-aws"
+UPSTREAM_PLUGIN_REPO="velero-io/velero-plugin-for-aws"
 
 # Fetch the AWS plugin compatibility matrix from README
 README_URL="https://raw.githubusercontent.com/${UPSTREAM_PLUGIN_REPO}/refs/heads/main/README.md"

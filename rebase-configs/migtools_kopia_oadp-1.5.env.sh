@@ -26,7 +26,7 @@ fetch_github_api() {
 UPSTREAM_VELERO_MAJOR_VERSION=v1.16
 DESTINATION_DOWNSTREAM_VELERO_BRANCH=oadp-1.5
 
-tags_body=$(fetch_github_api "https://api.github.com/repos/vmware-tanzu/velero/tags?per_page=100") || exit 1
+tags_body=$(fetch_github_api "https://api.github.com/repos/velero-io/velero/tags?per_page=100") || exit 1
 
 LATEST_VELERO_TAG=$(
   printf '%s\n' "$tags_body" \
@@ -36,7 +36,7 @@ LATEST_VELERO_TAG=$(
   | tail -n 1
 )
 
-KOPIA_HASH=$(curl -s -L "https://raw.githubusercontent.com/vmware-tanzu/velero/$LATEST_VELERO_TAG/go.mod" \
+KOPIA_HASH=$(curl -s -L "https://raw.githubusercontent.com/velero-io/velero/$LATEST_VELERO_TAG/go.mod" \
   | grep 'replace github.com/kopia/kopia' \
   | awk '{print $NF}' \
   | awk -F'-' '{print $NF}')

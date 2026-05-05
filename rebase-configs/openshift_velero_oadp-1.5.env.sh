@@ -23,7 +23,7 @@ fetch_github_api() {
 UPSTREAM_VELERO_MAJOR_VERSION=v1.16
 DESTINATION_DOWNSTREAM_VELERO_BRANCH=oadp-1.5
 
-tags_body=$(fetch_github_api "https://api.github.com/repos/vmware-tanzu/velero/tags?per_page=100") || exit 1
+tags_body=$(fetch_github_api "https://api.github.com/repos/velero-io/velero/tags?per_page=100") || exit 1
 
 # Do not include -rc.X versions, only released Velero
 LATEST_VELERO_TAG=$(
@@ -34,7 +34,7 @@ LATEST_VELERO_TAG=$(
   | tail -n 1
 )
 
-SOURCE_UPSTREAM_REPO="https://github.com/vmware-tanzu/velero:$LATEST_VELERO_TAG"
+SOURCE_UPSTREAM_REPO="https://github.com/velero-io/velero:$LATEST_VELERO_TAG"
 DESTINATION_DOWNSTREAM_REPO="openshift/velero:$DESTINATION_DOWNSTREAM_VELERO_BRANCH"
 REBASE_REPO="oadp-rebasebot/velero:rebase-bot-$DESTINATION_DOWNSTREAM_VELERO_BRANCH"
 
