@@ -1,9 +1,9 @@
 # ===============================================================
 # Velero rebase configuration for OADP 1.6
-# Uses upstream Velero v1.18.1-rc.1 tag
+# Uses upstream Velero v1.18.1-rc.2 tag
 # ===============================================================
 
-UPSTREAM_VELERO_BRANCH="v1.18.1-rc.1"
+UPSTREAM_VELERO_BRANCH="v1.18.1-rc.2"
 DESTINATION_DOWNSTREAM_VELERO_BRANCH="oadp-1.6"
 
 SOURCE_UPSTREAM_REPO="https://github.com/velero-io/velero:$UPSTREAM_VELERO_BRANCH"
