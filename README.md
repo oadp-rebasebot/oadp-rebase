@@ -121,6 +121,7 @@ The `run-oadp-rebase.sh` script provides a unified interface for running rebase 
    ```bash
    podman machine ssh "sudo date -s @$(date +%s)"
    ```
+Open issue: https://github.com/containers/podman/issues/27293
 
 2. **`/tmp` volume mounts fail**: macOS's `/tmp` is a symlink to `/private/tmp`, which podman can't resolve for volume mounts. Use `--working-dir` with a path under `$HOME` instead (e.g. `--working-dir ~/.cache/oadp-rebase-workdir`), or use `/private/tmp` directly.
 
