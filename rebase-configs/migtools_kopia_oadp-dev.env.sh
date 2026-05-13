@@ -3,7 +3,11 @@
 fetch_github_api() {
     url="$1"
 
-    response=$(curl -s -L -w "%{http_code}" "$url")
+    if [ -n "$GITHUB_TOKEN" ]; then
+        response=$(curl -s -L -w "%{http_code}" -H "Authorization: token $GITHUB_TOKEN" "$url")
+    else
+        response=$(curl -s -L -w "%{http_code}" "$url")
+    fi
     http_code=$(printf "%s" "$response" | tail -c 3)
     body=$(printf "%s" "$response" | head -c $(($(printf "%s" "$response" | wc -c) - 3)))
 
@@ -27,10 +31,18 @@ fetch_github_api() {
 UPSTREAM_VELERO_BRANCH=main
 DESTINATION_DOWNSTREAM_VELERO_BRANCH=oadp-dev
 
-KOPIA_HASH=$(curl -s -L "https://raw.githubusercontent.com/velero-io/velero/$UPSTREAM_VELERO_BRANCH/go.mod" \
-  | grep 'replace github.com/kopia/kopia' \
-  | awk '{print $NF}' \
-  | awk -F'-' '{print $NF}')
+VELERO_GOMOD_URL="https://raw.githubusercontent.com/velero-io/velero/$UPSTREAM_VELERO_BRANCH/go.mod"
+if [ -n "$GITHUB_TOKEN" ]; then
+    KOPIA_HASH=$(curl -s -L -H "Authorization: token $GITHUB_TOKEN" "$VELERO_GOMOD_URL" \
+      | grep 'replace github.com/kopia/kopia' \
+      | awk '{print $NF}' \
+      | awk -F'-' '{print $NF}')
+else
+    KOPIA_HASH=$(curl -s -L "$VELERO_GOMOD_URL" \
+      | grep 'replace github.com/kopia/kopia' \
+      | awk '{print $NF}' \
+      | awk -F'-' '{print $NF}')
+fi
 
 UPSTREAM_KOPIA_REPO="project-velero/kopia"
 
