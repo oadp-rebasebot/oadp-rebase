@@ -1,0 +1,84 @@
+name: Update Wiki Rebase Status
+
+on:
+  schedule:
+    - cron: '17,47 * * * *'  # Every 30 minutes (offset from :00/:30)
+  workflow_dispatch:
+
+jobs:
+  update-wiki:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        branch: ["oadp-1.6"]
+      fail-fast: false
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.REBASEBOT_APP_ID }}
+          private-key: ${{ secrets.REBASEBOT_APP_KEY }}
+          owner: openshift
+          repositories: oadp-operator
+
+      - uses: actions/checkout@v4
+        with:
+          ref: oadp-dev
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: tools/rebase-status/go.sum
+
+      - name: Build rebase-status
+        run: |
+          cd tools/rebase-status
+          go build -o rebase-status .
+
+      - name: Generate status markdown
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          ./tools/rebase-status/rebase-status --format markdown ${{ matrix.branch }} \
+            > /tmp/rebase-status-${{ matrix.branch }}.md; rc=$?
+          if [ ! -s /tmp/rebase-status-${{ matrix.branch }}.md ]; then
+            echo "rebase-status produced empty output (exit code $rc)"
+            exit 1
+          fi
+          head -5 /tmp/rebase-status-${{ matrix.branch }}.md
+
+      - name: Clone wiki
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/openshift/oadp-operator.wiki.git /tmp/wiki
+
+      - name: Update wiki page
+        run: |
+          BRANCH="${{ matrix.branch }}"
+          # Wiki filenames use Unicode hyphen U+2010 (‐) in specific positions
+          # Map branch to wiki filename
+          case "$BRANCH" in
+            oadp-1.5) WIKI_FILE="Rebase-status-‐-oadp‐1.5.md" ;;
+            oadp-1.6) WIKI_FILE="Rebase-status-‐-oadp‐1.6.md" ;;
+            oadp-dev) WIKI_FILE="Rebase-status-‐-oadp‐dev.md" ;;
+            *) echo "Unknown branch: $BRANCH"; exit 1 ;;
+          esac
+
+          cp /tmp/rebase-status-${BRANCH}.md "/tmp/wiki/${WIKI_FILE}"
+
+      - name: Push wiki changes
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          cd /tmp/wiki
+          git config user.name "oadp-rebasebot"
+          git config user.email "oadp-maintainers@redhat.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to push"
+          else
+            git commit -m "Update rebase status for ${{ matrix.branch }} - $(date +%Y-%m-%d)"
+            git push
+          fi
