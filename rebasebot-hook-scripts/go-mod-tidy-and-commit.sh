@@ -91,7 +91,7 @@ process_go_mod_updates() {
         echo "=== Running 'go vet' in $module_base_path ==="
         # go vet exits non-zero when there are no packages to vet (e.g. doc-only modules).
         # Detect that case and skip gracefully.
-        vet_output=$(go vet ./... 2>&1) || {
+        vet_output=$(go vet ${GO_VET_TAGS:+-tags "$GO_VET_TAGS"} ./... 2>&1) || {
             if echo "$vet_output" | grep -q "no packages to vet\|matched no packages"; then
                 echo "=== No Go packages to vet in $module_base_path — skipping ==="
             else

@@ -415,6 +415,7 @@ run_container_rebase() {
   -v \"$SECRETS_DIR:/secrets:Z,ro\" $WORKING_MOUNT $HOOKS_MOUNT \
   -e GIT_USERNAME=\"$GIT_USERNAME\" \
   -e GIT_EMAIL=\"$GIT_EMAIL\" \
+  ${GO_VET_TAGS:+-e GO_VET_TAGS=\"$GO_VET_TAGS\"} \
   $EXTRA_ENV_FLAGS \
   \"$REBASEBOT_IMAGE\" \
   --conflict-policy strict \
