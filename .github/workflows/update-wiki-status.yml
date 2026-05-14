@@ -41,9 +41,9 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           ./tools/rebase-status/rebase-status --format markdown ${{ matrix.branch }} \
-            > /tmp/rebase-status-${{ matrix.branch }}.md; rc=$?
+            > /tmp/rebase-status-${{ matrix.branch }}.md || true
           if [ ! -s /tmp/rebase-status-${{ matrix.branch }}.md ]; then
-            echo "rebase-status produced empty output (exit code $rc)"
+            echo "rebase-status produced empty output"
             exit 1
           fi
           head -5 /tmp/rebase-status-${{ matrix.branch }}.md
