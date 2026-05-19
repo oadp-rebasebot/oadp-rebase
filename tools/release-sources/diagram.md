@@ -140,9 +140,9 @@ flowchart LR
   - `release-sources` and `rebase-status` then consume the committed file contents for consistency checks.
 - Downstream coupling in `oadp-operator` tests:
   - release tests validate that `image-references` and CSV `RELATED_IMAGE_*` stay in sync:
-    - [`ValidateImageReferencesMatchCSV`](https://github.com/openshift/oadp-operator/blob/935b4b19460ea4fcafbd7cc3532baf3fc04edae0/tests/release/image_references.go)
-    - [`ValidateCSVMatchImageReferences`](https://github.com/openshift/oadp-operator/blob/935b4b19460ea4fcafbd7cc3532baf3fc04edae0/tests/release/image_references.go)
-    - file-path constants for both artifacts: [`imageRefsRelPath` + `csvRelPath`](https://github.com/openshift/oadp-operator/blob/935b4b19460ea4fcafbd7cc3532baf3fc04edae0/tests/release/types.go)
+    - [`ValidateImageReferencesMatchCSV`](https://github.com/openshift/oadp-operator/blob/oadp-dev/tests/release/image_references.go)
+    - [`ValidateCSVMatchImageReferences`](https://github.com/openshift/oadp-operator/blob/oadp-dev/tests/release/image_references.go)
+    - file-path constants for both artifacts: [`imageRefsRelPath` + `csvRelPath`](https://github.com/openshift/oadp-operator/blob/oadp-dev/tests/release/types.go)
 
 ## End-to-end OADP release walk-through (intern-friendly, step-by-step)
 
