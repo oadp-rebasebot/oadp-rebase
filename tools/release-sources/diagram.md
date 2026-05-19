@@ -47,8 +47,9 @@ flowchart TD
   - OCP build-data streams aliases: [`openshift-eng/ocp-build-data/streams.yml` (oadp-1.5)](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/streams.yml)
   - OADP operator image references: [`openshift/oadp-operator/bundle/image-references` (oadp-1.5)](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/image-references)
   - Konflux advisory data:
-    - [`releng/konflux-release-data` stage advisories](https://gitlab.cee.redhat.com/releng/konflux-release-data/-/tree/main/advisories)
-    - [`releng/konflux-release-data` prod advisories](https://gitlab.cee.redhat.com/releng/konflux-release-data/-/tree/main/advisories)
+    - advisories repo path: [`releng/konflux-release-data/advisories`](https://gitlab.cee.redhat.com/releng/konflux-release-data/-/tree/main/advisories)
+    - stage files: `oadp-advisory-stage-*.yaml`
+    - prod files: `oadp-advisory-prod-*.yaml`
 
 ## Common build provenance flow (how source metadata becomes built images)
 
