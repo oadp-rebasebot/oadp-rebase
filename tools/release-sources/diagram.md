@@ -61,6 +61,32 @@ flowchart LR
     F --> S
 ```
 
+## OADP Operator catalog path (FBC / bundle / CSV / RELATED_IMAGES)
+
+For OADP Operator, `ocp-build-data` has additional metadata beyond plain image build wiring:
+- `group.yml` controls shared vars and catalog behavior (for example `GO_*`, `operator_image_ref_mode`, `FBC_DISABLE_CHANNEL_SKIPS`, `OCP_TARGET_VERSIONS`).
+- `images/oadp-operator.yml` defines `update-csv` inputs plus `delivery.bundle_delivery_repo_name` / `delivery_repo_names`.
+- `update-csv` processing produces/updates bundle CSV content (including `relatedImages` and `RELATED_IMAGE_*` env references used by the operator deployment).
+
+```mermaid
+flowchart LR
+    G["ocp-build-data/group.yml<br/>GO_* vars, operator_image_ref_mode,<br/>FBC_DISABLE_CHANNEL_SKIPS, OCP_TARGET_VERSIONS"]
+    I["ocp-build-data/images/oadp-operator.yml<br/>content.source.*, update-csv.*, delivery.*"]
+    S["openshift/oadp-operator source<br/>konflux.Dockerfile + manifests/ + bundle/"]
+    B["ART/Konflux build + update-csv stage<br/>build operator image and refresh bundle/CSV metadata"]
+    C["bundle image / CSV content<br/>contains relatedImages + RELATED_IMAGE_* driven refs"]
+    F["File Based Catalog (FBC) content<br/>published for target OCP versions"]
+    P["Published metadata systems<br/>image-references, pyxis, advisories"]
+
+    G --> B
+    I --> B
+    S --> B
+    B --> C
+    C --> F
+    C --> P
+    F --> P
+```
+
 ## Per-resulting-image diagrams (only when flow differs)
 
 ### A) Single-image repos (same/common path)
@@ -137,6 +163,10 @@ flowchart LR
 - **Per-image build wiring and source Dockerfile path**
   - `openshift-eng/ocp-build-data/blob/<branch>/images/*.yml`
   - fields commonly used: `name`, `content.source.git.*`, `content.source.dockerfile`, `delivery_repo_names`
+- **Operator bundle/CSV/FBC wiring (OADP Operator path)**
+  - `openshift-eng/ocp-build-data/blob/<branch>/group.yml` (catalog/version knobs such as `OCP_TARGET_VERSIONS`, `FBC_DISABLE_CHANNEL_SKIPS`)
+  - `openshift-eng/ocp-build-data/blob/<branch>/images/oadp-operator.yml` (`update-csv`, `bundle_delivery_repo_name`, `delivery_repo_names`)
+  - `openshift/oadp-operator/bundle/manifests/*.clusterserviceversion.yaml` (`relatedImages`, `RELATED_IMAGE_*` env usage)
 - **COPYs / additional files included into image**
   - source repo `Dockerfile` / `konflux.Dockerfile` (`COPY`/`ADD` statements)
 - **Submodules that can introduce vulnerable content**
