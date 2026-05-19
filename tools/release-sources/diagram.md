@@ -106,6 +106,25 @@ flowchart LR
 
 ## End-to-end OADP release walk-through (intern-friendly, step-by-step)
 
+```mermaid
+flowchart TB
+    S1["1) Choose release branch + source repos<br/>rebase-configs/*_<branch>.env.sh"]
+    S2["2) Define per-image ART build wiring<br/>ocp-build-data/images/*.yml"]
+    S3["3) Resolve Dockerfile FROM aliases<br/>ocp-build-data/streams.yml + ART tooling"]
+    S4["4) Build component images from source repos<br/>Dockerfile/konflux.Dockerfile + code/submodules"]
+    S5["5) Apply OADP operator bundle/CSV wiring<br/>group.yml + oadp-operator.yml + update-csv"]
+    S6["6) Publish/maintain bundle/image-references"]
+    S7["7) Build/publish File-Based Catalog (FBC)"]
+    S8["8) Publish release visibility metadata<br/>Pyxis + advisories"]
+    S9["9) Compare source-of-truth systems<br/>release-sources FetchAll/BuildUnion/FindIssues"]
+    S10["10) Gate readiness/drift<br/>rebase-status checks"]
+    S11["11) Special-case CVE checks<br/>oadp-must-gather ose-cli/oc path"]
+
+    S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9 --> S10
+    S3 --> S11
+    S4 --> S11
+```
+
 1. **Choose release branch + source repos**
    - branch-scoped mapping lives in [`rebase-configs/*_<branch>.env.sh`](../../rebase-configs/)
    - key variables: `SOURCE_UPSTREAM_REPO`, `DESTINATION_DOWNSTREAM_REPO`, `REBASE_REPO`
