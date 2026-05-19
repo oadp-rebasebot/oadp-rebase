@@ -83,13 +83,7 @@ flowchart LR
 
 ## OADP Operator catalog path (FBC / bundle / CSV / RELATED_IMAGES)
 
-For OADP Operator, `ocp-build-data` has additional metadata beyond plain image build wiring:
-- [`openshift-eng/ocp-build-data/group.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/group.yml) controls shared vars and catalog behavior (for example `GO_*`, `operator_image_ref_mode`, `FBC_DISABLE_CHANNEL_SKIPS`, `OCP_TARGET_VERSIONS`).
-- [`openshift-eng/ocp-build-data/images/oadp-operator.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/images/oadp-operator.yml) defines `update-csv` inputs plus `delivery.bundle_delivery_repo_name` / `delivery_repo_names`.
-- `update-csv` processing produces/updates bundle CSV content (including [`openshift/oadp-operator/bundle/manifests/oadp-operator.clusterserviceversion.yaml`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/manifests/oadp-operator.clusterserviceversion.yaml) and `RELATED_IMAGE_*` env references used by the operator deployment).
-- Resulting operator/catalog payload files to inspect:
-  - [`openshift/oadp-operator/bundle/image-references`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/image-references)
-  - [`openshift/oadp-operator/bundle/manifests/oadp-operator.clusterserviceversion.yaml`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/manifests/oadp-operator.clusterserviceversion.yaml)
+Most step-by-step details for this flow (vars/files/envs/repos and exact code links) are consolidated in the walkthrough section below.
 
 ```mermaid
 flowchart LR
@@ -110,55 +104,59 @@ flowchart LR
     F --> P
 ```
 
-### `bundle/image-references`: who edits it, and who consumes it
-
-- File location: [`openshift/oadp-operator/bundle/image-references`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/image-references)
-- In this tools repository, it is consumed as a **source-of-truth input** (not generated here):
-  - `release-sources` fetches/parses it in [`fetchImageRefs(...)`](./sources.go)
-  - `rebase-status` fetches/parses it in [`FetchImageReferences(...)`](../rebase-status/imageref.go)
-  - `rebase-status` uses it to check productization and ART-name alignment in [`checkProductized(...)`](../rebase-status/checks.go) and [`crossRefImageArt(...)`](../rebase-status/checks.go)
-- Practical edit model:
-  - treat it as a normal git-tracked YAML manifest updated via PRs in `openshift/oadp-operator` (manual edits and/or automation-produced commits can both land as git changes),
-  - `release-sources` and `rebase-status` then consume the committed file contents for consistency checks.
-- Downstream coupling in `oadp-operator` tests:
-  - release tests validate that `image-references` and CSV `RELATED_IMAGE_*` stay in sync:
-    - [`openshift/oadp-operator/tests/release/image_references.go`](https://github.com/openshift/oadp-operator/blob/oadp-dev/tests/release/image_references.go)
-    - [`openshift/oadp-operator/tests/release/image_references.go`](https://github.com/openshift/oadp-operator/blob/oadp-dev/tests/release/image_references.go)
-    - file-path constants for both artifacts: [`openshift/oadp-operator/tests/release/types.go`](https://github.com/openshift/oadp-operator/blob/oadp-dev/tests/release/types.go)
-
 ## End-to-end OADP release walk-through (intern-friendly, step-by-step)
 
 1. **Choose release branch + source repos**
    - branch-scoped mapping lives in [`rebase-configs/*_<branch>.env.sh`](../../rebase-configs/)
    - key variables: `SOURCE_UPSTREAM_REPO`, `DESTINATION_DOWNSTREAM_REPO`, `REBASE_REPO`
-2. **Define build wiring for each image**
+2. **Define per-image ART build wiring**
    - per-image config in [`openshift-eng/ocp-build-data/images`](https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.5/images)
    - for operator specifically: [`openshift-eng/ocp-build-data/images/oadp-operator.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/images/oadp-operator.yml)
-3. **Resolve `FROM` aliases to concrete images**
+   - common fields to inspect/edit: `name`, `content.source.git.*`, `content.source.dockerfile`, `delivery_repo_names`, `update-csv.*`
+3. **Resolve Dockerfile `FROM` aliases to concrete pullspecs**
    - alias source: [`openshift-eng/ocp-build-data/streams.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/streams.yml)
-   - consumed by ART/Konflux while processing source Dockerfiles/`konflux.Dockerfile`
-4. **Build operator and component images**
+   - schema and examples for `from.stream` / builder streams:
+     - [`openshift-eng/art-tools/ocp-build-data-validator/validator/json_schemas/image_config.base.schema.json`](https://github.com/openshift-eng/art-tools/blob/25f0a8d515ef029feaaa53162cfc2011d6913d56/ocp-build-data-validator/validator/json_schemas/image_config.base.schema.json)
+     - [`openshift-eng/ocp-build-data/example/images/myutil-base.yml`](https://github.com/openshift-eng/ocp-build-data/blob/0a05a447bc6464f6c00a8a1948fba0b8a5953388/example/images/myutil-base.yml)
+     - [`openshift-eng/ocp-build-data/example/images/template.yml`](https://github.com/openshift-eng/ocp-build-data/blob/0a05a447bc6464f6c00a8a1948fba0b8a5953388/example/images/template.yml)
+   - ART tooling paths that read/resolve stream aliases:
+     - [`openshift-eng/art-tools/doozer/doozerlib/image.py`](https://github.com/openshift-eng/art-tools/blob/25f0a8d515ef029feaaa53162cfc2011d6913d56/doozer/doozerlib/image.py)
+     - [`openshift-eng/art-tools/doozer/doozerlib/backend/rebaser.py`](https://github.com/openshift-eng/art-tools/blob/25f0a8d515ef029feaaa53162cfc2011d6913d56/doozer/doozerlib/backend/rebaser.py)
+     - [`openshift-eng/art-tools/doozer/doozerlib/backend/base_image_handler.py`](https://github.com/openshift-eng/art-tools/blob/25f0a8d515ef029feaaa53162cfc2011d6913d56/doozer/doozerlib/backend/base_image_handler.py)
+     - [`openshift-eng/art-tools/pyartcd/pyartcd/pipelines/update_golang.py`](https://github.com/openshift-eng/art-tools/blob/25f0a8d515ef029feaaa53162cfc2011d6913d56/pyartcd/pyartcd/pipelines/update_golang.py)
+4. **Build component images from source repos**
    - source repos (for example [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator/tree/oadp-1.5)) provide `konflux.Dockerfile`, `Dockerfile`, code, manifests, and optional submodules
-   - ART/Konflux produces image artifacts destined for Quay/registry
-5. **Run/update operator metadata wiring**
-   - OADP operator path uses `update-csv` knobs from [`openshift-eng/ocp-build-data/images/oadp-operator.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/images/oadp-operator.yml)
-   - CSV content (including `relatedImages` + `RELATED_IMAGE_*`) is materialized in [`openshift/oadp-operator/bundle/manifests/oadp-operator.clusterserviceversion.yaml`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/manifests/oadp-operator.clusterserviceversion.yaml)
-6. **Publish/maintain release image mapping**
-   - productized image mapping file: [`openshift/oadp-operator/bundle/image-references`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/image-references)
-   - this file is what downstream checks use to determine whether an image is actively tracked for release
+   - CVE-impacting edit points commonly include:
+     - builder/runtime base-image `FROM` lines in [`openshift/oadp-operator/konflux.Dockerfile`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/konflux.Dockerfile)
+     - toolchain declarations in [`openshift/oadp-operator/go.mod`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/go.mod)
+     - copied content via `COPY`/`ADD` in [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator/tree/oadp-1.5)
+     - submodule inputs in [`openshift/oadp-must-gather/.gitmodules`](https://github.com/openshift/oadp-must-gather/blob/oadp-1.5/.gitmodules)
+     - helper hooks in this repo (for example [`rebasebot-hook-scripts/restic-submodule-and-commit_*.sh`](../../rebasebot-hook-scripts/))
+5. **Apply OADP Operator bundle/CSV wiring**
+   - catalog/version/env controls in [`openshift-eng/ocp-build-data/group.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/group.yml) (for example `GO_*`, `operator_image_ref_mode`, `FBC_DISABLE_CHANNEL_SKIPS`, `OCP_TARGET_VERSIONS`)
+   - operator image + `update-csv` knobs in [`openshift-eng/ocp-build-data/images/oadp-operator.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/images/oadp-operator.yml)
+   - resulting CSV wiring in [`openshift/oadp-operator/bundle/manifests/oadp-operator.clusterserviceversion.yaml`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/manifests/oadp-operator.clusterserviceversion.yaml) (`relatedImages`, `RELATED_IMAGE_*`)
+6. **Publish/maintain `bundle/image-references` as release mapping**
+   - file path: [`openshift/oadp-operator/bundle/image-references`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/image-references)
+   - treated as git-tracked source-of-truth in `openshift/oadp-operator` PRs (manual and automation updates both land as commits)
+   - downstream coupling tests:
+     - [`openshift/oadp-operator/tests/release/image_references.go`](https://github.com/openshift/oadp-operator/blob/oadp-dev/tests/release/image_references.go)
+     - [`openshift/oadp-operator/tests/release/types.go`](https://github.com/openshift/oadp-operator/blob/oadp-dev/tests/release/types.go)
 7. **Build/publish File-Based Catalog (FBC)**
-   - catalog controls in [`openshift-eng/ocp-build-data/group.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/group.yml) (`OCP_TARGET_VERSIONS`, `FBC_DISABLE_CHANNEL_SKIPS`, `operator_image_ref_mode`, etc.)
-   - bundle/CSV output is transformed into FBC content and published for target OCP versions
+   - ART/Konflux + `update-csv` output produce bundle/CSV inputs consumed by FBC publish flows for target OCP versions
 8. **Publish release visibility metadata**
    - Pyxis product config: [`releng/pyxis-repo-configs/products/oadp/oadp.yaml`](https://gitlab.cee.redhat.com/releng/pyxis-repo-configs/-/blob/main/products/oadp/oadp.yaml)
    - Konflux advisory files: [`releng/konflux-release-data/advisories`](https://gitlab.cee.redhat.com/releng/konflux-release-data/-/tree/main/advisories)
-9. **Compare and audit source-of-truth systems**
-   - this tool (`release-sources`) compares pyxis, ocp-build-data, image-references, and advisories:
-     - [`FetchAll(...)`](./sources.go), [`BuildUnion(...)`](./sources.go), [`FindIssues(...)`](./sources.go)
-10. **Gate readiness and catch drift**
-   - this repo’s `rebase-status` cross-checks `image-references` vs `ocp-build-data` names and warns when entries are missing/commented:
-     - [`crossRefImageArt(...)`](../rebase-status/checks.go)
-     - [`checkProductized(...)`](../rebase-status/checks.go)
+9. **Compare source-of-truth systems in `release-sources`**
+   - parse/fetch paths in [`FetchAll(...)`](./sources.go)
+   - comparison paths in [`BuildUnion(...)`](./sources.go), [`FindIssues(...)`](./sources.go)
+10. **Gate readiness/drift in `rebase-status`**
+    - parse image-references in [`FetchImageReferences(...)`](../rebase-status/imageref.go)
+    - cross-checks in [`crossRefImageArt(...)`](../rebase-status/checks.go), [`checkProductized(...)`](../rebase-status/checks.go)
+11. **Special-case CVE checks for `oadp-must-gather`**
+    - verify CLI image stage source in Dockerfile `FROM ...openshift-ose-cli...`
+    - verify `COPY --from=ose-cli /usr/bin/oc /usr/bin/oc`
+    - verify the matching `streams.yml` alias resolves to expected CLI/base pullspec
 
 ## Per-resulting-image diagrams (only when flow differs)
 
@@ -177,10 +175,7 @@ flowchart LR
 
 ### B) `oadp-must-gather` special case (single output, multiple build sources)
 
-`oadp-must-gather` is still one resulting image, but its build inputs are broader:
-- main repo code,
-- additional source trees (e.g. `velero`/`restic`/`kopia` via submodules or fetched sources depending on Dockerfile path),
-- `oc` binary copied from OCP CLI image stage.
+Detailed ownership/edit notes for this case are in walkthrough step **11**.
 
 ```mermaid
 flowchart LR
@@ -198,17 +193,9 @@ flowchart LR
     E --> F
 ```
 
-`oc`-related CVE ownership for `oadp-must-gather` is typically tied to:
-- Dockerfile `FROM ...openshift-ose-cli...` stage tag/digest,
-- Dockerfile `COPY --from=ose-cli /usr/bin/oc /usr/bin/oc`,
-- and the `ocp-build-data/streams.yml` alias that resolves the CLI/base image pullspec used by ART.
-
 ### C) Multi-image repo flow (different output fan-out)
 
-Current known multi-output case from this codebase catalog: `migtools/oadp-vm-file-restore` producing:
-- `oadp-vm-file-restore`
-- `oadp-vmfr-access`
-- `oadp-vmfr-access-sshd`
+Current known multi-output case from this codebase catalog: `migtools/oadp-vm-file-restore`.
 
 ```mermaid
 flowchart LR
@@ -225,32 +212,9 @@ flowchart LR
 
 ## Where to edit for CVE remediation (quick map)
 
-- **Upstream/downstream source-of-truth repo mapping**
-  - [`rebase-configs/*_<branch>.env.sh`](../../rebase-configs/)
-  - keys: `SOURCE_UPSTREAM_REPO`, `DESTINATION_DOWNSTREAM_REPO`, `REBASE_REPO`
-- **Go version / builder toolchain used by Konflux build**
-  - repo [`openshift/oadp-operator/konflux.Dockerfile`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/konflux.Dockerfile) builder `FROM ...:rhel_9_golang_* AS builder`
-  - repo [`openshift/oadp-operator/go.mod`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/go.mod) / toolchain declarations
-- **Base image aliases used in Dockerfile `FROM` replacement**
-  - [`openshift-eng/ocp-build-data/streams.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/streams.yml)
-  - `release-sources` compares outputs only; ART tooling performs alias resolution from `streams.yml`:
-    - schema for `from.stream`: [`openshift-eng/art-tools/ocp-build-data-validator/validator/json_schemas/image_config.base.schema.json`](https://github.com/openshift-eng/art-tools/blob/25f0a8d515ef029feaaa53162cfc2011d6913d56/ocp-build-data-validator/validator/json_schemas/image_config.base.schema.json)
-    - `ocp-build-data` image-config examples: [`openshift-eng/ocp-build-data/example/images/myutil-base.yml`](https://github.com/openshift-eng/ocp-build-data/blob/0a05a447bc6464f6c00a8a1948fba0b8a5953388/example/images/myutil-base.yml), [`openshift-eng/ocp-build-data/example/images/template.yml`](https://github.com/openshift-eng/ocp-build-data/blob/0a05a447bc6464f6c00a8a1948fba0b8a5953388/example/images/template.yml)
-    - doozer stream readers/resolvers: [`openshift-eng/art-tools/doozer/doozerlib/image.py`](https://github.com/openshift-eng/art-tools/blob/25f0a8d515ef029feaaa53162cfc2011d6913d56/doozer/doozerlib/image.py), [`openshift-eng/art-tools/doozer/doozerlib/backend/rebaser.py`](https://github.com/openshift-eng/art-tools/blob/25f0a8d515ef029feaaa53162cfc2011d6913d56/doozer/doozerlib/backend/rebaser.py)
-    - stream-alias maintenance paths: [`openshift-eng/art-tools/doozer/doozerlib/backend/base_image_handler.py`](https://github.com/openshift-eng/art-tools/blob/25f0a8d515ef029feaaa53162cfc2011d6913d56/doozer/doozerlib/backend/base_image_handler.py), [`openshift-eng/art-tools/pyartcd/pyartcd/pipelines/update_golang.py`](https://github.com/openshift-eng/art-tools/blob/25f0a8d515ef029feaaa53162cfc2011d6913d56/pyartcd/pyartcd/pipelines/update_golang.py)
-- **Per-image build wiring and source Dockerfile path**
-  - [`openshift-eng/ocp-build-data/images`](https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.5/images)
-  - fields commonly used: `name`, `content.source.git.*`, `content.source.dockerfile`, `delivery_repo_names`
-- **Operator bundle/CSV/FBC wiring (OADP Operator path)**
-  - [`openshift-eng/ocp-build-data/group.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/group.yml) (catalog/version knobs such as `OCP_TARGET_VERSIONS`, `FBC_DISABLE_CHANNEL_SKIPS`)
-  - [`openshift-eng/ocp-build-data/images/oadp-operator.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/images/oadp-operator.yml) (`update-csv`, `bundle_delivery_repo_name`, `delivery_repo_names`)
-  - [`openshift/oadp-operator/bundle/manifests/oadp-operator.clusterserviceversion.yaml`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/manifests/oadp-operator.clusterserviceversion.yaml) (`relatedImages`, `RELATED_IMAGE_*` env usage)
-- **COPYs / additional files included into image**
-  - source repo [`openshift/oadp-operator`](https://github.com/openshift/oadp-operator/tree/oadp-1.5) (`COPY`/`ADD` statements)
-- **Submodules that can introduce vulnerable content**
-  - source repo [`openshift/oadp-must-gather/.gitmodules`](https://github.com/openshift/oadp-must-gather/blob/oadp-1.5/.gitmodules)
-  - plus this repo’s helper hooks where applicable (e.g. [`rebasebot-hook-scripts/restic-submodule-and-commit_*.sh`](../../rebasebot-hook-scripts/))
-- **Where resulting image refs are published/checked**
-  - [`openshift/oadp-operator/bundle/image-references`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/image-references)
-  - [`releng/pyxis-repo-configs/products/oadp/oadp.yaml`](https://gitlab.cee.redhat.com/releng/pyxis-repo-configs/-/blob/main/products/oadp/oadp.yaml)
-  - [`releng/konflux-release-data/advisories`](https://gitlab.cee.redhat.com/releng/konflux-release-data/-/tree/main/advisories)
+- Primary edit/debug map is now consolidated in the walkthrough:
+  - branch/repo/env inputs: steps **1-2**
+  - base-image alias/debug paths (`streams.yml`, doozer, pyartcd): step **3**
+  - Dockerfile, toolchain, COPY/ADD, submodule edit points: steps **4** and **11**
+  - operator CSV/bundle/FBC controls: steps **5-7**
+  - release publication and drift checks: steps **8-10**
