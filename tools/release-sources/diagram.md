@@ -7,8 +7,8 @@ flowchart TD
     B --> C1["GitLab: pyxis-repo-configs<br/>products/oadp/oadp.yaml@main"]
     B --> C2["GitHub: openshift-eng/ocp-build-data<br/>images/*.yml@&lt;branch&gt;"]
     B --> C3["GitHub: openshift/oadp-operator<br/>bundle/image-references@&lt;branch&gt;"]
-    B --> C4["GitLab: konflux-release-data<br/>oadp-advisory-stage-*&lt;suffix&gt;.yaml"]
-    B --> C5["GitLab: konflux-release-data<br/>oadp-advisory-prod-*&lt;suffix&gt;.yaml"]
+    B --> C4["GitLab: konflux-release-data<br/>oadp-advisory-stage-&lt;suffix&gt;.yaml"]
+    B --> C5["GitLab: konflux-release-data<br/>oadp-advisory-prod-&lt;suffix&gt;.yaml"]
 
     C1 --> D["Sources{Pyxis, OBD, ImageRefs, Stage, Prod}<br/>+ metadata maps"]
     C2 --> D
@@ -50,8 +50,8 @@ flowchart TD
   - OADP operator image references: [`openshift/oadp-operator/bundle/image-references`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/image-references)
   - Konflux advisory data:
     - advisories repo path: [`releng/konflux-release-data/advisories`](https://gitlab.cee.redhat.com/releng/konflux-release-data/-/tree/main/advisories)
-    - stage files: `oadp-advisory-stage-*.yaml`
-    - prod files: `oadp-advisory-prod-*.yaml`
+    - stage files: `oadp-advisory-stage-<suffix>.yaml`
+    - prod files: `oadp-advisory-prod-<suffix>.yaml`
 
 ## Common build provenance flow (how source metadata becomes built images)
 
@@ -108,21 +108,30 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    S1["1) Choose release branch + source repos<br/>rebase-configs/*_<branch>.env.sh"]
-    S2["2) Define per-image ART build wiring<br/>ocp-build-data/images/*.yml"]
-    S3["3) Resolve Dockerfile FROM aliases<br/>ocp-build-data/streams.yml + doozer/pyartcd"]
-    S4["4) Build component images from source repos<br/>Dockerfile/konflux.Dockerfile + go.mod + .gitmodules"]
-    S5["5) Apply operator bundle/CSV wiring<br/>ocp-build-data/group.yml + images/oadp-operator.yml + bundle/manifests/*.csv.yaml"]
-    S6["6) Publish/maintain release mapping<br/>bundle/image-references"]
-    S7["7) Build/publish File-Based Catalog (FBC)<br/>bundle/CSV outputs -> FBC publish flow"]
-    S8["8) Publish release visibility metadata<br/>pyxis-repo-configs/products/oadp/oadp.yaml + konflux-release-data/advisories"]
-    S9["9) Compare source-of-truth systems<br/>tools/release-sources/sources.go (FetchAll/BuildUnion/FindIssues)"]
-    S10["10) Gate readiness/drift<br/>tools/rebase-status/checks.go + imageref.go"]
-    S11["11) Special-case CVE checks<br/>oadp-must-gather Dockerfile ose-cli/oc path + streams.yml alias"]
+    S1["1) Branch/repo mapping inputs<br/>rebase-configs/*_&lt;branch&gt;.env.sh: SOURCE_UPSTREAM_REPO, DESTINATION_DOWNSTREAM_REPO, REBASE_REPO"]
+    S2["2) Per-image ART config inputs<br/>openshift-eng/ocp-build-data/images/*.yml: name, content.source.git.*, content.source.dockerfile, delivery_repo_names, update-csv.*"]
+    S3["3) Base-image alias source<br/>openshift-eng/ocp-build-data/streams.yml (from.stream aliases -> concrete pullspecs)"]
+    S4["3b) Alias resolution tooling path<br/>art-tools doozerlib/image.py + backend/rebaser.py + backend/base_image_handler.py + pyartcd/pipelines/update_golang.py"]
+    S5["4) Source build inputs<br/>openshift/* repos: Dockerfile + konflux.Dockerfile + go.mod + COPY/ADD content + .gitmodules/submodule trees"]
+    S6["5) Operator catalog controls<br/>ocp-build-data/group.yml: GO_* vars, operator_image_ref_mode, FBC_DISABLE_CHANNEL_SKIPS, OCP_TARGET_VERSIONS"]
+    S7["5b) Operator image/update-csv controls<br/>ocp-build-data/images/oadp-operator.yml + openshift/oadp-operator/bundle/manifests/*.csv.yaml"]
+    S8["4-7) ART/Konflux build stages<br/>consume image config + streams aliases + source repo files to produce component images + refreshed bundle/CSV metadata"]
+    S9["6) Git-tracked release mapping<br/>openshift/oadp-operator/bundle/image-references (manual + automation commits; consumed by release tests/checks)"]
+    S10["7) File-Based Catalog publish<br/>bundle/CSV (+ relatedImages / RELATED_IMAGE_*) -> FBC artifacts for target OCP versions"]
+    S11["8) Release visibility outputs<br/>pyxis-repo-configs/products/oadp/oadp.yaml + konflux-release-data/advisories/oadp-advisory-(stage|prod)-&lt;suffix&gt;.yaml"]
+    S12["9) Drift/mismatch compare tool<br/>tools/release-sources/sources.go: FetchAll + BuildUnion + FindIssues"]
+    S13["10) Readiness gate tool<br/>tools/rebase-status/imageref.go + checks.go (crossRefImageArt/checkProductized)"]
+    S14["11) must-gather CVE-sensitive path<br/>openshift/oadp-must-gather Dockerfile/konflux.Dockerfile FROM ose-cli + COPY --from=ose-cli /usr/bin/oc /usr/bin/oc"]
 
-    S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9 --> S10
-    S3 --> S11
-    S4 --> S11
+    S1 --> S2 --> S8
+    S2 --> S3 --> S4 --> S8
+    S5 --> S8
+    S6 --> S8
+    S7 --> S8
+    S8 --> S9 --> S10 --> S11 --> S12 --> S13
+    S3 --> S14
+    S5 --> S14
+    S14 --> S8
 ```
 
 1. **Choose release branch + source repos**
@@ -185,7 +194,7 @@ Examples: `velero`, `oadp-operator`, plugin repos, `kubevirt-datamover-controlle
 
 ```mermaid
 flowchart LR
-    A["source repo + konflux.Dockerfile"] --> B["ocp-build-data/images/<image>.yml"]
+    A["source repo + konflux.Dockerfile"] --> B["ocp-build-data/images/&lt;image&gt;.yml"]
     C["ocp-build-data/streams.yml (FROM aliases)"] --> D["Konflux/ART build"]
     B --> D
     D --> E["1 resulting image"]
