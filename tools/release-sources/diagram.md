@@ -36,6 +36,7 @@ flowchart TD
 ## Hyperlinked reference map (step-by-step)
 
 - Branching note: many OADP code repos use `oadp-dev` as the default development branch (not `main`); release flows then use `oadp-1.x` style branches.
+- If a branch-specific link 404s: try `oadp-dev` first, then the nearest release branch (`oadp-1.6`, `oadp-1.5`, etc.).
 - CLI entrypoint: [`tools/release-sources/main.go`](./main.go)
 - Source collection and compare logic:
   - [`FetchAll(...)`](./sources.go)
