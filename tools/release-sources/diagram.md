@@ -35,7 +35,7 @@ flowchart TD
 
 ## Hyperlinked reference map (step-by-step)
 
-- Branching note: many OADP code repos use `oadp-dev` as the default development branch (not `main`); release flows then use `oadp-1.x` style branches.
+- Branching note: many OADP code repos use `oadp-dev` as the default development branch (not `main`), while release flows use `oadp-1.x` style branches.
 - If a branch-specific link 404s: try `oadp-dev` first, then the nearest release branch (`oadp-1.6`, `oadp-1.5`, etc.).
 - CLI entrypoint: [`tools/release-sources/main.go`](./main.go)
 - Source collection and compare logic:
@@ -131,7 +131,7 @@ flowchart LR
 ### `bundle/image-references`: who edits it, and who consumes it
 
 - File location: [`openshift/oadp-operator/bundle/image-references` (oadp-1.5)](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/image-references)
-- In this repo, it is consumed as a **source-of-truth input** (not generated here):
+- In this tools repository, it is consumed as a **source-of-truth input** (not generated here):
   - `release-sources` fetches/parses it in [`fetchImageRefs(...)`](./sources.go)
   - `rebase-status` fetches/parses it in [`FetchImageReferences(...)`](../rebase-status/imageref.go)
   - `rebase-status` uses it to check productization and ART-name alignment in [`checkProductized(...)`](../rebase-status/checks.go) and [`crossRefImageArt(...)`](../rebase-status/checks.go)
@@ -149,7 +149,6 @@ flowchart LR
 1. **Choose release branch + source repos**
    - branch-scoped mapping lives in [`rebase-configs/*_<branch>.env.sh`](../../rebase-configs/)
    - key variables: `SOURCE_UPSTREAM_REPO`, `DESTINATION_DOWNSTREAM_REPO`, `REBASE_REPO`
-   - practical branch model: default development is often `oadp-dev`; release runs target `oadp-<major>.<minor>` branches (for example `oadp-1.5`)
 2. **Define build wiring for each image**
    - per-image config in [`ocp-build-data/images/*.yml`](https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.5/images)
    - for operator specifically: [`images/oadp-operator.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/images/oadp-operator.yml)
