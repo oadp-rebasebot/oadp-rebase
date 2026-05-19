@@ -65,7 +65,7 @@ flowchart LR
 
 ### A) Single-image repos (same/common path)
 
-Examples: `velero`, `oadp-operator`, plugin repos, `kubevirt-datamover-controller`, `oadp-must-gather`.
+Examples: `velero`, `oadp-operator`, plugin repos, `kubevirt-datamover-controller`.
 
 ```mermaid
 flowchart LR
@@ -76,7 +76,35 @@ flowchart LR
     E --> F["image-references + pyxis + advisories"]
 ```
 
-### B) Multi-image repo flow (different output fan-out)
+### B) `oadp-must-gather` special case (single output, multiple build sources)
+
+`oadp-must-gather` is still one resulting image, but its build inputs are broader:
+- main repo code,
+- additional source trees (e.g. `velero`/`restic`/`kopia` via submodules or fetched sources depending on Dockerfile path),
+- `oc` binary copied from OCP CLI image stage.
+
+```mermaid
+flowchart LR
+    A["openshift/oadp-must-gather source"]
+    B[".gitmodules and/or fetched external source trees<br/>(velero, restic, kopia)"]
+    C["Dockerfile or konflux.Dockerfile<br/>(selected by ocp-build-data images/*.yml)"]
+    D["ose-cli image stage<br/>(provides /usr/bin/oc)"]
+    E["ART/Konflux build"]
+    F["final oadp-must-gather image<br/>contains gather + helper binaries + oc"]
+
+    A --> E
+    B --> E
+    C --> E
+    D --> E
+    E --> F
+```
+
+`oc`-related CVE ownership for `oadp-must-gather` is typically tied to:
+- Dockerfile `FROM ...openshift-ose-cli...` stage tag/digest,
+- Dockerfile `COPY --from=ose-cli /usr/bin/oc /usr/bin/oc`,
+- and the `ocp-build-data/streams.yml` alias that resolves the CLI/base image pullspec used by ART.
+
+### C) Multi-image repo flow (different output fan-out)
 
 Current known multi-output case from this codebase catalog: `migtools/oadp-vm-file-restore` producing:
 - `oadp-vm-file-restore`
