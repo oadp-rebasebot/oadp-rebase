@@ -86,8 +86,8 @@ flowchart LR
 ```mermaid
 flowchart LR
     A["openshift/oadp-must-gather source"]
-    B[".gitmodules and/or fetched external source trees<br/>(velero, restic, kopia)"]
-    C["Dockerfile or konflux.Dockerfile<br/>(selected by ocp-build-data images/*.yml)"]
+    B[".gitmodules or fetched external source trees<br/>(velero, restic, kopia; depends on selected Dockerfile path)"]
+    C["Dockerfile or konflux.Dockerfile<br/>(selected by ocp-build-data/images/*.yml)"]
     D["ose-cli image stage<br/>(provides /usr/bin/oc)"]
     E["ART/Konflux build"]
     F["final oadp-must-gather image<br/>contains gather + helper binaries + oc"]
