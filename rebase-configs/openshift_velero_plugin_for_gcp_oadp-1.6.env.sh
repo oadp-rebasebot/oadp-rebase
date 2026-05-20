@@ -1,12 +1,12 @@
 # ===============================================================
 # GCP plugin rebase configuration for OADP 1.6
-# Uses upstream velero-plugin-for-gcp v1.14.1-rc.1
+# Uses upstream velero-plugin-for-gcp v1.14.1
 # which corresponds to the GCP plugin version for Velero 1.18
-# (v1.14.1-rc.1 go.mod references github.com/velero-io/velero v1.18.x)
+# (v1.14.1 go.mod references github.com/velero-io/velero v1.18.x)
 # ===============================================================
 
 UPSTREAM_PLUGIN_REPO="velero-io/velero-plugin-for-gcp"
-UPSTREAM_PLUGIN_TAG="v1.14.1-rc.1"
+UPSTREAM_PLUGIN_TAG="v1.14.1"
 DESTINATION_DOWNSTREAM_BRANCH="oadp-1.6"
 
 SOURCE_UPSTREAM_REPO="https://github.com/${UPSTREAM_PLUGIN_REPO}:${UPSTREAM_PLUGIN_TAG}"
