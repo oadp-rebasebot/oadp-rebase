@@ -45,11 +45,11 @@ flowchart TD
   - render paths in [`render.go`](./render.go)
 - External source systems used by `FetchAll(...)`:
   - Pyxis config: [`releng/pyxis-repo-configs/products/oadp/oadp.yaml`](https://gitlab.cee.redhat.com/releng/pyxis-repo-configs/-/blob/main/products/oadp/oadp.yaml)
-  - OCP build-data images: [`openshift-eng/ocp-build-data/images`](https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.5/images)
-  - OCP build-data streams aliases: [`openshift-eng/ocp-build-data/streams.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/streams.yml)
-  - OADP operator image references: [`openshift/oadp-operator/bundle/image-references`](https://github.com/openshift/oadp-operator/blob/oadp-1.5/bundle/image-references)
+  - OCP build-data images: [`openshift-eng/ocp-build-data/images`](https://github.com/openshift-eng/ocp-build-data/tree/oadp-dev/images)
+  - OCP build-data streams aliases: [`openshift-eng/ocp-build-data/streams.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-dev/streams.yml)
+  - OADP operator image references: [`openshift/oadp-operator/bundle/image-references`](https://github.com/openshift/oadp-operator/blob/oadp-dev/bundle/image-references)
   - Konflux advisory data:
-    - advisories repo path: [`releng/konflux-release-data/advisories`](https://gitlab.cee.redhat.com/releng/konflux-release-data/-/tree/main/advisories)
+    - ReleasePlanAdmission repo path: [`releng/konflux-release-data/config/kflux-ocp-p01.7ayg.p1/product/ReleasePlanAdmission/art-oadp`](https://gitlab.cee.redhat.com/releng/konflux-release-data/-/tree/main/config/kflux-ocp-p01.7ayg.p1/product/ReleasePlanAdmission/art-oadp)
     - stage files: `oadp-advisory-stage-<suffix>.yaml`
     - prod files: `oadp-advisory-prod-<suffix>.yaml`
 
@@ -68,7 +68,7 @@ flowchart LR
     K["Konflux/ART build<br/>reads Dockerfile FROM + aliases from streams.yml"]
     O["openshift/oadp-operator<br/>bundle/image-references<br/>(quay target refs)"]
     P["pyxis-repo-configs<br/>products/oadp/oadp.yaml"]
-    S["konflux-release-data advisories<br/>stage/prod release payload entries"]
+    S["konflux-release-data ReleasePlanAdmission/art-oadp<br/>stage/prod release payload entries"]
     F["Final container image(s)<br/>registry/quay + published metadata"]
 
     R --> U
@@ -118,7 +118,7 @@ flowchart TB
     S8["4-7) ART/Konflux build stages<br/>consume image config + streams aliases + source repo files to produce component images + refreshed bundle/CSV metadata"]
     S9["6) Git-tracked release mapping<br/>openshift/oadp-operator/bundle/image-references (manual + automation commits; consumed by release tests/checks)"]
     S10["7) File-Based Catalog publish<br/>bundle/CSV (+ relatedImages / RELATED_IMAGE_*) -> FBC artifacts for target OCP versions"]
-    S11["8) Release visibility outputs<br/>pyxis-repo-configs/products/oadp/oadp.yaml + konflux-release-data/advisories/oadp-advisory-(stage|prod)-&lt;suffix&gt;.yaml"]
+    S11["8) Release visibility outputs<br/>pyxis-repo-configs/products/oadp/oadp.yaml + konflux-release-data/config/.../ReleasePlanAdmission/art-oadp/oadp-advisory-(stage|prod)-&lt;suffix&gt;.yaml"]
     S12["9) Drift/mismatch compare tool<br/>tools/release-sources/sources.go: FetchAll + BuildUnion + FindIssues"]
     S13["10) Readiness gate tool<br/>tools/rebase-status/imageref.go + checks.go (crossRefImageArt/checkProductized)"]
     S14["11) must-gather CVE-sensitive path<br/>openshift/oadp-must-gather Dockerfile/konflux.Dockerfile FROM ose-cli + COPY --from=ose-cli /usr/bin/oc /usr/bin/oc"]
@@ -138,11 +138,11 @@ flowchart TB
    - branch-scoped mapping lives in [`rebase-configs/*_<branch>.env.sh`](../../rebase-configs/)
    - key variables: `SOURCE_UPSTREAM_REPO`, `DESTINATION_DOWNSTREAM_REPO`, `REBASE_REPO`
 2. **Define per-image ART build wiring**
-   - per-image config in [`openshift-eng/ocp-build-data/images`](https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.5/images)
-   - for operator specifically: [`openshift-eng/ocp-build-data/images/oadp-operator.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/images/oadp-operator.yml)
+   - per-image config in [`openshift-eng/ocp-build-data/images`](https://github.com/openshift-eng/ocp-build-data/tree/oadp-dev/images)
+   - for operator specifically: [`openshift-eng/ocp-build-data/images/oadp-operator.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-dev/images/oadp-operator.yml)
    - common fields to inspect/edit: `name`, `content.source.git.*`, `content.source.dockerfile`, `delivery_repo_names`, `update-csv.*`
 3. **Resolve Dockerfile `FROM` aliases to concrete pullspecs**
-   - alias source: [`openshift-eng/ocp-build-data/streams.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-1.5/streams.yml)
+   - alias source: [`openshift-eng/ocp-build-data/streams.yml`](https://github.com/openshift-eng/ocp-build-data/blob/oadp-dev/streams.yml)
    - schema and examples for `from.stream` / builder streams:
      - [`openshift-eng/art-tools/ocp-build-data-validator/validator/json_schemas/image_config.base.schema.json`](https://github.com/openshift-eng/art-tools/blob/25f0a8d515ef029feaaa53162cfc2011d6913d56/ocp-build-data-validator/validator/json_schemas/image_config.base.schema.json)
      - [`openshift-eng/ocp-build-data/example/images/myutil-base.yml`](https://github.com/openshift-eng/ocp-build-data/blob/0a05a447bc6464f6c00a8a1948fba0b8a5953388/example/images/myutil-base.yml)
@@ -174,7 +174,7 @@ flowchart TB
    - ART/Konflux + `update-csv` output produce bundle/CSV inputs consumed by FBC publish flows for target OCP versions
 8. **Publish release visibility metadata**
    - Pyxis product config: [`releng/pyxis-repo-configs/products/oadp/oadp.yaml`](https://gitlab.cee.redhat.com/releng/pyxis-repo-configs/-/blob/main/products/oadp/oadp.yaml)
-   - Konflux advisory files: [`releng/konflux-release-data/advisories`](https://gitlab.cee.redhat.com/releng/konflux-release-data/-/tree/main/advisories)
+   - Konflux advisory files: [`releng/konflux-release-data/config/kflux-ocp-p01.7ayg.p1/product/ReleasePlanAdmission/art-oadp`](https://gitlab.cee.redhat.com/releng/konflux-release-data/-/tree/main/config/kflux-ocp-p01.7ayg.p1/product/ReleasePlanAdmission/art-oadp)
 9. **Compare source-of-truth systems in `release-sources`**
    - parse/fetch paths in [`FetchAll(...)`](./sources.go)
    - comparison paths in [`BuildUnion(...)`](./sources.go), [`FindIssues(...)`](./sources.go)
