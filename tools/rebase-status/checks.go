@@ -88,7 +88,7 @@ func checkConfig(client *GitHubClient, spec *RepoSpec) *CheckResult {
 // checkOpenPR searches for an open rebase PR from oadp-rebasebot on the
 // downstream repo. Informational only — presence or absence is not an error.
 func checkOpenPR(client *GitHubClient, spec *RepoSpec) *CheckResult {
-	num, url, err := client.OpenRebasePR(spec.Org, spec.Repo)
+	num, url, err := client.OpenRebasePR(spec.Org, spec.Repo, spec.Branch)
 	if err != nil {
 		return &CheckResult{StatusWarn, "err", fmt.Sprintf("API error: %v", err)}
 	}
