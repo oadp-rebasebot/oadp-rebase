@@ -267,6 +267,41 @@ func (c *GitHubClient) CompareCommits(org, repo, base, head string) ([]CommitInf
 	return commits, nil
 }
 
+// OpenRebasePR searches for an open PR authored by oadp-rebasebot in the
+// given repo targeting the specified base branch. Returns the PR number
+// and HTML URL, or (0, "") if none found.
+func (c *GitHubClient) OpenRebasePR(org, repo, base string) (int, string, error) {
+	apiPath := fmt.Sprintf("/repos/%s/%s/pulls?state=open&base=%s&per_page=10", org, repo, base)
+
+	body, code, err := c.get(apiPath)
+	if err != nil {
+		return 0, "", err
+	}
+	if code != http.StatusOK {
+		return 0, "", fmt.Errorf("GitHub API %s returned %d", apiPath, code)
+	}
+
+	var prs []struct {
+		Number  int    `json:"number"`
+		HTMLURL string `json:"html_url"`
+		User    struct {
+			Login string `json:"login"`
+			Type  string `json:"type"`
+		} `json:"user"`
+	}
+	if err := json.Unmarshal(body, &prs); err != nil {
+		return 0, "", fmt.Errorf("parsing PRs: %w", err)
+	}
+
+	for _, pr := range prs {
+		login := strings.ToLower(pr.User.Login)
+		if login == "oadp-rebasebot" || strings.HasPrefix(login, "oadp-rebasebot-app") {
+			return pr.Number, pr.HTMLURL, nil
+		}
+	}
+	return 0, "", nil
+}
+
 // RateLimitRemaining returns the remaining API calls.
 func (c *GitHubClient) RateLimitRemaining() (int, error) {
 	body, code, err := c.get("/rate_limit")

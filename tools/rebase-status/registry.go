@@ -78,6 +78,7 @@ type DisplayGroup struct {
 
 // DisplayGroups defines the consolidated columns shown in table/text/markdown output.
 var DisplayGroups = []DisplayGroup{
+	{ID: "open_pr", Header: "PR", CheckIDs: []string{"open_pr"}},
 	{ID: "rebase", Header: "Rebase", CheckIDs: []string{"config", "rebasebot"}},
 	{ID: "go_version", Header: "Go", CheckIDs: []string{"go_version"}},
 	{ID: "ci_config", Header: "CI", CheckIDs: []string{"ci_config"}},

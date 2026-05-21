@@ -97,6 +97,13 @@ func runRepoChecks(spec RepoSpec, checks []Check, client *GitHubClient) RepoStat
 	}
 	artConfigStoreMu.Unlock()
 
+	// Propagate open PR info from the store
+	openPRStoreMu.Lock()
+	if pr, ok := openPRStore[spec.FullName()]; ok {
+		status.OpenPR = pr
+	}
+	openPRStoreMu.Unlock()
+
 	// Propagate release data
 	if currentReleaseData != nil {
 		key := spec.FullName()
