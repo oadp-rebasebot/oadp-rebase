@@ -35,14 +35,14 @@ regenerate_pnpm_lock() {
 
     echo "=== Regenerating frontend/pnpm-lock.yaml ==="
 
-    if ! command -v pnpm &>/dev/null; then
-        echo "pnpm not found, installing pnpm@${PNPM_VERSION} globally..."
-        npm install -g "pnpm@${PNPM_VERSION}"
-    fi
-
     pushd frontend
 
-    pnpm install --no-frozen-lockfile
+    if command -v pnpm &>/dev/null; then
+        pnpm install --no-frozen-lockfile
+    else
+        echo "pnpm not found, using npx to run pnpm@${PNPM_VERSION}..."
+        npx "pnpm@${PNPM_VERSION}" install --no-frozen-lockfile
+    fi
 
     popd
 
