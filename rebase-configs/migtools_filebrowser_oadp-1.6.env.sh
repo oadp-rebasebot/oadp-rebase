@@ -1,4 +1,12 @@
-SOURCE_UPSTREAM_REPO="https://github.com/filebrowser/filebrowser:master"
+# ===============================================================
+# Filebrowser rebase configuration for OADP 1.6
+# Uses upstream filebrowser v2.63.5
+# ===============================================================
+
+UPSTREAM_FILEBROWSER_REPO="filebrowser/filebrowser"
+UPSTREAM_FILEBROWSER_TAG="v2.63.5"
+
+SOURCE_UPSTREAM_REPO="https://github.com/${UPSTREAM_FILEBROWSER_REPO}:${UPSTREAM_FILEBROWSER_TAG}"
 DESTINATION_DOWNSTREAM_REPO="migtools/filebrowser:oadp-1.6"
 REBASE_REPO="oadp-rebasebot/filebrowser:rebase-bot-oadp-1.6"
 
