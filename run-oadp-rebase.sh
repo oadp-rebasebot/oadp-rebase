@@ -87,6 +87,10 @@ get_config_name() {
         oadp-cli-oadp-dev) echo "migtools_oadp_cli_oadp-dev" ;;
         oadp-cli-oadp-1.6) echo "migtools_oadp_cli_oadp-1.6" ;;
 
+        # === HyperShift OADP Plugin ===
+        hypershift-oadp-plugin-main) echo "openshift_hypershift_oadp_plugin_main" ;;
+        hypershift-oadp-plugin-oadp-1.6) echo "openshift_hypershift_oadp_plugin_oadp-1.6" ;;
+
         # === OADP VMDP ===
         oadp-vmdp-oadp-dev) echo "migtools_oadp_vmdp_oadp-dev" ;;
         oadp-vmdp-oadp-1.6) echo "migtools_oadp_vmdp_oadp-1.6" ;;
@@ -113,7 +117,7 @@ get_wave_repos() {
     if [ "$branch" = "oadp-dev" ]; then
         case "$wave" in
             2) echo "velero-oadp-dev" ;;
-            3) echo "kubevirt-velero-plugin-main velero-plugin-for-csi-oadp-dev oadp-operator-oadp-dev velero-plugin-for-aws-oadp-dev velero-plugin-for-legacy-aws-oadp-dev velero-plugin-for-microsoft-azure-oadp-dev velero-plugin-for-gcp-oadp-dev" ;;
+            3) echo "kubevirt-velero-plugin-main velero-plugin-for-csi-oadp-dev oadp-operator-oadp-dev velero-plugin-for-aws-oadp-dev velero-plugin-for-legacy-aws-oadp-dev velero-plugin-for-microsoft-azure-oadp-dev velero-plugin-for-gcp-oadp-dev hypershift-oadp-plugin-main" ;;
             4) echo "oadp-non-admin-oadp-dev openshift-velero-plugin-oadp-dev kubevirt-datamover-controller-oadp-dev oadp-vm-file-restore-oadp-dev" ;;
             5) echo "oadp-must-gather-oadp-dev oadp-cli-oadp-dev kubevirt-datamover-plugin-oadp-dev" ;;
             *) return 1 ;;
@@ -131,7 +135,7 @@ get_wave_repos() {
         case "$wave" in
             1) echo "kopia-oadp-1.6 restic-oadp-1.6 filebrowser-oadp-1.6 oadp-vmdp-oadp-1.6" ;;
             2) echo "velero-oadp-1.6" ;;
-            3) echo "kubevirt-velero-plugin-oadp-1.6 oadp-operator-oadp-1.6 velero-plugin-for-aws-oadp-1.6 velero-plugin-for-legacy-aws-oadp-1.6 velero-plugin-for-microsoft-azure-oadp-1.6 velero-plugin-for-gcp-oadp-1.6" ;;
+            3) echo "kubevirt-velero-plugin-oadp-1.6 oadp-operator-oadp-1.6 velero-plugin-for-aws-oadp-1.6 velero-plugin-for-legacy-aws-oadp-1.6 velero-plugin-for-microsoft-azure-oadp-1.6 velero-plugin-for-gcp-oadp-1.6 hypershift-oadp-plugin-oadp-1.6" ;;
             4) echo "oadp-non-admin-oadp-1.6 openshift-velero-plugin-oadp-1.6 kubevirt-datamover-controller-oadp-1.6 oadp-vm-file-restore-oadp-1.6" ;;
             5) echo "oadp-must-gather-oadp-1.6 oadp-cli-oadp-1.6 kubevirt-datamover-plugin-oadp-1.6" ;;
             *) return 1 ;;
@@ -591,6 +595,8 @@ if [ "$WAVE_MODE" != "true" ]; then
         TARGET="udistribution-main"
     elif [ "$TARGET" = "kubevirt-velero-plugin" ] && [ -z "${OADP_BRANCH_SET:-}" ]; then
         TARGET="kubevirt-velero-plugin-main"
+    elif [ "$TARGET" = "hypershift-oadp-plugin" ] && [ -z "${OADP_BRANCH_SET:-}" ]; then
+        TARGET="hypershift-oadp-plugin-main"
     elif ! get_config_name "$TARGET" >/dev/null 2>&1; then
         TARGET="${TARGET}-${OADP_BRANCH}"
     fi
