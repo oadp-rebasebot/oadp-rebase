@@ -10,6 +10,7 @@ import (
 // DefaultChecks is the ordered list of checks to run.
 // To add a new check: define a CheckFunc, add a Check entry here.
 var DefaultChecks = []Check{
+	{ID: "open_pr", Header: "PR", Run: checkOpenPR},
 	{ID: "config", Header: "Rebase Cfg", Run: checkConfig},
 	{ID: "rebasebot", Header: "Rebase", Run: checkRebasebotBranch},
 	{ID: "go_version", Header: "Go", Run: checkGoVersion},
@@ -63,6 +64,9 @@ var (
 
 	artConfigStore   = map[string][]*ArtBuildConfig{}
 	artConfigStoreMu sync.Mutex
+
+	openPRStore   = map[string]*OpenPRInfo{}
+	openPRStoreMu sync.Mutex
 )
 
 // ---------- Individual checks ----------
@@ -79,6 +83,24 @@ func checkConfig(client *GitHubClient, spec *RepoSpec) *CheckResult {
 		StatusFail, "",
 		fmt.Sprintf("no rebase config for %s/%s on branch %s", spec.Org, spec.Repo, spec.Branch),
 	}
+}
+
+// checkOpenPR searches for an open rebase PR from oadp-rebasebot on the
+// downstream repo. Informational only — presence or absence is not an error.
+func checkOpenPR(client *GitHubClient, spec *RepoSpec) *CheckResult {
+	num, url, err := client.OpenRebasePR(spec.Org, spec.Repo)
+	if err != nil {
+		return &CheckResult{StatusWarn, "err", fmt.Sprintf("API error: %v", err)}
+	}
+	if num == 0 {
+		return &CheckResult{StatusNA, "", "no open rebase PR"}
+	}
+
+	openPRStoreMu.Lock()
+	openPRStore[spec.FullName()] = &OpenPRInfo{Number: num, URL: url}
+	openPRStoreMu.Unlock()
+
+	return &CheckResult{StatusOK, fmt.Sprintf("#%d", num), url}
 }
 
 // checkBranch verifies the downstream branch exists on GitHub.

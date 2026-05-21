@@ -64,6 +64,7 @@ type RepoStatus struct {
 	DepSyncs []DepSync    // internal dependency sync details
 	Images   []ImageInfo  // container image tag status
 	Konflux      *KonfluxInfo    // Konflux build config details
+	OpenPR       *OpenPRInfo       // open rebase PR if any
 	ImageRefData []*ImageRefEntry // from bundle/image-references
 	ArtConfigs   []*ArtBuildConfig // from ocp-build-data (may be multiple per repo)
 }
@@ -100,6 +101,12 @@ type KonfluxInfo struct {
 	HasDir        bool   // .konflux/ directory exists
 	HasDockerfile bool   // konflux.Dockerfile exists
 	BuilderTag    string // e.g. "rhel_9_golang_1.25" from the FROM line
+}
+
+// OpenPRInfo describes an open rebase PR found on a repo.
+type OpenPRInfo struct {
+	Number int
+	URL    string
 }
 
 // Issue is a problem found during checking.

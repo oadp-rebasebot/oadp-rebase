@@ -596,6 +596,8 @@ func RenderMarkdown(w io.Writer, statuses []RepoStatus, branch string) {
 					gr = groupResult(r.Checks, dg.CheckIDs)
 				}
 				switch dg.ID {
+				case "open_pr":
+					fmt.Fprintf(w, " %s |", mdOpenPRCell(r.OpenPR))
 				case "rebase":
 					fmt.Fprintf(w, " %s |", mdRebaseGroupCell(gr, r.Spec))
 				case "go_version":
@@ -740,6 +742,7 @@ func RenderMarkdown(w io.Writer, statuses []RepoStatus, branch string) {
 	fmt.Fprintln(w, "| **Component** | Repository name (links to rebase PRs) |")
 	fmt.Fprintln(w, "| **Upstream** | Upstream repo and branch/tag being rebased from |")
 	fmt.Fprintln(w, "| **Rebase CI** | Prow rebasebot job status badge (links to job history) |")
+	fmt.Fprintln(w, "| **PR** | Open rebase PR from oadp-rebasebot (links to PR) |")
 	fmt.Fprintln(w, "| **Rebase** | Rebase config + rebasebot scratch branch ready |")
 	fmt.Fprintln(w, "| **Go** | Go version detected in the repo |")
 	fmt.Fprintln(w, "| **CI** | CI operator config exists in openshift/release |")
@@ -906,6 +909,13 @@ func mdProwCfgCell(result *CheckResult, spec RepoSpec) string {
 }
 
 // mdRepoLink returns a Markdown link for the repo name pointing to its rebase PRs.
+func mdOpenPRCell(pr *OpenPRInfo) string {
+	if pr == nil {
+		return "—"
+	}
+	return fmt.Sprintf("[#%d](%s)", pr.Number, pr.URL)
+}
+
 func mdRepoLink(spec RepoSpec) string {
 	prURL := fmt.Sprintf("https://github.com/%s/%s/pulls?q=is%%3Apr+(is%%3Aopen+OR+is%%3Aclosed)+in%%3Atitle+%%22Merge+https%%3A%%2F%%2Fgithub.com%%2F%%22",
 		spec.Org, spec.Repo)
