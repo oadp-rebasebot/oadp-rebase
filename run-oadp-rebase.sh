@@ -333,7 +333,8 @@ run_local_rebase() {
   --github-app-id \"$GITHUB_APP_ID\" \
   --github-app-key \"$SECRETS_DIR/oadp-rebasebot-app-key\" \
   --github-cloner-id \"$GITHUB_CLONER_ID\" \
-  --github-cloner-key \"$SECRETS_DIR/oadp-rebasebot-cloner-key\""
+  --github-cloner-key \"$SECRETS_DIR/oadp-rebasebot-cloner-key\" \
+  --conflict-policy strict"
 
     [ -n "$REPO_WORKING_DIR" ] && CMD="$CMD --working-dir \"$REPO_WORKING_DIR\""
     [ -n "${HOOK_SCRIPTS:-}" ] && CMD="$CMD $HOOK_SCRIPTS"
@@ -427,7 +428,8 @@ run_container_rebase() {
   --github-app-id \"$GITHUB_APP_ID\" \
   --github-app-key /secrets/oadp-rebasebot-app-key \
   --github-cloner-id \"$GITHUB_CLONER_ID\" \
-  --github-cloner-key /secrets/oadp-rebasebot-cloner-key"
+  --github-cloner-key /secrets/oadp-rebasebot-cloner-key \
+  --conflict-policy strict"
 
     [ -n "$REBASEBOT_WORKING_DIR" ] && CMD="$CMD --working-dir \"$REBASEBOT_WORKING_DIR\""
     [ -n "${HOOK_SCRIPTS:-}" ] && CMD="$CMD $HOOK_SCRIPTS"
@@ -469,6 +471,8 @@ run_wave() {
     failed=""
     skipped=""
     success_count=0
+    pr_summary_file="$(mktemp)"
+    rebase_output_file="$(mktemp)"
 
     for config in $repos; do
         log_section "Processing repo: $config"
@@ -495,7 +499,16 @@ run_wave() {
             rebase_func="run_container_rebase"
         fi
 
-        if $rebase_func "$config" "$dry_run" "$source_type"; then
+        rebase_rc_file="$(mktemp)"
+        ( set +e; $rebase_func "$config" "$dry_run" "$source_type" 2>&1; echo $? > "$rebase_rc_file" ) | tee "$rebase_output_file"
+        rebase_rc="$(cat "$rebase_rc_file" 2>/dev/null || echo 1)"
+        rm -f "$rebase_rc_file"
+
+        # Extract PR status messages from output (regardless of success/failure)
+        grep -E '(I created a new rebase PR|I updated existing rebase PR|PR .+/pull/[0-9]+ already contains|rebase/manual)' \
+            "$rebase_output_file" | sed 's/.*INFO - //' >> "$pr_summary_file" || true
+
+        if [ "$rebase_rc" = "0" ]; then
             log_success "Processed $config"
             success_count=$((success_count + 1))
         else
@@ -523,10 +536,21 @@ run_wave() {
     if [ -n "$failed" ]; then
         log_fail "Failed repositories:"
         for repo in $failed; do [ -n "$repo" ] && printf "  %s\n" "$repo"; done
-        return 1
+    else
+        log_success "All repositories processed (or skipped) successfully!"
     fi
 
-    log_success "All repositories processed (or skipped) successfully!"
+    if [ -s "$pr_summary_file" ]; then
+        printf "\n"
+        log_info "Pull request results:"
+        while IFS= read -r line; do
+            printf "  🔗 %s\n" "$line"
+        done < "$pr_summary_file"
+    fi
+
+    rm -f "$rebase_output_file" "$pr_summary_file"
+
+    [ -n "$failed" ] && return 1
 }
 
 # === Argument Parsing ===

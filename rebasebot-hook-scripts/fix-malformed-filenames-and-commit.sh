@@ -10,6 +10,13 @@ set -euo pipefail
 # Committed as UPSTREAM: <drop> so rebasebot will not carry it forward
 # once upstream has fixed all occurrences.
 
+# Define characters using raw UTF-8 byte sequences (\xNN) for portability.
+# Do NOT use printf '\uNNNN' — older bash/printf may not support \u escapes,
+# causing the literal characters u,2,0,e,f,b to be matched and stripped.
+LRM=$'\xe2\x80\x8e'    # U+200E LEFT-TO-RIGHT MARK
+RLM=$'\xe2\x80\x8f'    # U+200F RIGHT-TO-LEFT MARK
+ZWSP=$'\xe2\x80\x8b'   # U+200B ZERO WIDTH SPACE
+
 if [[ -z "${REBASEBOT_GIT_USERNAME:-}" || -z "${REBASEBOT_GIT_EMAIL:-}" ]]; then
     author_flag=()
 else
@@ -17,14 +24,23 @@ else
 fi
 
 found=0
+# Use git ls-files (not find) to iterate only tracked files, avoiding
+# "bad source" errors when find returns a directory that gets renamed
+# before its child files are processed.
 while IFS= read -r -d '' file; do
-    clean_name=$(echo "$file" | sed "s/[$(printf '\u200e\u200f\u200b')]//g")
+    # Use bash parameter substitution instead of sed character class —
+    # sed [..] treats multi-byte UTF-8 sequences as individual bytes.
+    clean_name="$file"
+    clean_name="${clean_name//$LRM/}"
+    clean_name="${clean_name//$RLM/}"
+    clean_name="${clean_name//$ZWSP/}"
     if [[ "$file" != "$clean_name" ]]; then
         echo "Renaming: $file -> $clean_name"
+        mkdir -p "$(dirname "$clean_name")"
         git mv "$file" "$clean_name"
         found=1
     fi
-done < <(find . -name '*['"$(printf '\u200e\u200f\u200b')"']*' -print0 2>/dev/null)
+done < <(git ls-files -z)
 
 if [[ "$found" -eq 1 ]]; then
     git add -A
