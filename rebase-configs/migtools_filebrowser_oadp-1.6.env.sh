@@ -15,4 +15,5 @@ HOOK_SCRIPTS_LOCATION="git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-de
 HOOK_SCRIPTS="--post-rebase-hook \
   ${HOOK_SCRIPTS_LOCATION}/normalize-dockerfiles-and-commit.sh \
   ${HOOK_SCRIPTS_LOCATION}/filebrowser-regenerate-package-lock-and-commit.sh \
+  ${HOOK_SCRIPTS_LOCATION}/filebrowser-regenerate-pnpm-lock-and-commit.sh \
   "
