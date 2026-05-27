@@ -15,6 +15,10 @@ fi
 
 REPLACE_LINE="replace $UPSTREAM_MODULE => $DOWNSTREAM_MODULE $DOWNSTREAM_BRANCH"
 
+# Update require entries to the downstream Velero branch as well.
+sed -Ei "s|^([[:space:]]*require[[:space:]]+$UPSTREAM_MODULE)[[:space:]]+[^[:space:]]+|\\1 $DOWNSTREAM_BRANCH|" "$GO_MOD_FILE"
+sed -Ei "s|^([[:space:]]*$UPSTREAM_MODULE)[[:space:]]+[^[:space:]]+|\\1 $DOWNSTREAM_BRANCH|" "$GO_MOD_FILE"
+
 # Remove any stale replace for the other module path
 if [ "$UPSTREAM_MODULE" = "github.com/velero-io/velero" ]; then
     sed -i '/^replace github\.com\/vmware-tanzu\/velero /d' "$GO_MOD_FILE"
@@ -28,4 +32,3 @@ if grep -q "^replace $UPSTREAM_MODULE" "$GO_MOD_FILE"; then
 else
     echo "$REPLACE_LINE" >> "$GO_MOD_FILE"
 fi
-
