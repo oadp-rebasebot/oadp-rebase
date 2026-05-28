@@ -4,6 +4,7 @@ set -euo pipefail
 DOWNSTREAM_BRANCH="oadp-1.6"
 DOWNSTREAM_MODULE="github.com/openshift/velero"
 GO_MOD_FILE="go.mod"
+UPSTREAM_VELERO_TAG="v1.18.1"
 
 # Detect which velero module path the project uses (vmware-tanzu or velero-io)
 if grep -qE "require.*github\.com/velero-io/velero " "$GO_MOD_FILE" || \
@@ -15,16 +16,8 @@ fi
 
 REPLACE_LINE="replace $UPSTREAM_MODULE => $DOWNSTREAM_MODULE $DOWNSTREAM_BRANCH"
 
-# Update require entries (both single-line and block forms) to an upstream Velero tag.
-# If not provided via env, preserve current upstream-style tag from go.mod.
-VELERO_REQUIRE_VERSION="${VELERO_REQUIRE_VERSION:-$(
-    sed -nE "s|^[[:space:]]*(require[[:space:]]+)?$UPSTREAM_MODULE[[:space:]]+([^[:space:]]+).*$|\\2|p" "$GO_MOD_FILE" | head -n1
-)}"
-if [[ "$VELERO_REQUIRE_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
-    sed -Ei "s|^([[:space:]]*(require[[:space:]]+)?$UPSTREAM_MODULE)[[:space:]]+[^[:space:]]+|\\1 $VELERO_REQUIRE_VERSION|" "$GO_MOD_FILE"
-else
-    echo "Skipping Velero require rewrite: set VELERO_REQUIRE_VERSION to an upstream tag (e.g. v1.18.1 or v1.18.1-rc.2)" >&2
-fi
+# Update require entries (both single-line and block forms) to the branch-aligned upstream Velero tag.
+sed -Ei "s|^([[:space:]]*(require[[:space:]]+)?$UPSTREAM_MODULE)[[:space:]]+[^[:space:]]+|\\1 $UPSTREAM_VELERO_TAG|" "$GO_MOD_FILE"
 
 # Remove any stale replace for the other module path
 if [ "$UPSTREAM_MODULE" = "github.com/velero-io/velero" ]; then
