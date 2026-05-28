@@ -9,7 +9,7 @@ UPSTREAM_VELERO_MAJOR_VERSION="v1.16"
 fetch_github_api() {
     local url="$1"
     if [ -n "${GITHUB_TOKEN:-}" ]; then
-        curl -fsSL -H "Authorization: token $GITHUB_TOKEN" "$url"
+        curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" "$url"
     else
         curl -fsSL "$url"
     fi
@@ -20,7 +20,10 @@ fetch_all_velero_tags() {
     local combined=""
     while :; do
         local body
-        body="$(fetch_github_api "https://api.github.com/repos/velero-io/velero/tags?per_page=100&page=$page")"
+        if ! body="$(fetch_github_api "https://api.github.com/repos/velero-io/velero/tags?per_page=100&page=$page")"; then
+            echo "Failed to fetch Velero tags from GitHub API (page $page)" >&2
+            exit 1
+        fi
         combined="${combined}"$'\n'"${body}"
         local count
         count="$(printf '%s\n' "$body" | grep -c "\"name\": \"" || true)"
