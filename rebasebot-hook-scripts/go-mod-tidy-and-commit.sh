@@ -20,6 +20,13 @@ stage_and_commit(){
     fi
 
     if [[ -n $(git status --porcelain) ]]; then
+        # Hermeto validates vendor/ with `git add --intent-to-add --force`
+        # (bypassing .gitignore) then diffs against committed state.
+        # Without --force here, files matching .gitignore patterns (*.so,
+        # *.exe, etc.) would be silently excluded, causing Hermeto to
+        # detect them as missing and fail vendor consistency checks.
+        # See: https://github.com/hermetoproject/hermeto/blob/bb68e974/hermeto/core/package_managers/gomod/main.py#L1393
+        git add --force vendor/ 2>/dev/null || true
         git add -A
         git commit "${author_flag[@]}" -q -m "UPSTREAM: <drop>: Updating go modules"
     fi
