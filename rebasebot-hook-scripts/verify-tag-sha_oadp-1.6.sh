@@ -16,18 +16,19 @@ if [ "$REBASEBOT_SOURCE" != "$EXPECTED_TAG" ]; then
     exit 1
 fi
 
-RESOLVED_SHA=$(git ls-remote "$UPSTREAM_REPO" "$EXPECTED_TAG" | awk '{print $1}')
+LS_REMOTE_OUTPUT=$(git ls-remote "$UPSTREAM_REPO" "refs/tags/$EXPECTED_TAG" "refs/tags/$EXPECTED_TAG^{}")
 
-if [ -z "$RESOLVED_SHA" ]; then
+if [ -z "$LS_REMOTE_OUTPUT" ]; then
     echo "Failed to resolve tag '$EXPECTED_TAG' from $UPSTREAM_REPO" >&2
     exit 1
 fi
 
-# Handle annotated tags — dereference to the commit
-DEREF_SHA=$(git ls-remote "$UPSTREAM_REPO" "$EXPECTED_TAG^{}" | awk '{print $1}')
-if [ -n "$DEREF_SHA" ]; then
-    RESOLVED_SHA="$DEREF_SHA"
-fi
+COMMIT_SHA=$(echo "$LS_REMOTE_OUTPUT" | awk '/\^{}$/ {print $1}')
+TAG_OBJECT_SHA=$(echo "$LS_REMOTE_OUTPUT" | awk '!/\^{}$/ {print $1}')
+
+# For annotated tags, the commit SHA comes from the dereferenced entry;
+# for lightweight tags, the tag points directly to the commit
+RESOLVED_SHA="${COMMIT_SHA:-$TAG_OBJECT_SHA}"
 
 if [ "$RESOLVED_SHA" != "$EXPECTED_SHA" ]; then
     echo "TAG SHA MISMATCH for $EXPECTED_TAG" >&2
