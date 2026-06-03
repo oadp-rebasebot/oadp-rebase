@@ -26,7 +26,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for branch in oadp-1.5 oadp-1.6; do
+          for branch in oadp-1.6 oadp-1.5; do
             tools/rebase-status/rebase-status \
               --config-dir rebase-configs \
               --format markdown \
@@ -42,7 +42,7 @@ jobs:
 
           HEADER
 
-          for branch in oadp-1.5 oadp-1.6; do
+          for branch in oadp-1.6 oadp-1.5; do
             page="Rebase-Status-${branch}"
             file="/tmp/${page}.md"
 
@@ -71,7 +71,7 @@ jobs:
           wiki_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.wiki.git"
           git clone "$wiki_url" /tmp/wiki
 
-          for branch in oadp-1.5 oadp-1.6; do
+          for branch in oadp-1.6 oadp-1.5; do
             cp "/tmp/Rebase-Status-${branch}.md" "/tmp/wiki/Rebase-Status-${branch}.md"
           done
           cp /tmp/Home.md /tmp/wiki/Home.md
