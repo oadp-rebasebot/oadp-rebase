@@ -1,0 +1,88 @@
+name: Rebase Status Wiki
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: tools/rebase-status/go.sum
+
+      - name: Build rebase-status
+        run: make -C tools/rebase-status rebase-status
+
+      - name: Generate status reports
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for branch in oadp-1.6 oadp-1.5; do
+            tools/rebase-status/rebase-status \
+              --config-dir rebase-configs \
+              --format markdown \
+              "$branch" > "/tmp/Rebase-Status-${branch}.md"
+          done
+
+      - name: Generate Home page
+        run: |
+          cat > /tmp/Home.md <<'HEADER'
+          # OADP Rebase Status
+
+          _Updated automatically by [rebase-status-wiki workflow](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/rebase-status-wiki.yaml)_
+
+          HEADER
+
+          for branch in oadp-1.6 oadp-1.5; do
+            page="Rebase-Status-${branch}"
+            file="/tmp/${page}.md"
+
+            # Extract score line (e.g. "**14/18 repos ready (77%)**")
+            score=$(grep -m1 '^\*\*[0-9]' "$file" | sed 's/\*//g')
+
+            echo "## [${branch}](${page})" >> /tmp/Home.md
+            echo "" >> /tmp/Home.md
+            echo "${score}" >> /tmp/Home.md
+            echo "" >> /tmp/Home.md
+
+            # List waves needing attention (marked with :construction:)
+            grep '^## :construction:' "$file" | while IFS= read -r line; do
+              # Extract wave title for display and build anchor link
+              title=$(echo "$line" | sed 's/^## :construction: //')
+              anchor=$(echo "$line" | sed 's/^## //' | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g' | sed 's/[^a-z0-9-]//g')
+              echo "- :construction: [${title}](${page}#${anchor})" >> /tmp/Home.md
+            done
+            echo "" >> /tmp/Home.md
+          done
+
+      - name: Push to wiki
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          wiki_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.wiki.git"
+          git clone "$wiki_url" /tmp/wiki
+
+          for branch in oadp-1.6 oadp-1.5; do
+            cp "/tmp/Rebase-Status-${branch}.md" "/tmp/wiki/Rebase-Status-${branch}.md"
+          done
+          cp /tmp/Home.md /tmp/wiki/Home.md
+
+          cd /tmp/wiki
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to wiki"
+          else
+            git commit -m "Update rebase status $(date -u +%Y-%m-%d)"
+            git push
+          fi
