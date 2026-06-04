@@ -31,6 +31,11 @@ jobs:
               --config-dir rebase-configs \
               --format markdown \
               "$branch" > "/tmp/Rebase-Status-${branch}.md" || true
+
+            if [ ! -s "/tmp/Rebase-Status-${branch}.md" ]; then
+              echo "::error::rebase-status produced no output for ${branch}"
+              exit 1
+            fi
           done
 
       - name: Generate Home page
