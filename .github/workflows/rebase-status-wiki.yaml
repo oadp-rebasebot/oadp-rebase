@@ -26,11 +26,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for branch in oadp-1.6 oadp-1.5; do
+          for branch in oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3; do
             tools/rebase-status/rebase-status \
               --config-dir rebase-configs \
               --format markdown \
-              "$branch" > "/tmp/Rebase-Status-${branch}.md"
+              "$branch" > "/tmp/Rebase-Status-${branch}.md" || true
+
+            if [ ! -s "/tmp/Rebase-Status-${branch}.md" ]; then
+              echo "::error::rebase-status produced no output for ${branch}"
+              exit 1
+            fi
           done
 
       - name: Generate Home page
@@ -42,7 +47,7 @@ jobs:
 
           HEADER
 
-          for branch in oadp-1.6 oadp-1.5; do
+          for branch in oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3; do
             page="Rebase-Status-${branch}"
             file="/tmp/${page}.md"
 
@@ -53,6 +58,12 @@ jobs:
             echo "" >> /tmp/Home.md
             echo "${score}" >> /tmp/Home.md
             echo "" >> /tmp/Home.md
+
+            # TODO label for branches without rebase configs
+            if [ "$branch" = "oadp-1.3" ] || [ "$branch" = "oadp-1.4" ]; then
+              echo "> **TODO:** Rebase configs are yet to be added for ${branch}" >> /tmp/Home.md
+              echo "" >> /tmp/Home.md
+            fi
 
             # List waves needing attention (marked with :construction:)
             grep '^## :construction:' "$file" | while IFS= read -r line; do
@@ -71,7 +82,7 @@ jobs:
           wiki_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.wiki.git"
           git clone "$wiki_url" /tmp/wiki
 
-          for branch in oadp-1.6 oadp-1.5; do
+          for branch in oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3; do
             cp "/tmp/Rebase-Status-${branch}.md" "/tmp/wiki/Rebase-Status-${branch}.md"
           done
           cp /tmp/Home.md /tmp/wiki/Home.md
