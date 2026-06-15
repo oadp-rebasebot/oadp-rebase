@@ -188,6 +188,9 @@ func checkCIConfig(client *GitHubClient, spec *RepoSpec) *CheckResult {
 	if spec.NoRebase {
 		return &CheckResult{StatusNA, "", "not managed by rebasebot"}
 	}
+	if !repoProducesImages(spec.FullName()) {
+		return &CheckResult{StatusNA, "", "repo does not produce container images"}
+	}
 	ciOrg := spec.Org
 	ciRepo := spec.Repo
 
