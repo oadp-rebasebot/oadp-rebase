@@ -104,8 +104,7 @@ func main() {
 		}
 		RenderHome(os.Stdout, branchResults)
 		if len(failedBranches) > 0 {
-			fmt.Fprintf(os.Stderr, "error: failed to load %d branch(es): %v\n", len(failedBranches), failedBranches)
-			os.Exit(1)
+			fmt.Fprintf(os.Stderr, "warning: failed to load %d branch(es): %v\n", len(failedBranches), failedBranches)
 		}
 		return
 	}
