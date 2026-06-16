@@ -77,12 +77,14 @@ func main() {
 	// Home page mode: multiple branches → single Home.md
 	if format == "home" {
 		var branchResults []BranchResult
+		var failedBranches []string
 		for _, branch := range flag.Args() {
 			clearStores()
 
 			specs, err := LoadSpecs(configDir, branch)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "warning: %s: %v\n", branch, err)
+				fmt.Fprintf(os.Stderr, "error: %s: %v\n", branch, err)
+				failedBranches = append(failedBranches, branch)
 				continue
 			}
 			specs = filterSpecs(specs, waveFilter, repoFilter)
@@ -101,6 +103,10 @@ func main() {
 			branchResults = append(branchResults, BranchResult{Branch: branch, Statuses: statuses})
 		}
 		RenderHome(os.Stdout, branchResults)
+		if len(failedBranches) > 0 {
+			fmt.Fprintf(os.Stderr, "error: failed to load %d branch(es): %v\n", len(failedBranches), failedBranches)
+			os.Exit(1)
+		}
 		return
 	}
 
