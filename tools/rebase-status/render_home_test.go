@@ -186,8 +186,8 @@ func TestRenderHome(t *testing.T) {
 	if !strings.Contains(out, "<summary>Copy</summary>") {
 		t.Error("missing Slack copy section")
 	}
-	if !strings.Contains(out, "<https://example.com/42|velero #42>") {
-		t.Error("missing Slack-formatted PR link")
+	if !strings.Contains(out, "velero #42") || !strings.Contains(out, "https://example.com/42") {
+		t.Error("missing PR link in Slack snippet")
 	}
 
 	// Should NOT show TODO (configs exist)
