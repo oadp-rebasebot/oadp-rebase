@@ -61,11 +61,11 @@ func TestHomeScoreLine(t *testing.T) {
 		total, ready, errs, warns int
 		want                      string
 	}{
-		{18, 14, 4, 1, "14/18 repos ready (77%) | 4 errors | 1 warnings"},
+		{18, 14, 4, 1, "14/18 repos ready (77%) | 4 error(s) | 1 warning(s)"},
 		{10, 10, 0, 0, "10/10 repos ready (100%)"},
 		{0, 0, 0, 0, "0/0 repos ready"},
-		{5, 3, 2, 0, "3/5 repos ready (60%) | 2 errors"},
-		{8, 7, 0, 1, "7/8 repos ready (87%) | 1 warnings"},
+		{5, 3, 2, 0, "3/5 repos ready (60%) | 2 error(s)"},
+		{8, 7, 0, 1, "7/8 repos ready (87%) | 1 warning(s)"},
 	}
 	for _, tt := range tests {
 		got := homeScoreLine(tt.total, tt.ready, tt.errs, tt.warns)

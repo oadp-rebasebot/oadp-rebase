@@ -97,10 +97,10 @@ func homeScoreLine(total, ready, errs, warns int) string {
 		s += fmt.Sprintf(" (%d%%)", ready*100/total)
 	}
 	if errs > 0 {
-		s += fmt.Sprintf(" | %d errors", errs)
+		s += fmt.Sprintf(" | %d error(s)", errs)
 	}
 	if warns > 0 {
-		s += fmt.Sprintf(" | %d warnings", warns)
+		s += fmt.Sprintf(" | %d warning(s)", warns)
 	}
 	return s
 }
