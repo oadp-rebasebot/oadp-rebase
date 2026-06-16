@@ -44,7 +44,6 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	branch := flag.Arg(0)
 
 	// Find config directory
 	if configDir == "" {
@@ -55,20 +54,6 @@ func main() {
 			fmt.Fprintf(os.Stderr, "hint: run from the oadp-rebase repo root, or use --config-dir\n")
 			os.Exit(1)
 		}
-	}
-
-	// Load repo specs
-	specs, err := LoadSpecs(configDir, branch)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error loading configs: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Apply filters
-	specs = filterSpecs(specs, waveFilter, repoFilter)
-	if len(specs) == 0 {
-		fmt.Fprintf(os.Stderr, "no repos matched filters (wave=%d, repo=%q)\n", waveFilter, repoFilter)
-		os.Exit(1)
 	}
 
 	// Create GitHub client
@@ -88,6 +73,58 @@ func main() {
 
 	// Create Quay client for image checks
 	quayClient = NewQuayClient()
+
+	// Home page mode: multiple branches → single Home.md
+	if format == "home" {
+		var branchResults []BranchResult
+		var failedBranches []string
+		for _, branch := range flag.Args() {
+			clearStores()
+
+			specs, err := LoadSpecs(configDir, branch)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error: %s: %v\n", branch, err)
+				failedBranches = append(failedBranches, branch)
+				continue
+			}
+			specs = filterSpecs(specs, waveFilter, repoFilter)
+
+			rd, rdErr := FetchReleaseData(client, branch)
+			if rdErr != nil {
+				fmt.Fprintf(os.Stderr, "warning: %s: release data: %v\n", branch, rdErr)
+			}
+			currentReleaseData = rd
+
+			statuses := RunAllChecks(specs, DefaultChecks, client)
+			if !hideDepDetails {
+				fetchDepCommitDetails(statuses, client, branch)
+			}
+
+			branchResults = append(branchResults, BranchResult{Branch: branch, Statuses: statuses})
+		}
+		RenderHome(os.Stdout, branchResults)
+		if len(failedBranches) > 0 {
+			fmt.Fprintf(os.Stderr, "warning: failed to load %d branch(es): %v\n", len(failedBranches), failedBranches)
+		}
+		return
+	}
+
+	// Single-branch mode
+	branch := flag.Arg(0)
+
+	// Load repo specs
+	specs, err := LoadSpecs(configDir, branch)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error loading configs: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Apply filters
+	specs = filterSpecs(specs, waveFilter, repoFilter)
+	if len(specs) == 0 {
+		fmt.Fprintf(os.Stderr, "no repos matched filters (wave=%d, repo=%q)\n", waveFilter, repoFilter)
+		os.Exit(1)
+	}
 
 	// Fetch release data (image-references + ocp-build-data)
 	rd, rdErr := FetchReleaseData(client, branch)

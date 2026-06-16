@@ -69,6 +69,29 @@ var (
 	openPRStoreMu sync.Mutex
 )
 
+// clearStores resets all global check stores between branch runs.
+func clearStores() {
+	depSyncStoreMu.Lock()
+	depSyncStore = map[string][]DepSync{}
+	depSyncStoreMu.Unlock()
+
+	imageStoreMu.Lock()
+	imageStore = map[string][]ImageInfo{}
+	imageStoreMu.Unlock()
+
+	konfluxStoreMu.Lock()
+	konfluxStore = map[string]*KonfluxInfo{}
+	konfluxStoreMu.Unlock()
+
+	artConfigStoreMu.Lock()
+	artConfigStore = map[string][]*ArtBuildConfig{}
+	artConfigStoreMu.Unlock()
+
+	openPRStoreMu.Lock()
+	openPRStore = map[string]*OpenPRInfo{}
+	openPRStoreMu.Unlock()
+}
+
 // ---------- Individual checks ----------
 
 // checkConfig verifies a rebase config file exists for this repo/branch.
@@ -88,19 +111,19 @@ func checkConfig(client *GitHubClient, spec *RepoSpec) *CheckResult {
 // checkOpenPR searches for an open rebase PR from oadp-rebasebot on the
 // downstream repo. Informational only — presence or absence is not an error.
 func checkOpenPR(client *GitHubClient, spec *RepoSpec) *CheckResult {
-	num, url, err := client.OpenRebasePR(spec.Org, spec.Repo, spec.Branch)
+	pr, err := client.OpenRebasePR(spec.Org, spec.Repo, spec.Branch)
 	if err != nil {
 		return &CheckResult{StatusWarn, "err", fmt.Sprintf("API error: %v", err)}
 	}
-	if num == 0 {
+	if pr == nil {
 		return &CheckResult{StatusNA, "", "no open rebase PR"}
 	}
 
 	openPRStoreMu.Lock()
-	openPRStore[spec.FullName()] = &OpenPRInfo{Number: num, URL: url}
+	openPRStore[spec.FullName()] = pr
 	openPRStoreMu.Unlock()
 
-	return &CheckResult{StatusOK, fmt.Sprintf("#%d", num), url}
+	return &CheckResult{StatusOK, fmt.Sprintf("#%d", pr.Number), pr.URL}
 }
 
 // checkBranch verifies the downstream branch exists on GitHub.

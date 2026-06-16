@@ -39,41 +39,14 @@ jobs:
           done
 
       - name: Generate Home page
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat > /tmp/Home.md <<'HEADER'
-          # OADP Rebase Status
-
-          _Updated automatically by [rebase-status-wiki workflow](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/rebase-status-wiki.yaml)_
-
-          HEADER
-
-          for branch in oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3; do
-            page="Rebase-Status-${branch}"
-            file="/tmp/${page}.md"
-
-            # Extract score line (e.g. "**14/18 repos ready (77%)**")
-            score=$(grep -m1 '^\*\*[0-9]' "$file" | sed 's/\*//g')
-
-            echo "## [${branch}](${page})" >> /tmp/Home.md
-            echo "" >> /tmp/Home.md
-            echo "${score}" >> /tmp/Home.md
-            echo "" >> /tmp/Home.md
-
-            # TODO label for branches without rebase configs
-            if [ "$branch" = "oadp-1.3" ] || [ "$branch" = "oadp-1.4" ]; then
-              echo "> **TODO:** Rebase configs are yet to be added for ${branch}" >> /tmp/Home.md
-              echo "" >> /tmp/Home.md
-            fi
-
-            # List waves needing attention (marked with :construction:)
-            grep '^## :construction:' "$file" | while IFS= read -r line; do
-              # Extract wave title for display and build anchor link
-              title=$(echo "$line" | sed 's/^## :construction: //')
-              anchor=$(echo "$line" | sed 's/^## //' | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g' | sed 's/[^a-z0-9-]//g')
-              echo "- :construction: [${title}](${page}#${anchor})" >> /tmp/Home.md
-            done
-            echo "" >> /tmp/Home.md
-          done
+          tools/rebase-status/rebase-status \
+            --config-dir rebase-configs \
+            --format home \
+            oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3 \
+            > /tmp/Home.md
 
       - name: Push to wiki
         env:
