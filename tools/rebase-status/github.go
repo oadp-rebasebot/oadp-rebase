@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"time"
 )
 
 // GitHubClient wraps HTTP calls to the GitHub REST API.
@@ -268,38 +269,42 @@ func (c *GitHubClient) CompareCommits(org, repo, base, head string) ([]CommitInf
 }
 
 // OpenRebasePR searches for an open PR authored by oadp-rebasebot in the
-// given repo targeting the specified base branch. Returns the PR number
-// and HTML URL, or (0, "") if none found.
-func (c *GitHubClient) OpenRebasePR(org, repo, base string) (int, string, error) {
+// given repo targeting the specified base branch. Returns nil if none found.
+func (c *GitHubClient) OpenRebasePR(org, repo, base string) (*OpenPRInfo, error) {
 	apiPath := fmt.Sprintf("/repos/%s/%s/pulls?state=open&base=%s&per_page=10", org, repo, base)
 
 	body, code, err := c.get(apiPath)
 	if err != nil {
-		return 0, "", err
+		return nil, err
 	}
 	if code != http.StatusOK {
-		return 0, "", fmt.Errorf("GitHub API %s returned %d", apiPath, code)
+		return nil, fmt.Errorf("GitHub API %s returned %d", apiPath, code)
 	}
 
 	var prs []struct {
-		Number  int    `json:"number"`
-		HTMLURL string `json:"html_url"`
-		User    struct {
+		Number    int       `json:"number"`
+		HTMLURL   string    `json:"html_url"`
+		CreatedAt time.Time `json:"created_at"`
+		User      struct {
 			Login string `json:"login"`
 			Type  string `json:"type"`
 		} `json:"user"`
 	}
 	if err := json.Unmarshal(body, &prs); err != nil {
-		return 0, "", fmt.Errorf("parsing PRs: %w", err)
+		return nil, fmt.Errorf("parsing PRs: %w", err)
 	}
 
 	for _, pr := range prs {
 		login := strings.ToLower(pr.User.Login)
 		if login == "oadp-rebasebot" || strings.HasPrefix(login, "oadp-rebasebot-app") {
-			return pr.Number, pr.HTMLURL, nil
+			return &OpenPRInfo{
+				Number:    pr.Number,
+				URL:       pr.HTMLURL,
+				CreatedAt: pr.CreatedAt,
+			}, nil
 		}
 	}
-	return 0, "", nil
+	return nil, nil
 }
 
 // RateLimitRemaining returns the remaining API calls.

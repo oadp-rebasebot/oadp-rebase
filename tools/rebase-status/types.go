@@ -105,8 +105,9 @@ type KonfluxInfo struct {
 
 // OpenPRInfo describes an open rebase PR found on a repo.
 type OpenPRInfo struct {
-	Number int
-	URL    string
+	Number    int
+	URL       string
+	CreatedAt time.Time
 }
 
 // Issue is a problem found during checking.
@@ -168,6 +169,12 @@ func (rd *ReleaseData) ArtConfigsFor(orgRepo string) []*ArtBuildConfig {
 		return nil
 	}
 	return rd.repoArtConfigs[orgRepo]
+}
+
+// BranchResult holds the check results for all repos on a single branch.
+type BranchResult struct {
+	Branch   string
+	Statuses []RepoStatus
 }
 
 // Check is a registered check that can run against a repo.
