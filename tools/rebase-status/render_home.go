@@ -205,14 +205,14 @@ func RenderHome(w io.Writer, branches []BranchResult) {
 			fmt.Fprintln(w)
 			fmt.Fprintln(w, ":memo: Open rebase PRs:")
 			for _, p := range openPRs {
-				fmt.Fprintf(w, "  • <%s|%s #%d> — Wave %d (%s)\n",
-					p.PR.URL, p.Repo, p.PR.Number, p.Wave,
-					p.PR.CreatedAt.Format("2006-01-02"))
+				fmt.Fprintf(w, "  • %s #%d — Wave %d (%s)\n    %s\n",
+					p.Repo, p.PR.Number, p.Wave,
+					p.PR.CreatedAt.Format("2006-01-02"), p.PR.URL)
 			}
 		}
 
 		fmt.Fprintln(w)
-		fmt.Fprintf(w, "<%s|Full status>\n", wikiURL)
+		fmt.Fprintf(w, "Full status: %s\n", wikiURL)
 		fmt.Fprintln(w, "```")
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "</details>")
