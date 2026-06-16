@@ -295,7 +295,7 @@ run_local_rebase() {
         error_exit "rebasebot CLI not found in PATH. Please install it or use container mode (remove --local flag)."
     fi
 
-    log_section "Rebasing using recepit: $config (local CLI)"
+    log_section "Rebasing using receipt: $config (local CLI)"
     log_info "Dry run: $dry_run, Config source: $source_type"
 
     check_secrets
@@ -359,7 +359,7 @@ run_container_rebase() {
     [ -z "$CONTAINER_ENGINE" ] && CONTAINER_ENGINE="$(command -v docker || true)"
     [ -z "$CONTAINER_ENGINE" ] && error_exit "No podman or docker found"
 
-    log_section "Rebasing using recepit: $config"
+    log_section "Rebasing using receipt: $config"
     log_info "Dry run: $dry_run, Config source: $source_type"
 
     check_secrets
