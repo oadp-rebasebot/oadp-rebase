@@ -108,10 +108,13 @@ jobs:
           persist-credentials: false
 
       - name: Setup secrets
+        env:
+          APP_KEY: ${{ secrets.OADP_REBASEBOT_APP_KEY }}
+          CLONER_KEY: ${{ secrets.OADP_REBASEBOT_CLONER_KEY }}
         run: |
           mkdir -p /tmp/rebasebot-secrets
-          printf '%s' "${{ secrets.OADP_REBASEBOT_APP_KEY }}" > /tmp/rebasebot-secrets/oadp-rebasebot-app-key
-          printf '%s' "${{ secrets.OADP_REBASEBOT_CLONER_KEY }}" > /tmp/rebasebot-secrets/oadp-rebasebot-cloner-key
+          echo "$APP_KEY" > /tmp/rebasebot-secrets/oadp-rebasebot-app-key
+          echo "$CLONER_KEY" > /tmp/rebasebot-secrets/oadp-rebasebot-cloner-key
           chmod 600 /tmp/rebasebot-secrets/*
 
       - name: Run rebasebot for ${{ matrix.target }}
