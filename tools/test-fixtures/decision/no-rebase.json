@@ -1,0 +1,3 @@
+[
+  {"repo": "openshift/hypershift-oadp-plugin", "branch": "main", "wave": 3, "skip": false, "upstream": "", "checks": {"config": {"status": "na", "summary": ""}, "open_pr": {"status": "na", "summary": ""}, "dep_sync": {"status": "ok", "summary": "1/1"}}}
+]

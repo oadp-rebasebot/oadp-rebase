@@ -1,0 +1,196 @@
+name: Auto Rebase
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      branches:
+        description: 'Branches to process (comma-separated, or "all")'
+        required: false
+        default: 'all'
+      dry_run:
+        description: 'Dry run (no PRs created)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-rebase
+  cancel-in-progress: false
+
+jobs:
+  decide:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+      has_targets: ${{ steps.build-matrix.outputs.has_targets }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: tools/rebase-status/go.sum
+
+      - name: Build rebase-status
+        run: make -C tools/rebase-status rebase-status
+
+      - name: Determine targets
+        id: build-matrix
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ inputs.branches }}" = "all" ] || [ -z "${{ inputs.branches }}" ]; then
+            BRANCHES="oadp-1.6"
+          else
+            BRANCHES=$(echo "${{ inputs.branches }}" | tr ',' ' ')
+          fi
+
+          all_targets='[]'
+
+          for branch in $BRANCHES; do
+            echo "::group::rebase-status $branch"
+
+            json_file="/tmp/status-${branch}.json"
+            tools/rebase-status/rebase-status \
+              --config-dir rebase-configs \
+              --json \
+              --hide-dependency-details \
+              "$branch" > "$json_file" || true
+
+            targets=$(bash tools/rebase-decision.sh --reason < "$json_file")
+            count=$(echo "$targets" | grep -c . || echo 0)
+            echo "Branch $branch: $count target(s)"
+
+            while IFS=$(printf '\t') read -r target reason; do
+              [ -z "$target" ] && continue
+              all_targets=$(echo "$all_targets" | jq \
+                --arg branch "$branch" \
+                --arg target "$target" \
+                --arg reason "$reason" \
+                '. + [{"branch": $branch, "target": $target, "reason": $reason}]')
+            done <<< "$targets"
+
+            echo "::endgroup::"
+          done
+
+          total=$(echo "$all_targets" | jq length)
+          echo "Total targets across all branches: $total"
+
+          if [ "$total" -gt 0 ]; then
+            echo "has_targets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_targets=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          matrix=$(echo "$all_targets" | jq -c '{include: .}')
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  rebase:
+    needs: decide
+    if: needs.decide.outputs.has_targets == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix: ${{ fromJSON(needs.decide.outputs.matrix) }}
+      fail-fast: false
+      max-parallel: 3
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup secrets
+        run: |
+          mkdir -p /tmp/rebasebot-secrets
+          printf '%s' "${{ secrets.OADP_REBASEBOT_APP_KEY }}" > /tmp/rebasebot-secrets/oadp-rebasebot-app-key
+          printf '%s' "${{ secrets.OADP_REBASEBOT_CLONER_KEY }}" > /tmp/rebasebot-secrets/oadp-rebasebot-cloner-key
+          chmod 600 /tmp/rebasebot-secrets/*
+
+      - name: Run rebasebot for ${{ matrix.target }}
+        id: run
+        env:
+          SECRETS_DIR: /tmp/rebasebot-secrets
+        run: |
+          dry_run_flag=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            dry_run_flag="--dry-run"
+          fi
+
+          echo "Target: ${{ matrix.target }} (reason: ${{ matrix.reason }})"
+
+          set +e
+          ./run-oadp-rebase.sh $dry_run_flag "${{ matrix.target }}" 2>&1 | tee /tmp/rebase-output.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+
+          pr_url=$(grep -oE 'https://github.com/[^[:space:]]+/pull/[0-9]+' /tmp/rebase-output.txt | head -1 || echo "")
+          pr_info=$(grep -E '(I created a new rebase PR|I updated existing rebase PR|PR .+/pull/[0-9]+ already contains|rebase/manual)' \
+            /tmp/rebase-output.txt | sed 's/.*INFO - //' | head -1 || echo "")
+
+          echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
+          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+          echo "pr_info=$pr_info" >> "$GITHUB_OUTPUT"
+
+          exit $rc
+
+      - name: Save result
+        if: always()
+        run: |
+          mkdir -p /tmp/results
+          cat > "/tmp/results/${{ matrix.target }}.json" <<EOF
+          {
+            "target": "${{ matrix.target }}",
+            "branch": "${{ matrix.branch }}",
+            "reason": "${{ matrix.reason }}",
+            "exit_code": "${{ steps.run.outputs.exit_code }}",
+            "pr_url": "${{ steps.run.outputs.pr_url }}",
+            "pr_info": "${{ steps.run.outputs.pr_info }}"
+          }
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: result-${{ matrix.target }}
+          path: /tmp/results/
+          retention-days: 7
+
+  notify:
+    needs: [decide, rebase]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download results
+        if: needs.decide.outputs.has_targets == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: result-*
+          path: /tmp/results
+          merge-multiple: true
+
+      - name: Build Slack payload
+        id: payload
+        env:
+          HAS_TARGETS: ${{ needs.decide.outputs.has_targets }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          args=""
+          [ "$DRY_RUN" = "true" ] && args="$args --dry-run"
+          [ -n "$RUN_URL" ] && args="$args --run-url $RUN_URL"
+          [ "$HAS_TARGETS" != "true" ] && args="$args --no-targets"
+          bash tools/rebase-notify.sh /tmp/results $args > /tmp/slack-payload.json
+          echo "Slack payload:"
+          cat /tmp/slack-payload.json
+
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -sf -X POST -H 'Content-type: application/json' -d @/tmp/slack-payload.json "$SLACK_WEBHOOK_URL"
