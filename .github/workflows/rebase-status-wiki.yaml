@@ -1,6 +1,9 @@
 name: Rebase Status Wiki
 
 on:
+  workflow_run:
+    workflows: ["Auto Rebase"]
+    types: [completed]
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:

@@ -1,0 +1,3 @@
+[
+  {"repo": "openshift/velero", "branch": "oadp-dev", "wave": 2, "skip": false, "upstream": "", "checks": {"config": {"status": "ok", "summary": ""}, "open_pr": {"status": "na", "summary": ""}, "dep_sync": {"status": "fail", "summary": "0/1"}}}
+]

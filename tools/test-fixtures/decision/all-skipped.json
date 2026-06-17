@@ -1,0 +1,4 @@
+[
+  {"repo": "migtools/kopia", "branch": "oadp-dev", "wave": 1, "skip": true, "upstream": "", "checks": {"config": {"status": "skip", "summary": ""}, "open_pr": {"status": "skip", "summary": ""}, "dep_sync": {"status": "skip", "summary": ""}}},
+  {"repo": "openshift/velero", "branch": "oadp-dev", "wave": 2, "skip": true, "upstream": "", "checks": {"config": {"status": "skip", "summary": ""}, "open_pr": {"status": "skip", "summary": ""}, "dep_sync": {"status": "skip", "summary": ""}}}
+]

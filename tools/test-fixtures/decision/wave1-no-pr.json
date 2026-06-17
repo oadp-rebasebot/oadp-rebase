@@ -1,0 +1,3 @@
+[
+  {"repo": "migtools/kopia", "branch": "oadp-dev", "wave": 1, "skip": false, "upstream": "", "checks": {"config": {"status": "ok", "summary": ""}, "open_pr": {"status": "na", "summary": ""}, "dep_sync": {"status": "ok", "summary": ""}}}
+]
