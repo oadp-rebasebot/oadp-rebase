@@ -30,6 +30,8 @@ jobs:
       has_targets: ${{ steps.build-matrix.outputs.has_targets }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-go@v5
         with:
@@ -43,11 +45,12 @@ jobs:
         id: build-matrix
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_BRANCHES: ${{ inputs.branches }}
         run: |
-          if [ "${{ inputs.branches }}" = "all" ] || [ -z "${{ inputs.branches }}" ]; then
+          if [ "$INPUT_BRANCHES" = "all" ] || [ -z "$INPUT_BRANCHES" ]; then
             BRANCHES="oadp-1.6"
           else
-            BRANCHES=$(echo "${{ inputs.branches }}" | tr ',' ' ')
+            BRANCHES=$(echo "$INPUT_BRANCHES" | tr ',' ' ')
           fi
 
           all_targets='[]'
@@ -101,6 +104,8 @@ jobs:
       max-parallel: 3
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup secrets
         run: |
@@ -138,18 +143,24 @@ jobs:
 
       - name: Save result
         if: always()
+        env:
+          TARGET: ${{ matrix.target }}
+          BRANCH: ${{ matrix.branch }}
+          REASON: ${{ matrix.reason }}
+          EXIT_CODE: ${{ steps.run.outputs.exit_code }}
+          PR_URL: ${{ steps.run.outputs.pr_url }}
+          PR_INFO: ${{ steps.run.outputs.pr_info }}
         run: |
           mkdir -p /tmp/results
-          cat > "/tmp/results/${{ matrix.target }}.json" <<EOF
-          {
-            "target": "${{ matrix.target }}",
-            "branch": "${{ matrix.branch }}",
-            "reason": "${{ matrix.reason }}",
-            "exit_code": "${{ steps.run.outputs.exit_code }}",
-            "pr_url": "${{ steps.run.outputs.pr_url }}",
-            "pr_info": "${{ steps.run.outputs.pr_info }}"
-          }
-          EOF
+          jq -n \
+            --arg target "$TARGET" \
+            --arg branch "$BRANCH" \
+            --arg reason "$REASON" \
+            --arg exit_code "$EXIT_CODE" \
+            --arg pr_url "$PR_URL" \
+            --arg pr_info "$PR_INFO" \
+            '{target: $target, branch: $branch, reason: $reason, exit_code: $exit_code, pr_url: $pr_url, pr_info: $pr_info}' \
+            > "/tmp/results/${TARGET}.json"
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -164,6 +175,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Download results
         if: needs.decide.outputs.has_targets == 'true'

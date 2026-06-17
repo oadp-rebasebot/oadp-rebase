@@ -47,7 +47,13 @@ else
     OUTPUT_EXPR='.target'
 fi
 
-jq -r "
+input=$(cat)
+if ! echo "$input" | jq empty 2>/dev/null; then
+    echo "Warning: invalid JSON input, returning no targets" >&2
+    exit 0
+fi
+
+echo "$input" | jq -r "
     [ .[] |
       select(.skip != true) |
       select(.checks.config.status == \"ok\") |
