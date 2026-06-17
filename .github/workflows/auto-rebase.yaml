@@ -122,20 +122,23 @@ jobs:
           echo "$CLONER_KEY" > /tmp/rebasebot-secrets/oadp-rebasebot-cloner-key
           chmod 600 /tmp/rebasebot-secrets/*
 
-      - name: Run rebasebot for ${{ matrix.target }}
-        id: run
+      - name: Dry run for ${{ matrix.target }}
         env:
           SECRETS_DIR: /tmp/rebasebot-secrets
         run: |
-          dry_run_flag=""
-          if [ "${{ inputs.dry_run }}" = "true" ]; then
-            dry_run_flag="--dry-run"
-          fi
+          echo "Dry run: ${{ matrix.target }} (reason: ${{ matrix.reason }})"
+          ./run-oadp-rebase.sh --dry-run "${{ matrix.target }}" 2>&1 | tee /tmp/rebase-dry-run.txt
 
+      - name: Run rebasebot for ${{ matrix.target }}
+        id: run
+        if: inputs.dry_run != true
+        env:
+          SECRETS_DIR: /tmp/rebasebot-secrets
+        run: |
           echo "Target: ${{ matrix.target }} (reason: ${{ matrix.reason }})"
 
           set +e
-          ./run-oadp-rebase.sh $dry_run_flag "${{ matrix.target }}" 2>&1 | tee /tmp/rebase-output.txt
+          ./run-oadp-rebase.sh "${{ matrix.target }}" 2>&1 | tee /tmp/rebase-output.txt
           rc=${PIPESTATUS[0]}
           set -e
 
