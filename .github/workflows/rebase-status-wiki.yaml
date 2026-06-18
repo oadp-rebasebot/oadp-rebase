@@ -11,7 +11,7 @@ on:
       notify_branches:
         description: 'Branches to send Slack notifications for (comma-separated, or empty to skip)'
         required: false
-        default: 'oadp-1.6'
+        default: ''
 
 env:
   NOTIFY_BRANCHES: oadp-1.6
@@ -82,7 +82,23 @@ jobs:
             git push
           fi
 
-      - name: Generate Slack notification
+
+  notify-slack:
+    if: github.event_name != 'workflow_run'
+    needs: update-wiki
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: tools/rebase-status/go.sum
+
+      - name: Build rebase-status
+        run: make -C tools/rebase-status rebase-status
+
+      - name: Generate Slack payload
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NOTIFY_BRANCHES: ${{ inputs.notify_branches || env.NOTIFY_BRANCHES }}
@@ -103,7 +119,6 @@ jobs:
             --gh-token "$GITHUB_TOKEN" \
             > /tmp/slack-status-payload.json
 
-          # Skip if nothing actionable
           if jq -e '.empty // false' /tmp/slack-status-payload.json >/dev/null 2>&1; then
             echo "No actionable items — skipping Slack notification"
             echo "SKIP_NOTIFY=true" >> "$GITHUB_ENV"
