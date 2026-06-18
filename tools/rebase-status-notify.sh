@@ -61,7 +61,6 @@ pr_metadata="{}"
 if [ -n "$GH_TOKEN" ]; then
     tmpfile=$(mktemp)
     echo "{" > "$tmpfile"
-    first=true
     echo "$input" | jq -r '
         .[] | select(.checks.open_pr.status == "ok") |
         .repo + " " + .checks.open_pr.summary
