@@ -5,8 +5,16 @@ on:
     workflows: ["Auto Rebase"]
     types: [completed]
   schedule:
-    - cron: '0 6 * * *'
+    - cron: '0 6 * * 1-5'
   workflow_dispatch:
+    inputs:
+      notify_branches:
+        description: 'Branches to send Slack notifications for (comma-separated, or empty to skip)'
+        required: false
+        default: 'oadp-1.6'
+
+env:
+  NOTIFY_BRANCHES: oadp-1.6
 
 permissions:
   contents: write
@@ -73,3 +81,45 @@ jobs:
             git commit -m "Update rebase status $(date -u +%Y-%m-%d)"
             git push
           fi
+
+      - name: Generate Slack notification
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NOTIFY_BRANCHES: ${{ inputs.notify_branches || env.NOTIFY_BRANCHES }}
+        run: |
+          [ -z "$NOTIFY_BRANCHES" ] && { echo "No branches to notify"; exit 0; }
+
+          all_json="[]"
+          for branch in $(echo "$NOTIFY_BRANCHES" | tr ',' ' '); do
+            branch_json=$(tools/rebase-status/rebase-status \
+              --config-dir rebase-configs \
+              --json \
+              --hide-dependency-details \
+              "$branch" 2>/dev/null || echo "[]")
+            all_json=$(echo "$all_json" "$branch_json" | jq -s 'add')
+          done
+
+          echo "$all_json" | bash tools/rebase-status-notify.sh \
+            --gh-token "$GITHUB_TOKEN" \
+            > /tmp/slack-status-payload.json
+
+          # Skip if nothing actionable
+          if jq -e '.empty // false' /tmp/slack-status-payload.json >/dev/null 2>&1; then
+            echo "No actionable items — skipping Slack notification"
+            echo "SKIP_NOTIFY=true" >> "$GITHUB_ENV"
+          else
+            echo "Slack payload:"
+            jq . /tmp/slack-status-payload.json
+          fi
+
+      - name: Send Slack notification
+        if: env.SKIP_NOTIFY != 'true'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL not set — skipping"
+            exit 0
+          fi
+          curl -sfS -X POST -H 'Content-type: application/json' \
+            -d @/tmp/slack-status-payload.json "$SLACK_WEBHOOK_URL"
