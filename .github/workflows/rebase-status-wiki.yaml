@@ -121,5 +121,5 @@ jobs:
             echo "SLACK_WEBHOOK_URL not set — skipping"
             exit 0
           fi
-          curl -sf -X POST -H 'Content-type: application/json' \
+          curl -sfS -X POST -H 'Content-type: application/json' \
             -d @/tmp/slack-status-payload.json "$SLACK_WEBHOOK_URL"
