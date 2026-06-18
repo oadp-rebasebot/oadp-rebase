@@ -91,19 +91,19 @@ echo "$input" | jq --arg wiki_url "$WIKI_URL" \
 [$groups[] |
     .[0].branch as $branch |
 
-    # Pending PRs — construct URL from repo + summary
-    [.[] | select(.checks.open_pr.status == "ok") |
+    # Pending PRs — construct URL from repo + summary, exclude empty PRs
+    ([.[] | select(.checks.open_pr.status == "ok") |
         (.checks.open_pr.summary | ltrimstr("#")) as $num |
         ("https://github.com/" + .repo + "/pull/" + $num) as $pr_url |
         ($pr_meta[.repo + "/" + .checks.open_pr.summary] // -1) as $changed |
+        select($changed != 0) |
         {
             repo: .repo,
             wave: .wave,
             pr_num: .checks.open_pr.summary,
-            pr_url: $pr_url,
-            empty: ($changed == 0)
+            pr_url: $pr_url
         }
-    ] as $prs |
+    ]) as $prs |
 
     # Deps out of sync without a PR (pending work)
     [.[] | select(.checks.dep_sync.status == "fail" and .checks.open_pr.status != "ok") |
@@ -140,11 +140,10 @@ else
                 ":arrows_counterclockwise: *" + (.prs | length | tostring) + " pending PR" +
                 (if (.prs | length) > 1 then "s" else "" end) + "*\n" +
                 (.prs | sort_by(.wave) | map(
-                    (if .empty then ":white_circle:" else ":large_orange_circle:" end) +
+                    ":large_orange_circle:" +
                     " `" + (.repo | split("/") | .[1]) + "` " +
                     "<" + .pr_url + "|" + .pr_num + ">" +
-                    " (W" + (.wave | tostring) + ")" +
-                    (if .empty then " — _up to date, can close_" else "" end)
+                    " (W" + (.wave | tostring) + ")"
                 ) | join("\n"))
             else "" end) +
 
