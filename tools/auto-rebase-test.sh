@@ -227,7 +227,7 @@ assert_output "default conflict policy is strict" "strict" "$default_val"
 
 resolve_config() {
     target="$1"
-    grep -E "^\s+${target}\)" "$REBASE_SCRIPT" | head -1 | sed 's/.*echo "\(.*\)".*/\1/'
+    grep -E "^[[:space:]]+${target}\)" "$REBASE_SCRIPT" | head -1 | sed 's/.*echo "\(.*\)".*/\1/'
 }
 
 assert_output "config resolves: velero-oadp-1.6" \

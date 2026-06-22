@@ -153,11 +153,12 @@ jobs:
       - name: Resolve config file
         id: config
         if: failure() && steps.run.outputs.exit_code != ''
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
-          target="${{ matrix.target }}"
-          config_name=$(grep -E "^\s+${target}\)" run-oadp-rebase.sh | head -1 | sed 's/.*echo "\(.*\)".*/\1/')
+          config_name=$(grep -E "^[[:space:]]+${TARGET}\)" run-oadp-rebase.sh | head -1 | sed 's/.*echo "\(.*\)".*/\1/')
           if [ -z "$config_name" ]; then
-            echo "::warning::Could not resolve config file for target: ${target}"
+            echo "::warning::Could not resolve config file for target: ${TARGET}"
             exit 1
           fi
           echo "path=rebase-configs/${config_name}.env.sh" >> "$GITHUB_OUTPUT"
@@ -174,11 +175,15 @@ jobs:
 
       - name: Log triage verdict
         if: failure() && steps.analyze.outcome == 'success'
+        env:
+          TARGET: ${{ matrix.target }}
+          ANALYZE_RESPONSE: ${{ steps.analyze.outputs.response }}
         run: |
-          echo "::notice title=LLM Conflict Triage (${{ matrix.target }})::$(echo '${{ steps.analyze.outputs.response }}' | jq -r '.reason')"
+          reason="$(jq -r '.reason' <<< "$ANALYZE_RESPONSE")"
+          echo "::notice title=LLM Conflict Triage (${TARGET})::${reason}"
           echo "### Conflict Triage Result" >> "$GITHUB_STEP_SUMMARY"
           echo '```json' >> "$GITHUB_STEP_SUMMARY"
-          echo '${{ steps.analyze.outputs.response }}' | jq . >> "$GITHUB_STEP_SUMMARY"
+          jq . <<< "$ANALYZE_RESPONSE" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Retry rebasebot with warn policy
@@ -186,16 +191,17 @@ jobs:
         if: failure() && steps.analyze.outcome == 'success' && fromJSON(steps.analyze.outputs.response).safe == true
         env:
           SECRETS_DIR: /tmp/rebasebot-secrets
+          TARGET: ${{ matrix.target }}
         run: |
           dry_run_flag=""
           if [ "${{ inputs.dry_run }}" = "true" ]; then
             dry_run_flag="--dry-run"
           fi
 
-          echo "::notice title=Retrying (${{ matrix.target }})::LLM triage approved retry with --conflict-policy warn"
+          echo "::notice title=Retrying (${TARGET})::LLM triage approved retry with --conflict-policy warn"
 
           set +e
-          ./run-oadp-rebase.sh $dry_run_flag --conflict-policy warn "${{ matrix.target }}" 2>&1 | tee /tmp/rebase-output-retry.txt
+          ./run-oadp-rebase.sh $dry_run_flag --conflict-policy warn "$TARGET" 2>&1 | tee /tmp/rebase-output-retry.txt
           rc=${PIPESTATUS[0]}
           set -e
 
