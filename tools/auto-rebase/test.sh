@@ -190,7 +190,7 @@ fi
 printf "\n=== conflict-triage tests ===\n\n"
 # ============================================================
 
-REBASE_SCRIPT="$SCRIPT_DIR/../run-oadp-rebase.sh"
+REBASE_SCRIPT="$SCRIPT_DIR/../../run-oadp-rebase.sh"
 TRIAGE_FIXTURES="$FIXTURES/conflict-triage"
 
 # --- Script parameterization: no hardcoded --conflict-policy strict ---
@@ -214,7 +214,7 @@ fi
 
 # --- Script parameterization: flag is accepted ---
 
-out=$(cd "$SCRIPT_DIR/.." && ./run-oadp-rebase.sh --conflict-policy warn --test nonexistent-target 2>&1 || true)
+out=$(cd "$SCRIPT_DIR/../.." && ./run-oadp-rebase.sh --conflict-policy warn --test nonexistent-target 2>&1 || true)
 assert_not_contains "conflict-policy flag is accepted (no 'Unknown option')" "$out" "Unknown option"
 assert_contains "conflict-policy flag parsed before config lookup" "$out" "Unknown config"
 
