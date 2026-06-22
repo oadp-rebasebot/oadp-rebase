@@ -187,6 +187,109 @@ else
 fi
 
 # ============================================================
+printf "\n=== conflict-triage tests ===\n\n"
+# ============================================================
+
+REBASE_SCRIPT="$SCRIPT_DIR/../run-oadp-rebase.sh"
+TRIAGE_FIXTURES="$FIXTURES/conflict-triage"
+
+# --- Script parameterization: no hardcoded --conflict-policy strict ---
+
+# Extract run_local_rebase and run_container_rebase function bodies and check
+# for hardcoded strict policy (should only use "$CONFLICT_POLICY")
+func_bodies=$(sed -n '/^run_local_rebase()/,/^}/p;/^run_container_rebase()/,/^}/p' "$REBASE_SCRIPT")
+hardcoded=$(echo "$func_bodies" | grep -c 'conflict-policy strict' || true)
+assert_output "no hardcoded --conflict-policy strict in rebase functions" "0" "$hardcoded"
+
+# Verify $CONFLICT_POLICY is used in both functions
+parameterized=$(echo "$func_bodies" | grep -c 'conflict-policy.*CONFLICT_POLICY' || echo "0")
+if [ "$parameterized" -ge 2 ]; then
+    printf "  PASS  conflict-policy uses \$CONFLICT_POLICY in both functions\n"
+    passed=$((passed + 1))
+else
+    printf "  FAIL  conflict-policy uses \$CONFLICT_POLICY in both functions\n"
+    printf "    expected >= 2 occurrences, got: %s\n" "$parameterized"
+    failed=$((failed + 1))
+fi
+
+# --- Script parameterization: flag is accepted ---
+
+out=$(cd "$SCRIPT_DIR/.." && ./run-oadp-rebase.sh --conflict-policy warn --test nonexistent-target 2>&1 || true)
+assert_not_contains "conflict-policy flag is accepted (no 'Unknown option')" "$out" "Unknown option"
+assert_contains "conflict-policy flag parsed before config lookup" "$out" "Unknown config"
+
+# --- Script parameterization: default is strict ---
+
+default_val=$(grep '^CONFLICT_POLICY=' "$REBASE_SCRIPT" | head -1 | sed 's/.*="//' | sed 's/"//')
+assert_output "default conflict policy is strict" "strict" "$default_val"
+
+# --- Config resolution: workflow grep pattern works for all targets ---
+
+resolve_config() {
+    target="$1"
+    grep -E "^[[:space:]]+${target}\)" "$REBASE_SCRIPT" | head -1 | sed 's/.*echo "\(.*\)".*/\1/'
+}
+
+assert_output "config resolves: velero-oadp-1.6" \
+    "openshift_velero_oadp-1.6" "$(resolve_config velero-oadp-1.6)"
+assert_output "config resolves: oadp-vmdp-oadp-1.6" \
+    "migtools_oadp_vmdp_oadp-1.6" "$(resolve_config oadp-vmdp-oadp-1.6)"
+assert_output "config resolves: kopia-oadp-dev" \
+    "migtools_kopia_oadp-dev" "$(resolve_config kopia-oadp-dev)"
+assert_output "config resolves: oadp-operator-oadp-dev" \
+    "openshift_oadp-operator_oadp-dev" "$(resolve_config oadp-operator-oadp-dev)"
+assert_output "config resolves: velero-plugin-for-aws-oadp-1.6" \
+    "openshift_velero_plugin_for_aws_oadp-1.6" "$(resolve_config velero-plugin-for-aws-oadp-1.6)"
+assert_output "config resolves: oadp-must-gather-oadp-1.6" \
+    "openshift_oadp_must_gather_oadp-1.6" "$(resolve_config oadp-must-gather-oadp-1.6)"
+
+# --- Prompt file validation ---
+
+PROMPT_FILE="$SCRIPT_DIR/../.github/prompts/conflict-triage.prompt.yml"
+
+if [ -f "$PROMPT_FILE" ]; then
+    printf "  PASS  prompt file exists\n"
+    passed=$((passed + 1))
+else
+    printf "  FAIL  prompt file exists\n"
+    failed=$((failed + 1))
+fi
+
+if ruby -ryaml -e "YAML.load_file('$PROMPT_FILE')" 2>/dev/null; then
+    printf "  PASS  prompt file is valid YAML\n"
+    passed=$((passed + 1))
+else
+    printf "  FAIL  prompt file is valid YAML\n"
+    failed=$((failed + 1))
+fi
+
+prompt_content=$(cat "$PROMPT_FILE")
+assert_contains "prompt has rebase_output variable" "$prompt_content" "{{rebase_output}}"
+assert_contains "prompt has hook_config variable" "$prompt_content" "{{hook_config}}"
+
+# --- Test fixture validation ---
+
+safe_fixture="$TRIAGE_FIXTURES/safe-gomod-only.txt"
+unsafe_fixture="$TRIAGE_FIXTURES/unsafe-code-file.txt"
+
+safe_warnings=$(grep -c '^WARNING' "$safe_fixture" || echo "0")
+if [ "$safe_warnings" -gt 0 ]; then
+    printf "  PASS  safe fixture has WARNING lines\n"
+    passed=$((passed + 1))
+else
+    printf "  FAIL  safe fixture has WARNING lines\n"
+    failed=$((failed + 1))
+fi
+
+# Safe fixture: all WARNING "dropped from" lines should only reference go.mod or go.sum
+unsafe_files_in_safe=$(grep '^WARNING.*dropped from' "$safe_fixture" | grep -v "'go\.mod'" | grep -v "'go\.sum'" || true)
+assert_empty "safe fixture only has go.mod/go.sum warnings" "$unsafe_files_in_safe"
+
+# Unsafe fixture: should have warnings about non-go.mod files
+assert_contains "unsafe fixture has .go file warning" "$(cat "$unsafe_fixture")" "restore.go"
+assert_contains "unsafe fixture has downstream-only file warning" "$(cat "$unsafe_fixture")" "Dockerfile.ubi"
+
+# ============================================================
 printf "\n=== Results ===\n"
 # ============================================================
 

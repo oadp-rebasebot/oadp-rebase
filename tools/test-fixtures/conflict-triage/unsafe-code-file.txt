@@ -1,0 +1,18 @@
+INFO - Using working directory: /tmp/.cache/rebasebot
+INFO - Destination repository is https://github.com/openshift/velero.git
+INFO - rebase repository is https://github.com/oadp-rebasebot/velero.git
+INFO - source repository is https://github.com/velero-io/velero.git
+INFO - Fetching oadp-1.6 from dest
+INFO - Fetching oadp-1.6 from source
+INFO - Checking out source/oadp-1.6
+INFO - Performing rebase
+INFO - Picking commit: abc123 - UPSTREAM: <carry>: Add OpenShift route support
+WARNING - Upstream content may have been dropped from 'go.mod' by cherry-pick of: abc123 - UPSTREAM: <carry>: Add OpenShift route support
+WARNING -   lost line: k8s.io/api v0.32.1
+WARNING -   lost line: k8s.io/client-go v0.32.1
+WARNING - Upstream content may have been dropped from 'pkg/restore/restore.go' by cherry-pick of: abc123 - UPSTREAM: <carry>: Add OpenShift route support
+WARNING -   lost line: func (r *restorer) validateRestoreConfig(restore *api.Restore) error {
+WARNING -   lost line: 	if restore.Spec.IncludedNamespaces == nil {
+WARNING - Upstream content may have been dropped from 'Dockerfile.ubi' by cherry-pick of: abc123 - UPSTREAM: <carry>: Add OpenShift route support
+WARNING -   lost line: FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+ERROR - Manual intervention is needed to rebase https://github.com/velero-io/velero:oadp-1.6 into openshift/velero:oadp-1.6
