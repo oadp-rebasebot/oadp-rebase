@@ -243,44 +243,45 @@ assert_output "config resolves: velero-plugin-for-aws-oadp-1.6" \
 assert_output "config resolves: oadp-must-gather-oadp-1.6" \
     "openshift_oadp_must_gather_oadp-1.6" "$(resolve_config oadp-must-gather-oadp-1.6)"
 
-# --- System prompt validation ---
+# --- conflict-triage.sh tests ---
 
-SYSTEM_PROMPT="$SCRIPT_DIR/../.github/prompts/conflict-triage-system.txt"
-
-if [ -f "$SYSTEM_PROMPT" ]; then
-    printf "  PASS  system prompt file exists\n"
-    passed=$((passed + 1))
-else
-    printf "  FAIL  system prompt file exists\n"
-    failed=$((failed + 1))
-fi
-
-prompt_content=$(cat "$SYSTEM_PROMPT")
-assert_contains "system prompt has SAFE classification rules" "$prompt_content" "go-mod-tidy-and-commit.sh"
-assert_contains "system prompt has UNSAFE classification rules" "$prompt_content" "UNSAFE"
-assert_contains "system prompt has JSON output format" "$prompt_content" '"safe"'
-
-# --- Test fixture validation ---
-
+TRIAGE_SCRIPT="$SCRIPT_DIR/conflict-triage.sh"
 safe_fixture="$TRIAGE_FIXTURES/safe-gomod-only.txt"
 unsafe_fixture="$TRIAGE_FIXTURES/unsafe-code-file.txt"
+config_with_tidy="$TRIAGE_FIXTURES/hook-config-with-tidy.env.sh"
+config_without_tidy="$TRIAGE_FIXTURES/hook-config-without-tidy.env.sh"
 
-safe_warnings=$(grep -c '^WARNING' "$safe_fixture" || echo "0")
-if [ "$safe_warnings" -gt 0 ]; then
-    printf "  PASS  safe fixture has WARNING lines\n"
+# Safe fixture + hooks that cover go.mod → safe verdict
+safe_verdict=$(bash "$TRIAGE_SCRIPT" "$config_with_tidy" < "$safe_fixture") && safe_rc=0 || safe_rc=$?
+assert_output "safe fixture with go-mod-tidy hook → exit 0" "0" "$safe_rc"
+assert_json_field "safe verdict is true" "$safe_verdict" '.safe' "true"
+assert_json_field "safe verdict has reason" "$safe_verdict" '.reason' "All conflicting files are covered by configured hooks"
+
+# Unsafe fixture → unsafe verdict (has .go and Dockerfile.ubi warnings)
+unsafe_verdict=$(bash "$TRIAGE_SCRIPT" "$config_with_tidy" < "$unsafe_fixture") && unsafe_rc=0 || unsafe_rc=$?
+assert_output "unsafe fixture → exit 1" "1" "$unsafe_rc"
+assert_json_field "unsafe verdict is false" "$unsafe_verdict" '.safe' "false"
+assert_contains "unsafe reason mentions uncovered file" "$unsafe_verdict" "not covered by any configured hook"
+
+# Safe fixture but hooks don't include go-mod-tidy → unsafe (hook not configured)
+no_tidy_verdict=$(bash "$TRIAGE_SCRIPT" "$config_without_tidy" < "$safe_fixture") && no_tidy_rc=0 || no_tidy_rc=$?
+assert_output "safe fixture without go-mod-tidy hook → exit 1" "1" "$no_tidy_rc"
+assert_json_field "missing hook verdict is false" "$no_tidy_verdict" '.safe' "false"
+
+# No warnings in input → safe
+no_warn_verdict=$(echo "INFO - Rebase completed successfully" | bash "$TRIAGE_SCRIPT" "$config_with_tidy") && no_warn_rc=0 || no_warn_rc=$?
+assert_output "no warnings → exit 0" "0" "$no_warn_rc"
+assert_json_field "no warnings verdict is true" "$no_warn_verdict" '.safe' "true"
+
+# Verify JSON structure has affected_files array
+file_count=$(echo "$safe_verdict" | jq '.affected_files | length')
+if [ "$file_count" -gt 0 ]; then
+    printf "  PASS  verdict has affected_files array (%s files)\n" "$file_count"
     passed=$((passed + 1))
 else
-    printf "  FAIL  safe fixture has WARNING lines\n"
+    printf "  FAIL  verdict has affected_files array\n"
     failed=$((failed + 1))
 fi
-
-# Safe fixture: all WARNING "dropped from" lines should only reference go.mod or go.sum
-unsafe_files_in_safe=$(grep '^WARNING.*dropped from' "$safe_fixture" | grep -v "'go\.mod'" | grep -v "'go\.sum'" || true)
-assert_empty "safe fixture only has go.mod/go.sum warnings" "$unsafe_files_in_safe"
-
-# Unsafe fixture: should have warnings about non-go.mod files
-assert_contains "unsafe fixture has .go file warning" "$(cat "$unsafe_fixture")" "restore.go"
-assert_contains "unsafe fixture has downstream-only file warning" "$(cat "$unsafe_fixture")" "Dockerfile.ubi"
 
 # ============================================================
 printf "\n=== Results ===\n"

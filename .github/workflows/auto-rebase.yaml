@@ -22,7 +22,6 @@ on:
 
 permissions:
   contents: read
-  models: read
 
 concurrency:
   group: auto-rebase
@@ -150,8 +149,8 @@ jobs:
 
           exit $rc
 
-      - name: Build triage prompt
-        id: build-prompt
+      - name: Triage conflict
+        id: triage
         if: failure() && steps.run.outputs.exit_code != ''
         env:
           TARGET: ${{ matrix.target }}
@@ -159,47 +158,26 @@ jobs:
           config_name=$(grep -E "^[[:space:]]+${TARGET}\)" run-oadp-rebase.sh | head -1 | sed 's/.*echo "\(.*\)".*/\1/')
           if [ -z "$config_name" ]; then
             echo "::warning::Could not resolve config file for target: ${TARGET}"
-            exit 1
+            exit 0
           fi
 
-          cat > /tmp/triage-prompt.txt <<PROMPT_EOF
-          Analyze this rebasebot output and hook configuration, then classify each WARNING.
+          set +e
+          verdict=$(bash tools/conflict-triage.sh "rebase-configs/${config_name}.env.sh" < /tmp/rebase-output.txt)
+          triage_rc=$?
+          set -e
 
-          Rebasebot Output:
-          $(cat /tmp/rebase-output.txt)
+          echo "verdict=${verdict}" >> "$GITHUB_OUTPUT"
 
-          Hook Configuration:
-          $(cat "rebase-configs/${config_name}.env.sh")
-
-          Classify every WARNING line and return your verdict as JSON.
-          PROMPT_EOF
-
-      - name: Analyze conflict with LLM
-        id: analyze
-        if: failure() && steps.build-prompt.outcome == 'success'
-        uses: actions/ai-inference@v1
-        with:
-          model: openai/gpt-4o
-          max-completion-tokens: 1000
-          system-prompt-file: .github/prompts/conflict-triage-system.txt
-          prompt-file: /tmp/triage-prompt.txt
-
-      - name: Log triage verdict
-        if: failure() && steps.analyze.outcome == 'success'
-        env:
-          TARGET: ${{ matrix.target }}
-          ANALYZE_RESPONSE: ${{ steps.analyze.outputs.response }}
-        run: |
-          reason="$(jq -r '.reason' <<< "$ANALYZE_RESPONSE")"
-          echo "::notice title=LLM Conflict Triage (${TARGET})::${reason}"
+          reason=$(echo "$verdict" | jq -r '.reason')
+          echo "::notice title=Conflict Triage (${TARGET})::${reason}"
           echo "### Conflict Triage Result" >> "$GITHUB_STEP_SUMMARY"
           echo '```json' >> "$GITHUB_STEP_SUMMARY"
-          jq . <<< "$ANALYZE_RESPONSE" >> "$GITHUB_STEP_SUMMARY"
+          echo "$verdict" | jq . >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Retry rebasebot with warn policy
         id: retry
-        if: failure() && steps.analyze.outcome == 'success' && fromJSON(steps.analyze.outputs.response).safe == true
+        if: failure() && steps.triage.outcome == 'success' && fromJSON(steps.triage.outputs.verdict).safe == true
         env:
           SECRETS_DIR: /tmp/rebasebot-secrets
           TARGET: ${{ matrix.target }}
@@ -209,7 +187,7 @@ jobs:
             dry_run_flag="--dry-run"
           fi
 
-          echo "::notice title=Retrying (${TARGET})::LLM triage approved retry with --conflict-policy warn"
+          echo "::notice title=Retrying (${TARGET})::Conflict triage approved retry with --conflict-policy warn"
 
           set +e
           ./run-oadp-rebase.sh $dry_run_flag --conflict-policy warn "$TARGET" 2>&1 | tee /tmp/rebase-output-retry.txt

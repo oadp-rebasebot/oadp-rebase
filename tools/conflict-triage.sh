@@ -1,0 +1,90 @@
+#!/bin/sh
+#
+# Deterministic conflict triage for rebasebot failures.
+#
+# Reads rebasebot output from stdin, checks if all WARNING'd files are
+# covered by hooks configured in the given config file. Outputs a JSON
+# verdict to stdout. Exit 0 = safe to retry with --conflict-policy warn,
+# exit 1 = needs human review.
+#
+# Usage: cat rebase-output.txt | conflict-triage.sh <config-file>
+
+set -eu
+
+CONFIG_FILE="${1:-}"
+[ -n "$CONFIG_FILE" ] || { echo "Usage: $0 <config-file>" >&2; exit 2; }
+[ -f "$CONFIG_FILE" ] || { echo "Config file not found: $CONFIG_FILE" >&2; exit 2; }
+
+# Source the config to get HOOK_SCRIPTS
+HOOK_SCRIPTS=""
+. "$CONFIG_FILE"
+
+# Read rebasebot output from stdin
+rebase_output=$(cat)
+
+# Extract unique filenames from WARNING lines
+# Pattern: WARNING - Upstream content may have been dropped from 'FILENAME' by cherry-pick
+warned_files=$(echo "$rebase_output" | grep "^WARNING - Upstream content may have been dropped from" | sed "s/.*from '\\([^']*\\)'.*/\\1/" | sort -u)
+
+if [ -z "$warned_files" ]; then
+    printf '{"safe": true, "reason": "No conflict warnings found", "affected_files": []}\n'
+    exit 0
+fi
+
+has_go_mod_tidy=false
+has_normalize_dockerfiles=false
+echo "$HOOK_SCRIPTS" | grep -q "go-mod-tidy-and-commit.sh" && has_go_mod_tidy=true
+echo "$HOOK_SCRIPTS" | grep -q "normalize-dockerfiles-and-commit.sh" && has_normalize_dockerfiles=true
+
+safe=true
+reason=""
+files_json="["
+first=true
+
+for file in $warned_files; do
+    covered=false
+    hook_name=""
+
+    case "$file" in
+        go.mod|go.sum)
+            if [ "$has_go_mod_tidy" = "true" ]; then
+                covered=true
+                hook_name="go-mod-tidy-and-commit.sh"
+            fi
+            ;;
+        Dockerfile|Dockerfile-Windows|hack/build-image/Dockerfile)
+            if [ "$has_normalize_dockerfiles" = "true" ]; then
+                covered=true
+                hook_name="normalize-dockerfiles-and-commit.sh"
+            fi
+            ;;
+    esac
+
+    if [ "$first" = "true" ]; then
+        first=false
+    else
+        files_json="${files_json},"
+    fi
+    files_json="${files_json}{\"file\":\"${file}\",\"covered_by_hook\":${covered},\"hook_name\":\"${hook_name}\"}"
+
+    if [ "$covered" = "false" ]; then
+        safe=false
+        if [ -z "$reason" ]; then
+            reason="'${file}' is not covered by any configured hook"
+        fi
+    fi
+done
+
+files_json="${files_json}]"
+
+if [ "$safe" = "true" ]; then
+    reason="All conflicting files are covered by configured hooks"
+fi
+
+printf '{"safe": %s, "reason": "%s", "affected_files": %s}\n' "$safe" "$reason" "$files_json"
+
+if [ "$safe" = "true" ]; then
+    exit 0
+else
+    exit 1
+fi
