@@ -8,6 +8,15 @@
 # exit 1 = needs human review.
 #
 # Usage: cat rebase-output.txt | conflict-triage.sh <config-file>
+#
+# Rule table — to add a new rule, add a case arm below and a test fixture.
+#
+#   File pattern                          Safe if hook configured
+#   ------------------------------------  --------------------------------
+#   go.mod, go.sum                        go-mod-tidy-and-commit.sh
+#   Dockerfile, Dockerfile-Windows,       normalize-dockerfiles-and-commit.sh
+#     hack/build-image/Dockerfile
+#   (everything else)                     ALWAYS UNSAFE — needs human review
 
 set -eu
 
