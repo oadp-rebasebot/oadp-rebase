@@ -150,8 +150,8 @@ jobs:
 
           exit $rc
 
-      - name: Resolve config file
-        id: config
+      - name: Build triage prompt
+        id: build-prompt
         if: failure() && steps.run.outputs.exit_code != ''
         env:
           TARGET: ${{ matrix.target }}
@@ -161,17 +161,28 @@ jobs:
             echo "::warning::Could not resolve config file for target: ${TARGET}"
             exit 1
           fi
-          echo "path=rebase-configs/${config_name}.env.sh" >> "$GITHUB_OUTPUT"
+
+          cat > /tmp/triage-prompt.txt <<PROMPT_EOF
+          Analyze this rebasebot output and hook configuration, then classify each WARNING.
+
+          Rebasebot Output:
+          $(cat /tmp/rebase-output.txt)
+
+          Hook Configuration:
+          $(cat "rebase-configs/${config_name}.env.sh")
+
+          Classify every WARNING line and return your verdict as JSON.
+          PROMPT_EOF
 
       - name: Analyze conflict with LLM
         id: analyze
-        if: failure() && steps.config.outcome == 'success'
+        if: failure() && steps.build-prompt.outcome == 'success'
         uses: actions/ai-inference@v1
         with:
-          prompt-file: .github/prompts/conflict-triage.prompt.yml
-          file_input: |
-            rebase_output: /tmp/rebase-output.txt
-            hook_config: ${{ steps.config.outputs.path }}
+          model: openai/gpt-4o
+          max-completion-tokens: 1000
+          system-prompt-file: .github/prompts/conflict-triage-system.txt
+          prompt-file: /tmp/triage-prompt.txt
 
       - name: Log triage verdict
         if: failure() && steps.analyze.outcome == 'success'

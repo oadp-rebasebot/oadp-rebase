@@ -243,55 +243,22 @@ assert_output "config resolves: velero-plugin-for-aws-oadp-1.6" \
 assert_output "config resolves: oadp-must-gather-oadp-1.6" \
     "openshift_oadp_must_gather_oadp-1.6" "$(resolve_config oadp-must-gather-oadp-1.6)"
 
-# --- Prompt file validation ---
+# --- System prompt validation ---
 
-PROMPT_FILE="$SCRIPT_DIR/../.github/prompts/conflict-triage.prompt.yml"
+SYSTEM_PROMPT="$SCRIPT_DIR/../.github/prompts/conflict-triage-system.txt"
 
-if [ -f "$PROMPT_FILE" ]; then
-    printf "  PASS  prompt file exists\n"
+if [ -f "$SYSTEM_PROMPT" ]; then
+    printf "  PASS  system prompt file exists\n"
     passed=$((passed + 1))
 else
-    printf "  FAIL  prompt file exists\n"
+    printf "  FAIL  system prompt file exists\n"
     failed=$((failed + 1))
 fi
 
-# Validate using js-yaml v4 (same parser as actions/ai-inference)
-validate_err=$(npx -y js-yaml@4 "$PROMPT_FILE" > /dev/null 2>&1 && echo "" || npx -y js-yaml@4 "$PROMPT_FILE" 2>&1)
-if [ -z "$validate_err" ]; then
-    printf "  PASS  prompt file parses with js-yaml v4 (same as ai-inference action)\n"
-    passed=$((passed + 1))
-else
-    printf "  FAIL  prompt file parses with js-yaml v4 (same as ai-inference action)\n"
-    printf "    error: %s\n" "$validate_err"
-    failed=$((failed + 1))
-fi
-
-# Validate structure matches what actions/ai-inference loadPromptFile() expects:
-# - messages array exists
-# - each message has role (system|user|assistant) and content
-prompt_json=$(npx -y js-yaml@4 "$PROMPT_FILE" 2>/dev/null)
-msg_count=$(echo "$prompt_json" | jq '.messages | length' 2>/dev/null || echo "0")
-if [ "$msg_count" -gt 0 ]; then
-    printf "  PASS  prompt has messages array (%s messages)\n" "$msg_count"
-    passed=$((passed + 1))
-else
-    printf "  FAIL  prompt has messages array\n"
-    failed=$((failed + 1))
-fi
-
-bad_roles=$(echo "$prompt_json" | jq '[.messages[] | select(.role != "system" and .role != "user" and .role != "assistant")] | length' 2>/dev/null || echo "1")
-empty_content=$(echo "$prompt_json" | jq '[.messages[] | select(.content == null or .content == "")] | length' 2>/dev/null || echo "1")
-if [ "$bad_roles" = "0" ] && [ "$empty_content" = "0" ]; then
-    printf "  PASS  all messages have valid role and content\n"
-    passed=$((passed + 1))
-else
-    printf "  FAIL  all messages have valid role and content (bad_roles=%s, empty_content=%s)\n" "$bad_roles" "$empty_content"
-    failed=$((failed + 1))
-fi
-
-prompt_content=$(cat "$PROMPT_FILE")
-assert_contains "prompt has rebase_output variable" "$prompt_content" "{{rebase_output}}"
-assert_contains "prompt has hook_config variable" "$prompt_content" "{{hook_config}}"
+prompt_content=$(cat "$SYSTEM_PROMPT")
+assert_contains "system prompt has SAFE classification rules" "$prompt_content" "go-mod-tidy-and-commit.sh"
+assert_contains "system prompt has UNSAFE classification rules" "$prompt_content" "UNSAFE"
+assert_contains "system prompt has JSON output format" "$prompt_content" '"safe"'
 
 # --- Test fixture validation ---
 
