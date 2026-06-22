@@ -115,7 +115,7 @@ jobs:
             all_json=$(echo "$all_json" "$branch_json" | jq -s 'add')
           done
 
-          echo "$all_json" | bash tools/rebase-status-notify.sh \
+          echo "$all_json" | bash tools/auto-rebase/rebase-status-notify.sh \
             --gh-token "$GITHUB_TOKEN" \
             > /tmp/slack-status-payload.json
 
