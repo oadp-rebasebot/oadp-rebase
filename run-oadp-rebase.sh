@@ -182,6 +182,7 @@ Options:
   -l, --local                Use local rebasebot CLI instead of container
       --working-dir DIR      Working directory for rebase operations
       --local-hooks          Use local hook scripts from ./rebasebot-hook-scripts
+      --conflict-policy POL  Rebasebot conflict policy (default: strict)
   -h, --help                 Show this help
 EOF
 }
@@ -328,7 +329,7 @@ run_local_rebase() {
     fi
 
     CMD="rebasebot \
-  --conflict-policy strict \
+  --conflict-policy \"$CONFLICT_POLICY\" \
   --source \"$SOURCE_UPSTREAM_REPO\" \
   --dest \"$DESTINATION_DOWNSTREAM_REPO\" \
   --rebase \"$REBASE_REPO\" \
@@ -337,8 +338,7 @@ run_local_rebase() {
   --github-app-id \"$GITHUB_APP_ID\" \
   --github-app-key \"$SECRETS_DIR/oadp-rebasebot-app-key\" \
   --github-cloner-id \"$GITHUB_CLONER_ID\" \
-  --github-cloner-key \"$SECRETS_DIR/oadp-rebasebot-cloner-key\" \
-  --conflict-policy strict"
+  --github-cloner-key \"$SECRETS_DIR/oadp-rebasebot-cloner-key\""
 
     [ -n "$REPO_WORKING_DIR" ] && CMD="$CMD --working-dir \"$REPO_WORKING_DIR\""
     [ -n "${HOOK_SCRIPTS:-}" ] && CMD="$CMD $HOOK_SCRIPTS"
@@ -423,7 +423,7 @@ run_container_rebase() {
   ${GO_VET_TAGS:+-e GO_VET_TAGS=\"$GO_VET_TAGS\"} \
   $EXTRA_ENV_FLAGS \
   \"$REBASEBOT_IMAGE\" \
-  --conflict-policy strict \
+  --conflict-policy \"$CONFLICT_POLICY\" \
   --source \"$SOURCE_UPSTREAM_REPO\" \
   --dest \"$DESTINATION_DOWNSTREAM_REPO\" \
   --rebase \"$REBASE_REPO\" \
@@ -432,8 +432,7 @@ run_container_rebase() {
   --github-app-id \"$GITHUB_APP_ID\" \
   --github-app-key /secrets/oadp-rebasebot-app-key \
   --github-cloner-id \"$GITHUB_CLONER_ID\" \
-  --github-cloner-key /secrets/oadp-rebasebot-cloner-key \
-  --conflict-policy strict"
+  --github-cloner-key /secrets/oadp-rebasebot-cloner-key"
 
     [ -n "$REBASEBOT_WORKING_DIR" ] && CMD="$CMD --working-dir \"$REBASEBOT_WORKING_DIR\""
     [ -n "${HOOK_SCRIPTS:-}" ] && CMD="$CMD $HOOK_SCRIPTS"
@@ -565,6 +564,7 @@ WAVE_MODE="false"
 REMOTE_MODE="false"
 USE_LOCAL_CLI="false"
 USE_LOCAL_HOOKS="false"
+CONFLICT_POLICY="strict"
 TARGET=""
 
 while [ $# -gt 0 ]; do
@@ -579,6 +579,7 @@ while [ $# -gt 0 ]; do
         -s|--secrets-dir) SECRETS_DIR="$2"; shift 2 ;;
         --working-dir) WORKING_DIR="$2"; shift 2 ;;
         --local-hooks) USE_LOCAL_HOOKS="true"; shift ;;
+        --conflict-policy) CONFLICT_POLICY="$2"; shift 2 ;;
         -*) error_exit "Unknown option: $1" ;;
         *) [ -z "$TARGET" ] || error_exit "Multiple targets specified"; TARGET="$1"; shift ;;
     esac

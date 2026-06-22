@@ -22,6 +22,7 @@ on:
 
 permissions:
   contents: read
+  models: read
 
 concurrency:
   group: auto-rebase
@@ -149,15 +150,74 @@ jobs:
 
           exit $rc
 
+      - name: Resolve config file
+        id: config
+        if: failure() && steps.run.outputs.exit_code != ''
+        run: |
+          target="${{ matrix.target }}"
+          config_name=$(grep -E "^\s+${target}\)" run-oadp-rebase.sh | head -1 | sed 's/.*echo "\(.*\)".*/\1/')
+          if [ -z "$config_name" ]; then
+            echo "::warning::Could not resolve config file for target: ${target}"
+            exit 1
+          fi
+          echo "path=rebase-configs/${config_name}.env.sh" >> "$GITHUB_OUTPUT"
+
+      - name: Analyze conflict with LLM
+        id: analyze
+        if: failure() && steps.config.outcome == 'success'
+        uses: actions/ai-inference@v1
+        with:
+          prompt-file: .github/prompts/conflict-triage.prompt.yml
+          file_input: |
+            rebase_output: /tmp/rebase-output.txt
+            hook_config: ${{ steps.config.outputs.path }}
+
+      - name: Log triage verdict
+        if: failure() && steps.analyze.outcome == 'success'
+        run: |
+          echo "::notice title=LLM Conflict Triage (${{ matrix.target }})::$(echo '${{ steps.analyze.outputs.response }}' | jq -r '.reason')"
+          echo "### Conflict Triage Result" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          echo '${{ steps.analyze.outputs.response }}' | jq . >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Retry rebasebot with warn policy
+        id: retry
+        if: failure() && steps.analyze.outcome == 'success' && fromJSON(steps.analyze.outputs.response).safe == true
+        env:
+          SECRETS_DIR: /tmp/rebasebot-secrets
+        run: |
+          dry_run_flag=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            dry_run_flag="--dry-run"
+          fi
+
+          echo "::notice title=Retrying (${{ matrix.target }})::LLM triage approved retry with --conflict-policy warn"
+
+          set +e
+          ./run-oadp-rebase.sh $dry_run_flag --conflict-policy warn "${{ matrix.target }}" 2>&1 | tee /tmp/rebase-output-retry.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+
+          pr_url=$(grep -oE 'https://github.com/[^[:space:]]+/pull/[0-9]+' /tmp/rebase-output-retry.txt | head -1 || echo "")
+          pr_info=$(grep -E '(I created a new rebase PR|I updated existing rebase PR|PR .+/pull/[0-9]+ already contains|rebase/manual)' \
+            /tmp/rebase-output-retry.txt | sed 's/.*INFO - //' | head -1 || echo "")
+
+          echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
+          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+          echo "pr_info=$pr_info" >> "$GITHUB_OUTPUT"
+
+          exit $rc
+
       - name: Save result
         if: always()
         env:
           TARGET: ${{ matrix.target }}
           BRANCH: ${{ matrix.branch }}
           REASON: ${{ matrix.reason }}
-          EXIT_CODE: ${{ steps.run.outputs.exit_code }}
-          PR_URL: ${{ steps.run.outputs.pr_url }}
-          PR_INFO: ${{ steps.run.outputs.pr_info }}
+          EXIT_CODE: ${{ steps.retry.outputs.exit_code || steps.run.outputs.exit_code }}
+          PR_URL: ${{ steps.retry.outputs.pr_url || steps.run.outputs.pr_url }}
+          PR_INFO: ${{ steps.retry.outputs.pr_info || steps.run.outputs.pr_info }}
         run: |
           mkdir -p /tmp/results
           jq -n \
