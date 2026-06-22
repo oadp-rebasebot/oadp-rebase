@@ -255,11 +255,37 @@ else
     failed=$((failed + 1))
 fi
 
-if ruby -ryaml -e "YAML.load_file('$PROMPT_FILE')" 2>/dev/null; then
-    printf "  PASS  prompt file is valid YAML\n"
+# Validate using js-yaml v4 (same parser as actions/ai-inference)
+validate_err=$(npx -y js-yaml@4 "$PROMPT_FILE" > /dev/null 2>&1 && echo "" || npx -y js-yaml@4 "$PROMPT_FILE" 2>&1)
+if [ -z "$validate_err" ]; then
+    printf "  PASS  prompt file parses with js-yaml v4 (same as ai-inference action)\n"
     passed=$((passed + 1))
 else
-    printf "  FAIL  prompt file is valid YAML\n"
+    printf "  FAIL  prompt file parses with js-yaml v4 (same as ai-inference action)\n"
+    printf "    error: %s\n" "$validate_err"
+    failed=$((failed + 1))
+fi
+
+# Validate structure matches what actions/ai-inference loadPromptFile() expects:
+# - messages array exists
+# - each message has role (system|user|assistant) and content
+prompt_json=$(npx -y js-yaml@4 "$PROMPT_FILE" 2>/dev/null)
+msg_count=$(echo "$prompt_json" | jq '.messages | length' 2>/dev/null || echo "0")
+if [ "$msg_count" -gt 0 ]; then
+    printf "  PASS  prompt has messages array (%s messages)\n" "$msg_count"
+    passed=$((passed + 1))
+else
+    printf "  FAIL  prompt has messages array\n"
+    failed=$((failed + 1))
+fi
+
+bad_roles=$(echo "$prompt_json" | jq '[.messages[] | select(.role != "system" and .role != "user" and .role != "assistant")] | length' 2>/dev/null || echo "1")
+empty_content=$(echo "$prompt_json" | jq '[.messages[] | select(.content == null or .content == "")] | length' 2>/dev/null || echo "1")
+if [ "$bad_roles" = "0" ] && [ "$empty_content" = "0" ]; then
+    printf "  PASS  all messages have valid role and content\n"
+    passed=$((passed + 1))
+else
+    printf "  FAIL  all messages have valid role and content (bad_roles=%s, empty_content=%s)\n" "$bad_roles" "$empty_content"
     failed=$((failed + 1))
 fi
 
