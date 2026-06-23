@@ -17,6 +17,10 @@
 #   Dockerfile, Dockerfile-Windows,       normalize-dockerfiles-and-commit.sh
 #     hack/build-image/Dockerfile
 #   (everything else)                     ALWAYS UNSAFE — needs human review
+#
+# Prerequisite: rebasebot must have failed with "ERROR - Manual intervention
+# is needed". If the error is infrastructure (image pull, auth, network),
+# the script returns unsafe so no retry is attempted.
 
 set -eu
 
@@ -31,13 +35,22 @@ HOOK_SCRIPTS=""
 # Read rebasebot output from stdin
 rebase_output=$(cat)
 
+# Only triage if rebasebot actually failed due to conflict policy.
+# The signature is "ERROR - Manual intervention is needed". If that line
+# is missing, rebasebot failed for an infrastructure reason (image pull,
+# auth, network) and retrying with warn won't help.
+if ! echo "$rebase_output" | grep -q "^ERROR - Manual intervention is needed"; then
+    printf '{"safe": false, "reason": "Rebasebot did not fail due to conflict policy", "affected_files": []}\n'
+    exit 1
+fi
+
 # Extract unique filenames from WARNING lines
 # Pattern: WARNING - Upstream content may have been dropped from 'FILENAME' by cherry-pick
 warned_files=$(echo "$rebase_output" | grep "^WARNING - Upstream content may have been dropped from" | sed "s/.*from '\\([^']*\\)'.*/\\1/" | sort -u)
 
 if [ -z "$warned_files" ]; then
-    printf '{"safe": true, "reason": "No conflict warnings found", "affected_files": []}\n'
-    exit 0
+    printf '{"safe": false, "reason": "Manual intervention required but no specific file warnings found", "affected_files": []}\n'
+    exit 1
 fi
 
 has_go_mod_tidy=false
