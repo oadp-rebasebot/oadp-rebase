@@ -98,6 +98,64 @@ jobs:
           matrix=$(echo "$all_targets" | jq -c '{include: .}')
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
+          # Write decision summary to job summary
+          echo "## Rebase Decision Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          for branch in $BRANCHES; do
+            json_file="/tmp/status-${branch}.json"
+            [ -f "$json_file" ] || continue
+
+            echo "### Branch: \`$branch\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+
+            # Selected targets
+            selected=$(echo "$all_targets" | jq -r ".[] | select(.branch == \"$branch\") | \"| \(.target) | \(.reason) |\"")
+            if [ -n "$selected" ]; then
+              echo "**Selected for rebase:**" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "| Target | Reason |" >> "$GITHUB_STEP_SUMMARY"
+              echo "|--------|--------|" >> "$GITHUB_STEP_SUMMARY"
+              echo "$selected" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "**No targets selected for rebase.**" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+
+            # Skipped repos with reasons
+            skipped=$(jq -r "
+              [ .[] |
+                select(.skip == true) |
+                {repo: (.repo | split(\"/\") | .[1]), reason: \"skip=true\"}
+              ] + [ .[] |
+                select(.skip != true) |
+                select(.checks.config.status != \"ok\") |
+                {repo: (.repo | split(\"/\") | .[1]), reason: \"no rebase config\"}
+              ] + [ .[] |
+                select(.skip != true) |
+                select(.checks.config.status == \"ok\") |
+                select(.checks.open_pr.status == \"ok\") |
+                {repo: (.repo | split(\"/\") | .[1]), reason: \"open PR exists\"}
+              ] + [ .[] |
+                select(.skip != true) |
+                select(.checks.config.status == \"ok\") |
+                select(.checks.open_pr.status != \"ok\") |
+                select(.wave >= 2) |
+                select(.checks.dep_sync.status != \"fail\") |
+                {repo: (.repo | split(\"/\") | .[1]), reason: \"deps in sync\"}
+              ] | sort_by(.repo) | .[] | \"| \(.repo) | \(.reason) |\"
+            " < "$json_file")
+
+            if [ -n "$skipped" ]; then
+              echo "**Skipped:**" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "| Repo | Reason |" >> "$GITHUB_STEP_SUMMARY"
+              echo "|------|--------|" >> "$GITHUB_STEP_SUMMARY"
+              echo "$skipped" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+          done
+
   rebase:
     needs: decide
     if: needs.decide.outputs.has_targets == 'true'
