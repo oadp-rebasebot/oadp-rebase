@@ -601,12 +601,22 @@ func checkDepSync(client *GitHubClient, spec *RepoSpec) *CheckResult {
 	if err != nil {
 		return &CheckResult{StatusWarn, "err", fmt.Sprintf("API error: %v", err)}
 	}
-	if content == nil {
-		return &CheckResult{StatusNA, "", "no go.mod"}
+
+	var syncs []DepSync
+	if content != nil {
+		gomod := string(content)
+		syncs = parseInternalDeps(gomod, spec.Branch, spec.Org+"/"+spec.Repo)
 	}
 
-	gomod := string(content)
-	syncs := parseInternalDeps(gomod, spec.Branch, spec.Org+"/"+spec.Repo)
+	// Check git submodules (.gitmodules + tree entries with type "commit")
+	gitmodulesContent, _ := client.FileContent(spec.Org, spec.Repo, ".gitmodules", spec.Branch)
+	if gitmodulesContent != nil {
+		treeEntries, err := client.SubmoduleEntries(spec.Org, spec.Repo, spec.Branch)
+		if err == nil {
+			subSyncs := parseSubmoduleDeps(string(gitmodulesContent), treeEntries, spec.Org+"/"+spec.Repo)
+			syncs = append(syncs, subSyncs...)
+		}
+	}
 
 	if len(syncs) == 0 {
 		return &CheckResult{StatusOK, "", "no internal deps"}
@@ -616,7 +626,12 @@ func checkDepSync(client *GitHubClient, spec *RepoSpec) *CheckResult {
 	outOfSync := 0
 	for i := range syncs {
 		dep := &syncs[i]
-		head, err := client.HeadCommitSHA(dep.Org, dep.Repo, spec.Branch)
+		// Submodule deps use the branch from .gitmodules, go.mod deps use the spec branch
+		depBranch := spec.Branch
+		if dep.SubmoduleBranch != "" {
+			depBranch = dep.SubmoduleBranch
+		}
+		head, err := client.HeadCommitSHA(dep.Org, dep.Repo, depBranch)
 		if err != nil || head == "" {
 			continue // skip if we can't resolve
 		}

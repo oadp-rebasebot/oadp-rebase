@@ -81,13 +81,14 @@ type ImageInfo struct {
 
 // DepSync describes the sync state of one internal dependency.
 type DepSync struct {
-	Module   string // e.g. "github.com/openshift/velero"
-	Org      string // resolved GitHub org
-	Repo     string // resolved GitHub repo
-	HaveHash string // commit hash found in go.mod
-	HeadHash string // HEAD commit on the dep's branch
-	InSync   bool
-	Commits  []CommitInfo // commits between HaveHash and HeadHash (when details requested)
+	Module          string // e.g. "github.com/openshift/velero"
+	Org             string // resolved GitHub org
+	Repo            string // resolved GitHub repo
+	HaveHash        string // commit hash found in go.mod or submodule pointer
+	HeadHash        string // HEAD commit on the dep's branch
+	InSync          bool
+	Commits         []CommitInfo // commits between HaveHash and HeadHash (when details requested)
+	SubmoduleBranch string       // branch from .gitmodules (empty for go.mod deps)
 }
 
 // CommitInfo is a single commit's metadata.
