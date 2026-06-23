@@ -185,6 +185,7 @@ jobs:
 
       - name: Run rebasebot (strict) for ${{ matrix.target }}
         id: run
+        continue-on-error: true
         env:
           SECRETS_DIR: /tmp/rebasebot-secrets
           TARGET: ${{ matrix.target }}
@@ -208,11 +209,6 @@ jobs:
           echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
           echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
           echo "pr_info=$pr_info" >> "$GITHUB_OUTPUT"
-
-          if [ "$rc" -ne 0 ] && grep -qE 'rebase/manual' /tmp/rebase-output.txt; then
-            echo "::warning title=Manual intervention (${TARGET})::Rebase needs manual intervention"
-            exit 0
-          fi
 
           exit $rc
 
@@ -245,6 +241,7 @@ jobs:
 
       - name: Retry rebasebot with warn policy
         id: retry
+        continue-on-error: true
         if: always() && steps.run.outputs.exit_code != '0' && steps.triage.outcome == 'success' && fromJSON(steps.triage.outputs.verdict).safe == true
         env:
           SECRETS_DIR: /tmp/rebasebot-secrets
@@ -269,11 +266,6 @@ jobs:
           echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
           echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
           echo "pr_info=$pr_info" >> "$GITHUB_OUTPUT"
-
-          if [ "$rc" -ne 0 ] && grep -qE 'rebase/manual' /tmp/rebase-output-retry.txt; then
-            echo "::warning title=Manual intervention (${TARGET})::Rebase needs manual intervention"
-            exit 0
-          fi
 
           exit $rc
 
@@ -383,6 +375,32 @@ jobs:
           name: result-${{ matrix.target }}
           path: /tmp/results/
           retention-days: 7
+
+      - name: Check outcome
+        if: always()
+        env:
+          STRICT_RC: ${{ steps.run.outputs.exit_code }}
+          RETRY_OUTCOME: ${{ steps.retry.outcome }}
+          RETRY_RC: ${{ steps.retry.outputs.exit_code }}
+        run: |
+          # Strict succeeded — nothing to check
+          if [ "${STRICT_RC:-0}" = "0" ]; then
+            exit 0
+          fi
+
+          # Strict failed but retry ran and succeeded
+          if [ "$RETRY_OUTCOME" = "success" ] && [ "${RETRY_RC:-1}" = "0" ]; then
+            exit 0
+          fi
+
+          # Manual intervention — treat as warning, not failure
+          if grep -qE 'rebase/manual' /tmp/rebase-output.txt /tmp/rebase-output-retry.txt 2>/dev/null; then
+            echo "::warning::Rebase needs manual intervention"
+            exit 0
+          fi
+
+          # Real failure — fail the job
+          exit 1
 
   notify:
     needs: [decide, rebase]
