@@ -13,6 +13,9 @@ REBASE_REPO="oadp-rebasebot/oadp-must-gather:rebase-bot-oadp-dev"
 EXTRA_REBASEBOT_ARGS="--always-run-hooks"
 HOOK_SCRIPTS_LOCATION="git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:rebasebot-hook-scripts"
 HOOK_SCRIPTS="--post-rebase-hook \
+  ${HOOK_SCRIPTS_LOCATION}/velero-submodule-and-commit_oadp-dev.sh \
+  ${HOOK_SCRIPTS_LOCATION}/restic-submodule-and-commit_oadp-dev.sh \
+  ${HOOK_SCRIPTS_LOCATION}/kopia-submodule-and-commit_oadp-dev.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-replace_velero_oadp-dev.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-use-tag_oadp-operator_oadp-dev.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-use-tag_oadp-non-admin_oadp-dev.sh \

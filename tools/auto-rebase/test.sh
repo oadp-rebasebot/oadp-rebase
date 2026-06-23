@@ -285,6 +285,49 @@ else
 fi
 
 # ============================================================
+printf "\n=== must-gather submodule hook tests ===\n\n"
+# ============================================================
+
+HOOK_DIR="$SCRIPT_DIR/../../rebasebot-hook-scripts"
+CONFIG_DIR="$SCRIPT_DIR/../../rebase-configs"
+
+# --- Hook scripts exist ---
+
+for variant in oadp-1.6 oadp-dev; do
+    for sub in velero kopia; do
+        hook="$HOOK_DIR/${sub}-submodule-and-commit_${variant}.sh"
+        if [ -f "$hook" ]; then
+            printf "  PASS  ${sub}-submodule hook exists for ${variant}\n"
+            passed=$((passed + 1))
+        else
+            printf "  FAIL  ${sub}-submodule hook exists for ${variant}\n"
+            printf "    expected: %s\n" "$hook"
+            failed=$((failed + 1))
+        fi
+    done
+    # restic hook should already exist
+    hook="$HOOK_DIR/restic-submodule-and-commit_${variant}.sh"
+    if [ -f "$hook" ]; then
+        printf "  PASS  restic-submodule hook exists for ${variant}\n"
+        passed=$((passed + 1))
+    else
+        printf "  FAIL  restic-submodule hook exists for ${variant}\n"
+        failed=$((failed + 1))
+    fi
+done
+
+# --- Must-gather configs include all 3 submodule hooks ---
+
+for variant in oadp-1.6 oadp-dev; do
+    config="$CONFIG_DIR/openshift_oadp_must_gather_${variant}.env.sh"
+    config_content=$(cat "$config")
+    for sub in velero restic kopia; do
+        assert_contains "must-gather ${variant} has ${sub}-submodule hook" \
+            "$config_content" "${sub}-submodule-and-commit_${variant}.sh"
+    done
+done
+
+# ============================================================
 printf "\n=== Results ===\n"
 # ============================================================
 
