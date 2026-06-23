@@ -85,6 +85,7 @@ get_config_name() {
 
         # === OADP CLI ===
         oadp-cli-oadp-dev) echo "migtools_oadp_cli_oadp-dev" ;;
+        oadp-cli-oadp-1.5) echo "migtools_oadp_cli_oadp-1.5" ;;
         oadp-cli-oadp-1.6) echo "migtools_oadp_cli_oadp-1.6" ;;
 
         # === HyperShift OADP Plugin ===
@@ -128,7 +129,7 @@ get_wave_repos() {
             2) echo "velero-oadp-1.5" ;;
             3) echo "oadp-operator-oadp-1.5 velero-plugin-for-aws-oadp-1.5 velero-plugin-for-legacy-aws-oadp-1.5 velero-plugin-for-microsoft-azure-oadp-1.5 velero-plugin-for-gcp-oadp-1.5" ;;
             4) echo "oadp-non-admin-oadp-1.5 openshift-velero-plugin-oadp-1.5" ;;
-            5) echo "oadp-must-gather-oadp-1.5" ;;
+            5) echo "oadp-must-gather-oadp-1.5 oadp-cli-oadp-1.5" ;;
             *) return 1 ;;
         esac
     elif [ "$branch" = "oadp-1.6" ]; then
