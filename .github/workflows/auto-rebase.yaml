@@ -320,6 +320,12 @@ jobs:
           EXIT_CODE: ${{ steps.retry.outputs.exit_code || steps.run.outputs.exit_code }}
           PR_URL: ${{ steps.retry.outputs.pr_url || steps.run.outputs.pr_url }}
           PR_INFO: ${{ steps.retry.outputs.pr_info || steps.run.outputs.pr_info }}
+          STRICT_RC: ${{ steps.run.outputs.exit_code }}
+          TRIAGE_OUTCOME: ${{ steps.triage.outcome }}
+          TRIAGE_VERDICT: ${{ steps.triage.outputs.verdict }}
+          RETRY_OUTCOME: ${{ steps.retry.outcome }}
+          RETRY_RC: ${{ steps.retry.outputs.exit_code }}
+          OK_TO_TEST: ${{ steps.app-token.outcome == 'success' && (steps.retry.outputs.pr_url || steps.run.outputs.pr_url) != '' }}
         run: |
           mkdir -p /tmp/results
           jq -n \
@@ -331,6 +337,45 @@ jobs:
             --arg pr_info "$PR_INFO" \
             '{target: $target, branch: $branch, reason: $reason, exit_code: $exit_code, pr_url: $pr_url, pr_info: $pr_info}' \
             > "/tmp/results/${TARGET}.json"
+
+          # Build job step summary
+          echo "### Rebase: \`${TARGET}\` (\`${BRANCH}\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          # Determine overall status
+          if [ "${EXIT_CODE:-1}" = "0" ]; then
+            status="✅ Success"
+          elif grep -qE 'rebase/manual' /tmp/rebase-output.txt /tmp/rebase-output-retry.txt 2>/dev/null; then
+            status="⚠️ Manual intervention needed"
+          else
+            status="❌ Failed"
+          fi
+
+          echo "| Step | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Status** | ${status} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Trigger** | ${REASON} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Strict run** | exit ${STRICT_RC:-n/a} |" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -n "$TRIAGE_OUTCOME" ] && [ "$TRIAGE_OUTCOME" != "skipped" ]; then
+            triage_reason=$(echo "$TRIAGE_VERDICT" | jq -r '.reason // "n/a"' 2>/dev/null || echo "n/a")
+            triage_safe=$(echo "$TRIAGE_VERDICT" | jq -r '.safe // false' 2>/dev/null || echo "false")
+            echo "| **Triage** | safe=${triage_safe} — ${triage_reason} |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ "$RETRY_OUTCOME" = "success" ] || [ "$RETRY_OUTCOME" = "failure" ]; then
+            echo "| **Retry (warn)** | exit ${RETRY_RC:-n/a} |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ -n "$PR_URL" ]; then
+            echo "| **PR** | [${PR_INFO:-link}](${PR_URL}) |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ "$OK_TO_TEST" = "true" ]; then
+            echo "| **/ok-to-test** | ✅ Posted |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
         if: always()
