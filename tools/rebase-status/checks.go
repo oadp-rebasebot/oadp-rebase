@@ -609,13 +609,17 @@ func checkDepSync(client *GitHubClient, spec *RepoSpec) *CheckResult {
 	}
 
 	// Check git submodules (.gitmodules + tree entries with type "commit")
-	gitmodulesContent, _ := client.FileContent(spec.Org, spec.Repo, ".gitmodules", spec.Branch)
+	gitmodulesContent, err := client.FileContent(spec.Org, spec.Repo, ".gitmodules", spec.Branch)
+	if err != nil {
+		return &CheckResult{StatusWarn, "err", fmt.Sprintf("API error loading .gitmodules: %v", err)}
+	}
 	if gitmodulesContent != nil {
 		treeEntries, err := client.SubmoduleEntries(spec.Org, spec.Repo, spec.Branch)
-		if err == nil {
-			subSyncs := parseSubmoduleDeps(string(gitmodulesContent), treeEntries, spec.Org+"/"+spec.Repo)
-			syncs = append(syncs, subSyncs...)
+		if err != nil {
+			return &CheckResult{StatusWarn, "err", fmt.Sprintf("API error loading submodule tree: %v", err)}
 		}
+		subSyncs := parseSubmoduleDeps(string(gitmodulesContent), treeEntries, spec.Org+"/"+spec.Repo)
+		syncs = append(syncs, subSyncs...)
 	}
 
 	if len(syncs) == 0 {
@@ -624,6 +628,7 @@ func checkDepSync(client *GitHubClient, spec *RepoSpec) *CheckResult {
 
 	// Resolve HEAD commits for each dependency
 	outOfSync := 0
+	unresolved := 0
 	for i := range syncs {
 		dep := &syncs[i]
 		// Submodule deps use the branch from .gitmodules, go.mod deps use the spec branch
@@ -633,7 +638,8 @@ func checkDepSync(client *GitHubClient, spec *RepoSpec) *CheckResult {
 		}
 		head, err := client.HeadCommitSHA(dep.Org, dep.Repo, depBranch)
 		if err != nil || head == "" {
-			continue // skip if we can't resolve
+			unresolved++
+			continue
 		}
 		dep.HeadHash = head
 		dep.InSync = strings.HasPrefix(head, dep.HaveHash)
@@ -647,6 +653,13 @@ func checkDepSync(client *GitHubClient, spec *RepoSpec) *CheckResult {
 	depSyncStore[spec.FullName()] = syncs
 	depSyncStoreMu.Unlock()
 
+	if unresolved > 0 {
+		return &CheckResult{
+			StatusWarn,
+			fmt.Sprintf("%d/%d", len(syncs)-outOfSync-unresolved, len(syncs)),
+			fmt.Sprintf("could not resolve %d internal dep(s)", unresolved),
+		}
+	}
 	if outOfSync > 0 {
 		return &CheckResult{
 			StatusFail,
