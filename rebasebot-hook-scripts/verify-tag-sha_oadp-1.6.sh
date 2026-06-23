@@ -23,12 +23,16 @@ if [ -z "$LS_REMOTE_OUTPUT" ]; then
     exit 1
 fi
 
-COMMIT_SHA=$(echo "$LS_REMOTE_OUTPUT" | awk '/\^{}$/ {print $1}')
-TAG_OBJECT_SHA=$(echo "$LS_REMOTE_OUTPUT" | awk '!/\^{}$/ {print $1}')
+COMMIT_SHA=$(echo "$LS_REMOTE_OUTPUT" | grep '\^{}' | cut -f1 || true)
+TAG_OBJECT_SHA=$(echo "$LS_REMOTE_OUTPUT" | grep -v '\^{}' | cut -f1 || true)
 
 # For annotated tags, the commit SHA comes from the dereferenced entry;
 # for lightweight tags, the tag points directly to the commit
-RESOLVED_SHA="${COMMIT_SHA:-$TAG_OBJECT_SHA}"
+if [ -n "$COMMIT_SHA" ]; then
+    RESOLVED_SHA="$COMMIT_SHA"
+else
+    RESOLVED_SHA="$TAG_OBJECT_SHA"
+fi
 
 if [ "$RESOLVED_SHA" != "$EXPECTED_SHA" ]; then
     echo "TAG SHA MISMATCH for $EXPECTED_TAG" >&2
