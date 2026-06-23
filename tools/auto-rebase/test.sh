@@ -268,10 +268,11 @@ no_tidy_verdict=$(bash "$TRIAGE_SCRIPT" "$config_without_tidy" < "$safe_fixture"
 assert_output "safe fixture without go-mod-tidy hook → exit 1" "1" "$no_tidy_rc"
 assert_json_field "missing hook verdict is false" "$no_tidy_verdict" '.safe' "false"
 
-# No warnings in input → safe
-no_warn_verdict=$(echo "INFO - Rebase completed successfully" | bash "$TRIAGE_SCRIPT" "$config_with_tidy") && no_warn_rc=0 || no_warn_rc=$?
-assert_output "no warnings → exit 0" "0" "$no_warn_rc"
-assert_json_field "no warnings verdict is true" "$no_warn_verdict" '.safe' "true"
+# No conflict-policy error in output (e.g. image pull failure) → unsafe, don't retry
+infra_verdict=$(echo "Error: copying system image from manifest list: unexpected EOF" | bash "$TRIAGE_SCRIPT" "$config_with_tidy") && infra_rc=0 || infra_rc=$?
+assert_output "infrastructure failure → exit 1" "1" "$infra_rc"
+assert_json_field "infra failure verdict is false" "$infra_verdict" '.safe' "false"
+assert_contains "infra failure reason" "$infra_verdict" "did not fail due to conflict policy"
 
 # Verify JSON structure has affected_files array
 file_count=$(echo "$safe_verdict" | jq '.affected_files | length')
