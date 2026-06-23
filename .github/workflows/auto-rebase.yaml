@@ -27,6 +27,9 @@ concurrency:
   group: auto-rebase
   cancel-in-progress: false
 
+env:
+  GITHUB_APP_ID: '1810299'
+
 jobs:
   decide:
     runs-on: ubuntu-latest
@@ -180,7 +183,7 @@ jobs:
           echo "$CLONER_KEY" > /tmp/rebasebot-secrets/oadp-rebasebot-cloner-key
           chmod 600 /tmp/rebasebot-secrets/*
 
-      - name: Run rebasebot for ${{ matrix.target }}
+      - name: Run rebasebot (strict) for ${{ matrix.target }}
         id: run
         env:
           SECRETS_DIR: /tmp/rebasebot-secrets
@@ -205,11 +208,16 @@ jobs:
           echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
           echo "pr_info=$pr_info" >> "$GITHUB_OUTPUT"
 
+          if [ "$rc" -ne 0 ] && grep -qE 'rebase/manual' /tmp/rebase-output.txt; then
+            echo "::warning title=Manual intervention (${{ matrix.target }})::Rebase needs manual intervention"
+            exit 0
+          fi
+
           exit $rc
 
       - name: Triage conflict
         id: triage
-        if: failure() && steps.run.outputs.exit_code != ''
+        if: always() && steps.run.outputs.exit_code != '0' && steps.run.outputs.exit_code != ''
         env:
           TARGET: ${{ matrix.target }}
         run: |
@@ -236,7 +244,7 @@ jobs:
 
       - name: Retry rebasebot with warn policy
         id: retry
-        if: failure() && steps.triage.outcome == 'success' && fromJSON(steps.triage.outputs.verdict).safe == true
+        if: always() && steps.run.outputs.exit_code != '0' && steps.triage.outcome == 'success' && fromJSON(steps.triage.outputs.verdict).safe == true
         env:
           SECRETS_DIR: /tmp/rebasebot-secrets
           TARGET: ${{ matrix.target }}
@@ -261,7 +269,43 @@ jobs:
           echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
           echo "pr_info=$pr_info" >> "$GITHUB_OUTPUT"
 
+          if [ "$rc" -ne 0 ] && grep -qE 'rebase/manual' /tmp/rebase-output-retry.txt; then
+            echo "::warning title=Manual intervention (${{ matrix.target }})::Rebase needs manual intervention"
+            exit 0
+          fi
+
           exit $rc
+
+      - name: Extract PR org
+        id: pr-org
+        if: always()
+        env:
+          PR_URL: ${{ steps.retry.outputs.pr_url || steps.run.outputs.pr_url }}
+        run: |
+          if [ -n "$PR_URL" ]; then
+            org=$(echo "$PR_URL" | sed 's|https://github.com/||' | cut -d/ -f1)
+            echo "org=$org" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate app token for PR org
+        id: app-token
+        if: always() && steps.pr-org.outputs.org != ''
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ env.GITHUB_APP_ID }}
+          private-key: ${{ secrets.OADP_REBASEBOT_APP_KEY }}
+          owner: ${{ steps.pr-org.outputs.org }}
+
+      - name: Comment /ok-to-test on PR
+        if: always() && steps.app-token.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR_URL: ${{ steps.retry.outputs.pr_url || steps.run.outputs.pr_url }}
+        run: |
+          if [ -n "$PR_URL" ]; then
+            echo "Commenting /ok-to-test on $PR_URL"
+            gh pr comment "$PR_URL" --body "/ok-to-test"
+          fi
 
       - name: Save result
         if: always()
