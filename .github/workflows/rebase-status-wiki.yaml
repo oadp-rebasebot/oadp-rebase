@@ -14,6 +14,7 @@ on:
         default: ''
 
 env:
+  BRANCHES: oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3
   NOTIFY_BRANCHES: oadp-1.6
 
 permissions:
@@ -39,7 +40,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for branch in oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3; do
+          for branch in $BRANCHES; do
             tools/rebase-status/rebase-status \
               --config-dir rebase-configs \
               --format markdown \
@@ -58,7 +59,7 @@ jobs:
           tools/rebase-status/rebase-status \
             --config-dir rebase-configs \
             --format home \
-            oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3 \
+            $BRANCHES \
             > /tmp/Home.md
 
       - name: Push to wiki
@@ -68,7 +69,7 @@ jobs:
           wiki_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.wiki.git"
           git clone "$wiki_url" /tmp/wiki
 
-          for branch in oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3; do
+          for branch in $BRANCHES; do
             cp "/tmp/Rebase-Status-${branch}.md" "/tmp/wiki/Rebase-Status-${branch}.md"
           done
           cp /tmp/Home.md /tmp/wiki/Home.md
@@ -111,7 +112,7 @@ jobs:
         run: |
           mkdir -p /tmp/dag-data
           branches=""
-          for branch in oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3; do
+          for branch in $BRANCHES; do
             tools/rebase-status/rebase-status \
               --config-dir rebase-configs \
               --json \
@@ -120,8 +121,9 @@ jobs:
             branches="${branches:+$branches,}\"$branch\""
           done
 
+          default_branch=$(echo "$BRANCHES" | awk '{print $1}')
           cat > /tmp/dag-data/metadata.json <<EOF
-          {"branches": [$branches], "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)", "default_branch": "oadp-1.6"}
+          {"branches": [$branches], "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)", "default_branch": "$default_branch"}
           EOF
 
       - name: Assemble pages
