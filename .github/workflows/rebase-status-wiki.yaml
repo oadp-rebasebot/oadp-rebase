@@ -118,23 +118,18 @@ jobs:
           mkdir -p /tmp/dag-data
           branches=""
           for branch in $BRANCHES; do
-            tmp="/tmp/dag-data/${branch}.json.tmp"
             echo "::group::rebase-status $branch (DAG)"
-            if tools/rebase-status/rebase-status \
+            tools/rebase-status/rebase-status \
               --config-dir rebase-configs \
               --json \
               --hide-dependency-details \
-              "$branch" > "$tmp"; then
-              mv "$tmp" "/tmp/dag-data/${branch}.json"
-              branches="${branches:+$branches,}\"$branch\""
-            else
-              rm -f "$tmp"
-              echo "::warning::rebase-status failed for $branch (DAG)"
-            fi
+              "$branch" > "/tmp/dag-data/${branch}.json" || \
+              echo "::warning::rebase-status exited non-zero for $branch (check errors in output)"
             echo "::endgroup::"
+            branches="${branches:+$branches,}\"$branch\""
           done
 
-          default_branch=$(echo "$branches" | tr ',' '\n' | head -1 | tr -d '"')
+          default_branch=$(echo "$BRANCHES" | awk '{print $1}')
           cat > /tmp/dag-data/metadata.json <<EOF
           {"branches": [$branches], "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)", "default_branch": "$default_branch"}
           EOF
