@@ -182,7 +182,7 @@ jobs:
       - name: Generate Slack payload
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NOTIFY_BRANCHES: ${{ github.event_name == 'workflow_dispatch' && inputs.notify_branches || env.NOTIFY_BRANCHES }}
+          NOTIFY_BRANCHES: ${{ github.event_name != 'workflow_dispatch' && env.NOTIFY_BRANCHES || inputs.notify_branches }}
         run: |
           [ -z "$NOTIFY_BRANCHES" ] && { echo "No branches to notify"; exit 0; }
 

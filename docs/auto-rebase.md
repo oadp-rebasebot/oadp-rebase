@@ -14,7 +14,7 @@ Runs on a daily cron (07:00 UTC) or on manual dispatch. The workflow has three j
 
 1. **decide** — Builds the Go `rebase-status` tool, runs it against each configured branch to produce a JSON status report, then pipes that into `rebase-decision.sh` to select which repos need a rebase. The output is a GitHub Actions matrix of `{branch, target, reason}` objects.
 
-2. **rebase** — Fans out across the matrix. For each target, it runs `run-oadp-rebase.sh` with `--conflict-policy strict`. If the strict run fails, `conflict-triage.sh` inspects the rebasebot output to decide whether the conflicting files are all covered by post-rebase hooks. If so, it retries with `--conflict-policy warn`. After a successful rebase, it posts `/ok-to-test` on the created PR.
+2. **rebase** — Fans out across the matrix. For each target, it runs `run-oadp-rebase.sh` with `--conflict-policy strict`. If the strict run fails, `conflict-triage.sh` inspects the rebasebot output to decide whether the conflicting files are all covered by post-rebase hooks. If so, it retries with `--conflict-policy warn`. After PRs are created, a team member posts `/ok-to-test` using `tools/ok-to-test.sh`.
 
 3. **notify** — Collects result artifacts and sends a Slack summary via `rebase-notify.sh`.
 
@@ -56,7 +56,7 @@ The `filenameToRepo` map and `repoImages` map in the same file also need entries
 
 One shell env file per repo per branch, named `{prefix}_{branch}.env.sh`. These define the upstream source, downstream destination, intermediate rebase fork, and which hook scripts to run. For example:
 
-```
+```text
 rebase-configs/migtools_kopia_oadp-1.6.env.sh
 rebase-configs/openshift_velero_oadp-1.6.env.sh
 ```

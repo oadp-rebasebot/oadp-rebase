@@ -16,7 +16,9 @@ BRANCH=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --apply) APPLY=true ;;
-        -b|--branch) BRANCH="$2"; shift ;;
+        -b|--branch)
+            if [ $# -lt 2 ]; then echo "Error: $1 requires a branch name" >&2; exit 1; fi
+            BRANCH="$2"; shift ;;
         -h|--help)
             echo "Usage: $0 [-b BRANCH] [--apply]"
             echo "  -b, --branch   Only target PRs for this branch (e.g. oadp-1.6)"
@@ -38,7 +40,7 @@ needs_approval=$(echo "$prs" | jq -r \
     --arg branch "$BRANCH" '
     .[] |
     select([.labels[].name] | index("ok-to-test") | not) |
-    select($branch == "" or (.title | test("into " + $branch + "$"))) |
+    select($branch == "" or (.title | endswith("into " + $branch))) |
     .url
 ')
 
