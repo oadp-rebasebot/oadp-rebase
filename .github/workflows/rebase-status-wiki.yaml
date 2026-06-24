@@ -117,44 +117,27 @@ jobs:
         run: |
           mkdir -p /tmp/dag-data
           branches=""
-          failed=""
-          bundle_data="{}"
           for branch in $BRANCHES; do
+            tmp="/tmp/dag-data/${branch}.json.tmp"
             echo "::group::rebase-status $branch (DAG)"
             if tools/rebase-status/rebase-status \
               --config-dir rebase-configs \
               --json \
               --hide-dependency-details \
-              "$branch" > "/tmp/dag-data/${branch}.json"; then
-
-              # Log a summary so we can debug stale data
-              repos=$(jq length "/tmp/dag-data/${branch}.json")
-              open_prs=$(jq '[.[] | select(.checks.open_pr.status == "ok")] | length' "/tmp/dag-data/${branch}.json")
-              echo "  $branch: $repos repos, $open_prs open PRs"
-              if [ "$open_prs" -gt 0 ]; then
-                jq -r '.[] | select(.checks.open_pr.status == "ok") | "    PR: \(.repo) \(.checks.open_pr.summary)"' "/tmp/dag-data/${branch}.json"
-              fi
-
-              bundle_data=$(echo "$bundle_data" | jq --arg b "$branch" --slurpfile d "/tmp/dag-data/${branch}.json" '. + {($b): $d[0]}')
+              "$branch" > "$tmp"; then
+              mv "$tmp" "/tmp/dag-data/${branch}.json"
+              branches="${branches:+$branches,}\"$branch\""
             else
+              rm -f "$tmp"
               echo "::warning::rebase-status failed for $branch (DAG)"
-              failed="${failed:+$failed }$branch"
             fi
             echo "::endgroup::"
-            branches="${branches:+$branches,}\"$branch\""
           done
 
-          if [ -n "$failed" ]; then
-            echo "::warning::DAG data generation failed for: $failed"
-          fi
-
-          default_branch=$(echo "$BRANCHES" | awk '{print $1}')
-          echo "$bundle_data" | jq \
-            --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            --arg default_branch "$default_branch" \
-            --argjson branches "[$branches]" \
-            '{branches: $branches, generated_at: $generated_at, default_branch: $default_branch, data: .}' \
-            > /tmp/dag-data/dag-bundle.json
+          default_branch=$(echo "$branches" | tr ',' '\n' | head -1 | tr -d '"')
+          cat > /tmp/dag-data/metadata.json <<EOF
+          {"branches": [$branches], "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)", "default_branch": "$default_branch"}
+          EOF
 
       - name: Assemble pages
         run: bash tools/assemble-pages.sh
@@ -169,7 +152,9 @@ jobs:
         uses: actions/deploy-pages@v5
 
   notify-slack:
-    if: github.event_name != 'workflow_run'
+    if: >-
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.notify_branches != '')
     needs: update-wiki
     runs-on: ubuntu-latest
     steps:
