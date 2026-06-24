@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OADP Rebase Dependency Graph</title>
+  <style>
+    :root {
+      --bg: #0d1117; --surface: #161b22; --surface2: #1c2129;
+      --border: #30363d; --text: #c9d1d9; --muted: #8b949e;
+      --red: #f85149; --yellow: #d29922; --green: #3fb950;
+      --blue: #58a6ff; --cyan: #79c0ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .header {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .header h1 { font-size: 1.25rem; font-weight: 600; }
+    .header select {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      padding: .35rem .6rem; border-radius: 6px; font-size: .85rem;
+    }
+    .header select:focus { border-color: var(--blue); outline: none; }
+
+    .summary-bar {
+      display: flex; gap: 1.5rem; padding: .5rem 2rem;
+      font-size: .8rem; align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .summary-stat { display: flex; align-items: center; gap: .35rem; }
+    .summary-stat .num { font-weight: 700; font-size: 1rem; }
+    .summary-stat .lbl { color: var(--muted); font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; }
+    .progress-wrap {
+      flex: 1; max-width: 200px; height: 6px;
+      background: var(--surface2); border-radius: 3px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: var(--green); border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+    .summary-bar .meta { margin-left: auto; font-size: .7rem; color: var(--muted); }
+
+    #cy { width: 100%; height: calc(100vh - 8.5rem); }
+
+    .legend {
+      display: flex; gap: 1.5rem; padding: .5rem 2rem;
+      border-top: 1px solid var(--border);
+      font-size: .7rem; color: var(--muted); align-items: center;
+    }
+    .legend-item { display: flex; align-items: center; gap: .3rem; }
+    .legend-dot {
+      width: 10px; height: 10px; border-radius: 3px; display: inline-block;
+    }
+
+    .tooltip {
+      position: absolute; display: none;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: .75rem 1rem;
+      font-size: .8rem; color: var(--text);
+      pointer-events: none; z-index: 1000;
+      max-width: 320px; box-shadow: 0 4px 16px rgba(0,0,0,.5);
+    }
+    .tooltip .tt-repo { font-weight: 600; margin-bottom: .2rem; }
+    .tooltip .tt-wave { color: var(--muted); font-size: .7rem; margin-bottom: .4rem; }
+    .tooltip table { border-collapse: collapse; width: 100%; }
+    .tooltip td { padding: .1rem .3rem; font-size: .75rem; }
+    .tooltip td:first-child { color: var(--muted); }
+    .tooltip .tt-sync { color: var(--green); }
+    .tooltip .tt-nosync { color: var(--yellow); }
+
+    .empty-state {
+      display: flex; align-items: center; justify-content: center;
+      height: calc(100vh - 8.5rem); color: var(--muted); font-size: 1rem;
+      flex-direction: column; gap: .5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>OADP Rebase Dependency Graph</h1>
+    <select id="branch-select"></select>
+  </div>
+
+  <div class="summary-bar">
+    <div class="summary-stat"><span class="num" id="stat-synced" style="color:var(--green)">-</span><span class="lbl">synced</span></div>
+    <div class="summary-stat"><span class="num" id="stat-progress" style="color:var(--blue)">-</span><span class="lbl">in progress</span></div>
+    <div class="summary-stat"><span class="num" id="stat-outdated" style="color:var(--yellow)">-</span><span class="lbl">outdated</span></div>
+    <div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="meta" id="meta-info"></div>
+  </div>
+
+  <div id="cy"></div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot" style="background:#3fb950"></span> Synced</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#d29922"></span> Deps outdated</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#58a6ff"></span> PR open</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#8b949e"></span> Skipped</div>
+    <span style="margin-left:auto; font-size:.7rem; color:var(--muted)">Click node to open repo/PR</span>
+    <a href="../" style="font-size:.7rem">Prow Audit</a>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+  <script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+
+  <script type="module">
+    import { classifyStatus, deriveLabel, transformData } from './dag-data.js';
+
+    const COLORS = {
+      done: { bg: '#238636', border: '#3fb950', text: '#ffffff' },
+      need: { bg: '#9a6700', border: '#d29922', text: '#ffffff' },
+      prog: { bg: '#1f6feb', border: '#58a6ff', text: '#ffffff' },
+      skip: { bg: '#30363d', border: '#8b949e', text: '#8b949e' },
+    };
+
+    let cy;
+
+    async function loadMetadata() {
+      try {
+        const resp = await fetch('./data/metadata.json');
+        if (!resp.ok) throw new Error(resp.statusText);
+        return await resp.json();
+      } catch { return null; }
+    }
+
+    async function loadBranchData(branch) {
+      try {
+        const resp = await fetch(`./data/${branch}.json`);
+        if (!resp.ok) throw new Error(resp.statusText);
+        return await resp.json();
+      } catch { return null; }
+    }
+
+    function buildTooltipHTML(nodeData) {
+      const r = nodeData.fullData;
+      const depSyncs = r.dep_syncs || [];
+      let html = `<div class="tt-repo">${r.repo}</div>`;
+      html += `<div class="tt-wave">Wave ${r.wave} &middot; ${r.branch}</div>`;
+      if (nodeData.prSummary) {
+        const prNum = nodeData.prSummary.replace('#', '');
+        html += `<div style="margin-bottom:.4rem"><a href="https://github.com/${r.repo}/pull/${prNum}" target="_blank" style="color:var(--blue)">PR ${nodeData.prSummary}</a></div>`;
+      }
+      if (depSyncs.length > 0) {
+        html += '<table>';
+        for (const ds of depSyncs) {
+          const cls = ds.in_sync ? 'tt-sync' : 'tt-nosync';
+          const icon = ds.in_sync ? '✓' : '✗';
+          html += `<tr><td>${ds.org}/${ds.repo}</td><td class="${cls}">${icon}</td></tr>`;
+        }
+        html += '</table>';
+      }
+      return html;
+    }
+
+    function updateSummary(data) {
+      const repos = data.filter(r => !r.skip);
+      const counts = { done: 0, prog: 0, need: 0 };
+      for (const r of repos) {
+        const s = classifyStatus(r);
+        if (s === 'done') counts.done++;
+        else if (s === 'prog') counts.prog++;
+        else if (s === 'need') counts.need++;
+      }
+      document.getElementById('stat-synced').textContent = counts.done;
+      document.getElementById('stat-progress').textContent = counts.prog;
+      document.getElementById('stat-outdated').textContent = counts.need;
+      const total = repos.length || 1;
+      document.getElementById('progress-fill').style.width = Math.round((counts.done / total) * 100) + '%';
+    }
+
+    function renderGraph(data) {
+      const container = document.getElementById('cy');
+      const tooltip = document.getElementById('tooltip');
+      const { nodes, edges } = transformData(data);
+
+      if (cy) { cy.destroy(); cy = undefined; }
+
+      if (nodes.length === 0) {
+        updateSummary([]);
+        container.innerHTML = '<div class="empty-state"><div>No repos found for this branch</div></div>';
+        return;
+      }
+
+      updateSummary(data);
+
+      for (const n of nodes) {
+        if (n.data.status === 'prog' && n.data.prSummary) {
+          n.data.label += `  ${n.data.prSummary}`;
+        }
+      }
+
+      cy = cytoscape({
+        container,
+        elements: [...nodes, ...edges],
+        style: [
+          {
+            selector: 'node',
+            style: {
+              'label': 'data(label)',
+              'text-valign': 'center',
+              'text-halign': 'center',
+              'font-size': '11px',
+              'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
+              'font-weight': '600',
+              'color': '#ffffff',
+              'background-color': '#30363d',
+              'border-width': 2,
+              'border-color': '#8b949e',
+              'shape': 'round-rectangle',
+              'width': 'label',
+              'height': 30,
+              'padding': '14px',
+              'transition-property': 'opacity',
+              'transition-duration': '0.15s',
+            },
+          },
+          {
+            selector: '.wave-group',
+            style: {
+              'background-color': '#161b22',
+              'background-opacity': 0.5,
+              'border-color': '#30363d',
+              'border-width': 1,
+              'border-opacity': 0.4,
+              'shape': 'roundrectangle',
+              'label': 'data(label)',
+              'text-valign': 'top',
+              'text-halign': 'center',
+              'font-size': '10px',
+              'font-weight': '400',
+              'color': '#484f58',
+              'padding': '24px',
+            },
+          },
+          ...Object.entries(COLORS).map(([status, c]) => ({
+            selector: `node[status="${status}"]`,
+            style: {
+              'background-color': c.bg,
+              'border-color': c.border,
+              'color': c.text,
+            },
+          })),
+          {
+            selector: 'node[status="need"]',
+            style: { 'border-width': 3 },
+          },
+          {
+            selector: 'edge',
+            style: {
+              'width': 1.5,
+              'line-color': '#21262d',
+              'target-arrow-color': '#21262d',
+              'target-arrow-shape': 'triangle',
+              'arrow-scale': 1.2,
+              'target-arrow-fill': 'filled',
+              'curve-style': 'taxi',
+              'taxi-direction': 'rightward',
+              'taxi-turn': '20px',
+              'taxi-turn-min-distance': '10px',
+              'transition-property': 'opacity',
+              'transition-duration': '0.15s',
+            },
+          },
+          {
+            selector: 'edge[inSync]',
+            style: {
+              'line-color': '#1a7f37',
+              'target-arrow-color': '#1a7f37',
+              'line-opacity': 0.35,
+            },
+          },
+          {
+            selector: 'edge[!inSync]',
+            style: {
+              'line-color': '#d29922',
+              'target-arrow-color': '#d29922',
+              'line-opacity': 0.7,
+              'width': 2,
+              'line-style': 'dashed',
+              'line-dash-pattern': [6, 4],
+            },
+          },
+          { selector: 'node.dimmed', style: { 'opacity': 0.12 } },
+          { selector: 'edge.dimmed', style: { 'opacity': 0.04 } },
+          { selector: '.wave-group.dimmed', style: { 'opacity': 0.12 } },
+          { selector: 'node.highlighted', style: { 'border-width': 3 } },
+          { selector: 'edge.highlighted', style: { 'width': 2.5, 'line-opacity': 1 } },
+        ],
+        layout: {
+          name: 'dagre',
+          rankDir: 'LR',
+          rankSep: 120,
+          nodeSep: 30,
+          edgeSep: 10,
+          ranker: 'network-simplex',
+          spacingFactor: 1.2,
+        },
+        userZoomingEnabled: true,
+        userPanningEnabled: true,
+        boxSelectionEnabled: false,
+        minZoom: 0.3,
+        maxZoom: 2.5,
+      });
+
+      // Hover with debounce
+      let clearTimer = null;
+
+      cy.on('mouseover', 'node', (e) => {
+        if (e.target.hasClass('wave-group')) return;
+        if (clearTimer) { clearTimeout(clearTimer); clearTimer = null; }
+
+        const node = e.target;
+        const neighborhood = node.closedNeighborhood();
+
+        cy.elements().not('.wave-group').addClass('dimmed');
+        neighborhood.removeClass('dimmed').addClass('highlighted');
+        neighborhood.nodes().forEach(n => {
+          const p = n.parent();
+          if (p.length) p.removeClass('dimmed');
+        });
+
+        tooltip.innerHTML = buildTooltipHTML(node.data());
+        tooltip.style.display = 'block';
+      });
+
+      cy.on('mousemove', 'node', (e) => {
+        const pos = e.renderedPosition || e.position;
+        tooltip.style.left = (pos.x + 20) + 'px';
+        tooltip.style.top = (pos.y + 20) + 'px';
+      });
+
+      cy.on('mouseout', 'node', () => {
+        clearTimer = setTimeout(() => {
+          cy.elements().removeClass('dimmed highlighted');
+          tooltip.style.display = 'none';
+        }, 100);
+      });
+
+      cy.on('tap', 'node', (e) => {
+        if (e.target.hasClass('wave-group')) return;
+        const d = e.target.data();
+        const r = d.fullData;
+        if (d.prSummary) {
+          window.open(`https://github.com/${r.repo}/pull/${d.prSummary.replace('#', '')}`, '_blank');
+        } else {
+          window.open(`https://github.com/${r.repo}/tree/${r.branch}`, '_blank');
+        }
+      });
+
+      cy.ready(() => cy.fit(undefined, 50));
+    }
+
+    async function init() {
+      const meta = await loadMetadata();
+      const select = document.getElementById('branch-select');
+      const metaInfo = document.getElementById('meta-info');
+      const container = document.getElementById('cy');
+
+      if (!meta) {
+        container.innerHTML = '<div class="empty-state"><div>No data available yet</div><div style="font-size:.8rem">Data is generated by the Rebase Status Wiki workflow</div></div>';
+        return;
+      }
+
+      for (const branch of meta.branches) {
+        const opt = document.createElement('option');
+        opt.value = branch;
+        opt.textContent = branch;
+        if (branch === meta.default_branch) opt.selected = true;
+        select.appendChild(opt);
+      }
+
+      if (meta.generated_at) {
+        const dt = new Date(meta.generated_at);
+        metaInfo.textContent = `Updated ${dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} UTC`;
+      }
+
+      async function loadBranch(branch) {
+        const data = await loadBranchData(branch);
+        if (data) {
+          renderGraph(data);
+        } else {
+          if (cy) { cy.destroy(); cy = undefined; }
+          updateSummary([]);
+          container.innerHTML = `<div class="empty-state"><div>No data for ${branch}</div></div>`;
+        }
+      }
+
+      select.addEventListener('change', () => loadBranch(select.value));
+      loadBranch(meta.default_branch);
+    }
+
+    init();
+  </script>
+</body>
+</html>
