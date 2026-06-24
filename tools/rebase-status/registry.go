@@ -46,7 +46,7 @@ var allRepos = []RepoDef{
 	{Org: "openshift", Repo: "velero", Wave: 2},
 
 	// Wave 3 — plugins + operator
-	{Org: "openshift", Repo: "hypershift-oadp-plugin", Wave: 3, NoRebase: true, Branch: "main"},
+	{Org: "openshift", Repo: "hypershift-oadp-plugin", Wave: 3},
 	{Org: "openshift", Repo: "velero-plugin-for-csi", Wave: 3, MainOnly: true},
 	{Org: "openshift", Repo: "oadp-operator", Wave: 3},
 	{Org: "openshift", Repo: "velero-plugin-for-aws", Wave: 3},
