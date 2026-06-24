@@ -120,6 +120,7 @@ jobs:
           mkdir -p /tmp/dag-data
           branches=""
           failed=""
+          bundle_data="{}"
           for branch in $BRANCHES; do
             echo "::group::rebase-status $branch (DAG)"
             if tools/rebase-status/rebase-status \
@@ -135,6 +136,8 @@ jobs:
               if [ "$open_prs" -gt 0 ]; then
                 jq -r '.[] | select(.checks.open_pr.status == "ok") | "    PR: \(.repo) \(.checks.open_pr.summary)"' "/tmp/dag-data/${branch}.json"
               fi
+
+              bundle_data=$(echo "$bundle_data" | jq --arg b "$branch" --slurpfile d "/tmp/dag-data/${branch}.json" '. + {($b): $d[0]}')
             else
               echo "::warning::rebase-status failed for $branch (DAG)"
               failed="${failed:+$failed }$branch"
@@ -148,9 +151,12 @@ jobs:
           fi
 
           default_branch=$(echo "$BRANCHES" | awk '{print $1}')
-          cat > /tmp/dag-data/metadata.json <<EOF
-          {"branches": [$branches], "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)", "default_branch": "$default_branch"}
-          EOF
+          echo "$bundle_data" | jq \
+            --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg default_branch "$default_branch" \
+            --argjson branches "[$branches]" \
+            '{branches: $branches, generated_at: $generated_at, default_branch: $default_branch, data: .}' \
+            > /tmp/dag-data/dag-bundle.json
 
       - name: Assemble pages
         run: bash tools/assemble-pages.sh
