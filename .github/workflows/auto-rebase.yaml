@@ -269,40 +269,6 @@ jobs:
 
           exit $rc
 
-      - name: Extract PR org
-        id: pr-org
-        if: always()
-        env:
-          PR_URL: ${{ steps.retry.outputs.pr_url || steps.run.outputs.pr_url }}
-        run: |
-          if [ -n "$PR_URL" ]; then
-            org=$(echo "$PR_URL" | sed 's|https://github.com/||' | cut -d/ -f1)
-            repo=$(echo "$PR_URL" | sed 's|https://github.com/||' | cut -d/ -f2)
-            echo "org=$org" >> "$GITHUB_OUTPUT"
-            echo "repo=$repo" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Generate app token for PR org
-        id: app-token
-        if: always() && steps.pr-org.outputs.org != ''
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ env.GITHUB_APP_ID }}
-          private-key: ${{ secrets.OADP_REBASEBOT_APP_KEY }}
-          owner: ${{ steps.pr-org.outputs.org }}
-          repositories: ${{ steps.pr-org.outputs.repo }}
-
-      - name: Comment /ok-to-test on PR
-        if: always() && steps.app-token.outcome == 'success'
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          PR_URL: ${{ steps.retry.outputs.pr_url || steps.run.outputs.pr_url }}
-        run: |
-          if [ -n "$PR_URL" ]; then
-            echo "Commenting /ok-to-test on $PR_URL"
-            gh pr comment "$PR_URL" --body "/ok-to-test"
-          fi
-
       - name: Save result
         if: always()
         env:
@@ -317,7 +283,7 @@ jobs:
           TRIAGE_VERDICT: ${{ steps.triage.outputs.verdict }}
           RETRY_OUTCOME: ${{ steps.retry.outcome }}
           RETRY_RC: ${{ steps.retry.outputs.exit_code }}
-          OK_TO_TEST: ${{ steps.app-token.outcome == 'success' && (steps.retry.outputs.pr_url || steps.run.outputs.pr_url) != '' }}
+
         run: |
           mkdir -p /tmp/results
           jq -n \
@@ -361,10 +327,6 @@ jobs:
 
           if [ -n "$PR_URL" ]; then
             echo "| **PR** | [${PR_INFO:-link}](${PR_URL}) |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-          if [ "$OK_TO_TEST" = "true" ]; then
-            echo "| **/ok-to-test** | ✅ Posted |" >> "$GITHUB_STEP_SUMMARY"
           fi
 
           echo "" >> "$GITHUB_STEP_SUMMARY"
