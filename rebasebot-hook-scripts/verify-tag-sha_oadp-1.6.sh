@@ -6,20 +6,14 @@ set -o pipefail
 # Verify that the upstream Velero tag still points to the expected commit.
 # Detects silent tag recreation (a supply chain risk).
 
-EXPECTED_TAG="v1.18.1"
-EXPECTED_SHA="26ef8fa7df68dfa9ab8aa4669b8ac47340b0c510"
+EXPECTED_SHA="c253c7fe37d78c9b7e55c68544f7c5b2608712d8"
 UPSTREAM_REPO="https://github.com/velero-io/velero"
+TAG="$REBASEBOT_SOURCE"
 
-if [ "$REBASEBOT_SOURCE" != "$EXPECTED_TAG" ]; then
-    echo "Source tag '$REBASEBOT_SOURCE' does not match expected tag '$EXPECTED_TAG'" >&2
-    echo "Update this script if the upstream tag has changed." >&2
-    exit 1
-fi
-
-LS_REMOTE_OUTPUT=$(git ls-remote "$UPSTREAM_REPO" "refs/tags/$EXPECTED_TAG" "refs/tags/$EXPECTED_TAG^{}")
+LS_REMOTE_OUTPUT=$(git ls-remote "$UPSTREAM_REPO" "refs/tags/$TAG" "refs/tags/$TAG^{}")
 
 if [ -z "$LS_REMOTE_OUTPUT" ]; then
-    echo "Failed to resolve tag '$EXPECTED_TAG' from $UPSTREAM_REPO" >&2
+    echo "Failed to resolve tag '$TAG' from $UPSTREAM_REPO" >&2
     exit 1
 fi
 
@@ -35,11 +29,11 @@ else
 fi
 
 if [ "$RESOLVED_SHA" != "$EXPECTED_SHA" ]; then
-    echo "TAG SHA MISMATCH for $EXPECTED_TAG" >&2
+    echo "TAG SHA MISMATCH for $TAG" >&2
     echo "  Expected: $EXPECTED_SHA" >&2
     echo "  Resolved: $RESOLVED_SHA" >&2
     echo "The tag may have been recreated. Aborting rebase." >&2
     exit 1
 fi
 
-echo "Tag $EXPECTED_TAG verified: $RESOLVED_SHA"
+echo "Tag $TAG verified: $RESOLVED_SHA"
