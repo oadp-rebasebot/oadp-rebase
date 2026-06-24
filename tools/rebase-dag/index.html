@@ -186,7 +186,10 @@
       const tooltip = document.getElementById('tooltip');
       const { nodes, edges } = transformData(data);
 
+      if (cy) { cy.destroy(); cy = undefined; }
+
       if (nodes.length === 0) {
+        updateSummary([]);
         container.innerHTML = '<div class="empty-state"><div>No repos found for this branch</div></div>';
         return;
       }
@@ -198,8 +201,6 @@
           n.data.label += `  ${n.data.prSummary}`;
         }
       }
-
-      if (cy) cy.destroy();
 
       cy = cytoscape({
         container,
@@ -388,8 +389,13 @@
 
       async function loadBranch(branch) {
         const data = await loadBranchData(branch);
-        if (data) renderGraph(data);
-        else container.innerHTML = `<div class="empty-state"><div>No data for ${branch}</div></div>`;
+        if (data) {
+          renderGraph(data);
+        } else {
+          if (cy) { cy.destroy(); cy = undefined; }
+          updateSummary([]);
+          container.innerHTML = `<div class="empty-state"><div>No data for ${branch}</div></div>`;
+        }
       }
 
       select.addEventListener('change', () => loadBranch(select.value));

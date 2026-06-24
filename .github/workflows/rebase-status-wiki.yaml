@@ -19,8 +19,6 @@ env:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 jobs:
   update-wiki:
@@ -89,6 +87,10 @@ jobs:
   deploy-pages:
     needs: update-wiki
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     concurrency:
       group: pages
       cancel-in-progress: false
@@ -117,7 +119,7 @@ jobs:
               --config-dir rebase-configs \
               --json \
               --hide-dependency-details \
-              "$branch" > "/tmp/dag-data/${branch}.json" 2>/dev/null || echo "[]" > "/tmp/dag-data/${branch}.json"
+              "$branch" > "/tmp/dag-data/${branch}.json" || true
             branches="${branches:+$branches,}\"$branch\""
           done
 
