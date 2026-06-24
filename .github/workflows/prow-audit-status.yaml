@@ -62,10 +62,7 @@ jobs:
             message="all clear"
           fi
 
-          mkdir -p _site
-          cp tools/prow-merge-bot-configs/index.html _site/
-
-          cat > _site/badge.json <<EOF
+          cat > /tmp/badge.json <<EOF
           {
             "schemaVersion": 1,
             "label": "prow audit",
@@ -73,6 +70,8 @@ jobs:
             "color": "$color"
           }
           EOF
+
+          bash tools/assemble-pages.sh
 
       - uses: actions/configure-pages@v6
 

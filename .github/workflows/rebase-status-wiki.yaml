@@ -18,6 +18,8 @@ env:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   update-wiki:
@@ -82,6 +84,57 @@ jobs:
             git push
           fi
 
+
+  deploy-pages:
+    needs: update-wiki
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: tools/rebase-status/go.sum
+
+      - name: Build rebase-status
+        run: make -C tools/rebase-status rebase-status
+
+      - name: Generate DAG data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p /tmp/dag-data
+          branches=""
+          for branch in oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3; do
+            tools/rebase-status/rebase-status \
+              --config-dir rebase-configs \
+              --json \
+              --hide-dependency-details \
+              "$branch" > "/tmp/dag-data/${branch}.json" 2>/dev/null || echo "[]" > "/tmp/dag-data/${branch}.json"
+            branches="${branches:+$branches,}\"$branch\""
+          done
+
+          cat > /tmp/dag-data/metadata.json <<EOF
+          {"branches": [$branches], "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)", "default_branch": "oadp-1.6"}
+          EOF
+
+      - name: Assemble pages
+        run: bash tools/assemble-pages.sh
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v5
 
   notify-slack:
     if: github.event_name != 'workflow_run'
