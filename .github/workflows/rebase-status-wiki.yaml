@@ -39,15 +39,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for branch in $BRANCHES; do
-            tools/rebase-status/rebase-status \
+            echo "::group::rebase-status $branch (wiki)"
+            if ! tools/rebase-status/rebase-status \
               --config-dir rebase-configs \
               --format markdown \
-              "$branch" > "/tmp/Rebase-Status-${branch}.md" || true
+              "$branch" > "/tmp/Rebase-Status-${branch}.md"; then
+              echo "::error::rebase-status failed for ${branch}"
+              exit 1
+            fi
 
             if [ ! -s "/tmp/Rebase-Status-${branch}.md" ]; then
               echo "::error::rebase-status produced no output for ${branch}"
               exit 1
             fi
+            echo "::endgroup::"
           done
 
       - name: Generate Home page
@@ -114,19 +119,44 @@ jobs:
         run: |
           mkdir -p /tmp/dag-data
           branches=""
+          failed=""
+          bundle_data="{}"
           for branch in $BRANCHES; do
-            tools/rebase-status/rebase-status \
+            echo "::group::rebase-status $branch (DAG)"
+            if tools/rebase-status/rebase-status \
               --config-dir rebase-configs \
               --json \
               --hide-dependency-details \
-              "$branch" > "/tmp/dag-data/${branch}.json" || true
+              "$branch" > "/tmp/dag-data/${branch}.json"; then
+
+              # Log a summary so we can debug stale data
+              repos=$(jq length "/tmp/dag-data/${branch}.json")
+              open_prs=$(jq '[.[] | select(.checks.open_pr.status == "ok")] | length' "/tmp/dag-data/${branch}.json")
+              echo "  $branch: $repos repos, $open_prs open PRs"
+              if [ "$open_prs" -gt 0 ]; then
+                jq -r '.[] | select(.checks.open_pr.status == "ok") | "    PR: \(.repo) \(.checks.open_pr.summary)"' "/tmp/dag-data/${branch}.json"
+              fi
+
+              bundle_data=$(echo "$bundle_data" | jq --arg b "$branch" --slurpfile d "/tmp/dag-data/${branch}.json" '. + {($b): $d[0]}')
+            else
+              echo "::warning::rebase-status failed for $branch (DAG)"
+              failed="${failed:+$failed }$branch"
+            fi
+            echo "::endgroup::"
             branches="${branches:+$branches,}\"$branch\""
           done
 
+          if [ -n "$failed" ]; then
+            echo "::warning::DAG data generation failed for: $failed"
+          fi
+
           default_branch=$(echo "$BRANCHES" | awk '{print $1}')
-          cat > /tmp/dag-data/metadata.json <<EOF
-          {"branches": [$branches], "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)", "default_branch": "$default_branch"}
-          EOF
+          echo "$bundle_data" | jq \
+            --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg default_branch "$default_branch" \
+            --argjson branches "[$branches]" \
+            '{branches: $branches, generated_at: $generated_at, default_branch: $default_branch, data: .}' \
+            > /tmp/dag-data/dag-bundle.json
 
       - name: Assemble pages
         run: bash tools/assemble-pages.sh
@@ -158,7 +188,7 @@ jobs:
       - name: Generate Slack payload
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NOTIFY_BRANCHES: ${{ inputs.notify_branches || env.NOTIFY_BRANCHES }}
+          NOTIFY_BRANCHES: ${{ github.event_name != 'workflow_dispatch' && env.NOTIFY_BRANCHES || inputs.notify_branches }}
         run: |
           [ -z "$NOTIFY_BRANCHES" ] && { echo "No branches to notify"; exit 0; }
 
