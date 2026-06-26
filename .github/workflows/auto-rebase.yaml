@@ -210,6 +210,16 @@ jobs:
           echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
           echo "pr_info=$pr_info" >> "$GITHUB_OUTPUT"
 
+          if [ "$rc" = "0" ]; then
+            if [ -n "$pr_info" ]; then
+              echo "::notice title=Strict (${TARGET})::${pr_info}"
+            else
+              echo "::notice title=Strict (${TARGET})::Succeeded (no PR change)"
+            fi
+          else
+            echo "::warning title=Strict (${TARGET})::Failed with exit code ${rc}"
+          fi
+
           exit $rc
 
       - name: Triage conflict
@@ -267,6 +277,16 @@ jobs:
           echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
           echo "pr_info=$pr_info" >> "$GITHUB_OUTPUT"
 
+          if [ "$rc" = "0" ]; then
+            if [ -n "$pr_info" ]; then
+              echo "::notice title=Retry (${TARGET})::${pr_info}"
+            else
+              echo "::notice title=Retry (${TARGET})::Succeeded"
+            fi
+          else
+            echo "::warning title=Retry (${TARGET})::Failed with exit code ${rc}"
+          fi
+
           exit $rc
 
       - name: Generate app token
@@ -316,6 +336,13 @@ jobs:
           set -e
 
           echo "verify_rc=$rc" >> "$GITHUB_OUTPUT"
+
+          if [ "$rc" = "0" ]; then
+            echo "::notice title=Verify (${TARGET})::All carry commits and downstream files preserved"
+          else
+            echo "::warning title=Verify (${TARGET})::Verification failed (rc=${rc})"
+          fi
+
           exit 0
 
       - name: Post verification to PR
