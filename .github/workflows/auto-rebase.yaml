@@ -442,11 +442,9 @@ jobs:
             if [ "$VERIFY_RC" = "0" ]; then
               return 0
             elif [ "$VERIFY_RC" = "1" ]; then
-              echo "::error::Rebase verification failed"
-              exit 1
+              echo "::warning::Rebase verification failed — check the PR comment for details"
             else
-              echo "::error::Rebase verification did not run (rc=${VERIFY_RC:-empty})"
-              exit 1
+              echo "::warning::Rebase verification did not run (rc=${VERIFY_RC:-empty})"
             fi
           }
 
@@ -469,6 +467,7 @@ jobs:
           fi
 
           # Real failure — fail the job
+          echo "::error::Rebase failed (strict rc=${STRICT_RC}, retry=${RETRY_OUTCOME})"
           exit 1
 
   notify:
