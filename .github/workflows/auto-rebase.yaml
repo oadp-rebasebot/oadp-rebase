@@ -269,6 +269,80 @@ jobs:
 
           exit $rc
 
+      - name: Generate app token
+        id: app-token
+        if: always() && (steps.run.outputs.exit_code == '0' || steps.retry.outputs.exit_code == '0')
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ env.GITHUB_APP_ID }}
+          private-key: ${{ secrets.OADP_REBASEBOT_APP_KEY }}
+          owner: oadp-rebasebot
+
+      - name: Verify rebase
+        id: verify
+        if: always() && steps.app-token.outcome == 'success'
+        continue-on-error: true
+        env:
+          TARGET: ${{ matrix.target }}
+          COMMENT_FILE: /tmp/verify-comment.md
+        run: |
+          config_name=$(grep -E "^[[:space:]]+${TARGET}\)" run-oadp-rebase.sh | head -1 | sed 's/.*echo "\(.*\)".*/\1/' || true)
+          if [ -z "$config_name" ]; then
+            echo "::warning::Could not resolve config for verify: ${TARGET}"
+            echo "verify_rc=2" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          . "rebase-configs/${config_name}.env.sh"
+
+          # Parse repo:ref from config vars
+          # SOURCE_UPSTREAM_REPO is https://github.com/owner/repo:ref
+          upstream_stripped=$(echo "$SOURCE_UPSTREAM_REPO" | sed 's|https://github.com/||')
+          upstream_repo=$(echo "$upstream_stripped" | cut -d: -f1)
+          upstream_ref=$(echo "$upstream_stripped" | cut -d: -f2)
+          dest_repo=$(echo "$DESTINATION_DOWNSTREAM_REPO" | cut -d: -f1)
+          dest_branch=$(echo "$DESTINATION_DOWNSTREAM_REPO" | cut -d: -f2)
+          rebase_repo=$(echo "$REBASE_REPO" | cut -d: -f1)
+          rebase_branch=$(echo "$REBASE_REPO" | cut -d: -f2)
+
+          echo "Verifying: dest=${dest_repo}:${dest_branch} rebase=${rebase_repo}:${rebase_branch} upstream=${upstream_repo}:${upstream_ref}"
+
+          set +e
+          bash tools/verify-rebase.sh \
+            "$dest_repo" "$dest_branch" \
+            "$rebase_repo" "$rebase_branch" \
+            "$upstream_repo" "$upstream_ref"
+          rc=$?
+          set -e
+
+          echo "verify_rc=$rc" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Post verification to PR
+        if: always() && steps.verify.outcome == 'success' && steps.verify.outputs.verify_rc != '2'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR_URL: ${{ steps.retry.outputs.pr_url || steps.run.outputs.pr_url }}
+        run: |
+          [ -z "$PR_URL" ] && exit 0
+          [ ! -f /tmp/verify-comment.md ] && exit 0
+
+          pr_repo=$(echo "$PR_URL" | sed 's|https://github.com/||' | cut -d/ -f1-2)
+          pr_number=$(echo "$PR_URL" | grep -oE '[0-9]+$')
+          marker="<!-- verify-rebase -->"
+          body="$(printf '%s\n%s' "$marker" "$(cat /tmp/verify-comment.md)")"
+
+          existing=$(gh api "repos/${pr_repo}/issues/${pr_number}/comments" \
+            --jq ".[] | select(.body | startswith(\"${marker}\")) | .id" 2>/dev/null | head -1)
+
+          if [ -n "$existing" ]; then
+            gh api "repos/${pr_repo}/issues/comments/${existing}" -X PATCH -f body="$body"
+            echo "Updated existing verification comment"
+          else
+            gh api "repos/${pr_repo}/issues/${pr_number}/comments" -f body="$body"
+            echo "Posted verification comment"
+          fi
+
       - name: Save result
         if: always()
         env:
@@ -283,9 +357,19 @@ jobs:
           TRIAGE_VERDICT: ${{ steps.triage.outputs.verdict }}
           RETRY_OUTCOME: ${{ steps.retry.outcome }}
           RETRY_RC: ${{ steps.retry.outputs.exit_code }}
+          VERIFY_RC: ${{ steps.verify.outputs.verify_rc }}
 
         run: |
           mkdir -p /tmp/results
+
+          if [ -z "$VERIFY_RC" ] || [ "$VERIFY_RC" = "2" ]; then
+            verify_result="skipped"
+          elif [ "$VERIFY_RC" = "0" ]; then
+            verify_result="pass"
+          else
+            verify_result="fail"
+          fi
+
           jq -n \
             --arg target "$TARGET" \
             --arg branch "$BRANCH" \
@@ -293,7 +377,8 @@ jobs:
             --arg exit_code "$EXIT_CODE" \
             --arg pr_url "$PR_URL" \
             --arg pr_info "$PR_INFO" \
-            '{target: $target, branch: $branch, reason: $reason, exit_code: $exit_code, pr_url: $pr_url, pr_info: $pr_info}' \
+            --arg verify "$verify_result" \
+            '{target: $target, branch: $branch, reason: $reason, exit_code: $exit_code, pr_url: $pr_url, pr_info: $pr_info, verify: $verify}' \
             > "/tmp/results/${TARGET}.json"
 
           # Build job step summary
@@ -329,6 +414,8 @@ jobs:
             echo "| **PR** | [${PR_INFO:-link}](${PR_URL}) |" >> "$GITHUB_STEP_SUMMARY"
           fi
 
+          echo "| **Verify** | ${verify_result} |" >> "$GITHUB_STEP_SUMMARY"
+
           echo "" >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
@@ -344,14 +431,24 @@ jobs:
           STRICT_RC: ${{ steps.run.outputs.exit_code }}
           RETRY_OUTCOME: ${{ steps.retry.outcome }}
           RETRY_RC: ${{ steps.retry.outputs.exit_code }}
+          VERIFY_RC: ${{ steps.verify.outputs.verify_rc }}
         run: |
           # Strict succeeded — nothing to check
           if [ "${STRICT_RC:-0}" = "0" ]; then
+            # Rebase succeeded — check verify
+            if [ "$VERIFY_RC" = "1" ]; then
+              echo "::error::Rebase verification failed"
+              exit 1
+            fi
             exit 0
           fi
 
           # Strict failed but retry ran and succeeded
           if [ "$RETRY_OUTCOME" = "success" ] && [ "${RETRY_RC:-1}" = "0" ]; then
+            if [ "$VERIFY_RC" = "1" ]; then
+              echo "::error::Rebase verification failed"
+              exit 1
+            fi
             exit 0
           fi
 
@@ -366,7 +463,7 @@ jobs:
 
   notify:
     needs: [decide, rebase]
-    if: always() && inputs.notify_slack == true
+    if: always() && (github.event_name == 'schedule' || inputs.notify_slack == true)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
