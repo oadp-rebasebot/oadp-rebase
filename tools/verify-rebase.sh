@@ -87,19 +87,19 @@ git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
 log_info "Fetching dest branch..."
 if ! git fetch dest "$DEST_BRANCH" -q 2>/dev/null; then
   log_fail "Could not fetch ${DEST_REPO}:${DEST_BRANCH}"
-  exit 2
+  exit 1
 fi
 
 log_info "Fetching rebase branch..."
 if ! git fetch rebase "$REBASE_BRANCH" -q 2>/dev/null; then
   log_fail "Could not fetch ${REBASE_REPO}:${REBASE_BRANCH}"
-  exit 2
+  exit 1
 fi
 
 log_info "Fetching upstream ref..."
 if ! git fetch upstream "$UPSTREAM_REF" --depth=1 -q 2>/dev/null; then
   log_fail "Could not fetch ${UPSTREAM_REPO}:${UPSTREAM_REF}"
-  exit 2
+  exit 1
 fi
 
 DEST_REF="refs/remotes/dest/${DEST_BRANCH}"

@@ -433,22 +433,24 @@ jobs:
           RETRY_RC: ${{ steps.retry.outputs.exit_code }}
           VERIFY_RC: ${{ steps.verify.outputs.verify_rc }}
         run: |
-          # Strict succeeded — nothing to check
-          if [ "${STRICT_RC:-0}" = "0" ]; then
-            # Rebase succeeded — check verify
+          check_verify() {
             if [ "$VERIFY_RC" = "1" ]; then
               echo "::error::Rebase verification failed"
               exit 1
+            elif [ "$VERIFY_RC" != "0" ]; then
+              echo "::warning::Rebase verification was skipped (rc=${VERIFY_RC:-empty})"
             fi
+          }
+
+          # Strict succeeded — check verify
+          if [ "${STRICT_RC:-0}" = "0" ]; then
+            check_verify
             exit 0
           fi
 
           # Strict failed but retry ran and succeeded
           if [ "$RETRY_OUTCOME" = "success" ] && [ "${RETRY_RC:-1}" = "0" ]; then
-            if [ "$VERIFY_RC" = "1" ]; then
-              echo "::error::Rebase verification failed"
-              exit 1
-            fi
+            check_verify
             exit 0
           fi
 
