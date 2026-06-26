@@ -432,8 +432,13 @@ jobs:
           RETRY_OUTCOME: ${{ steps.retry.outcome }}
           RETRY_RC: ${{ steps.retry.outputs.exit_code }}
           VERIFY_RC: ${{ steps.verify.outputs.verify_rc }}
+          PR_URL: ${{ steps.retry.outputs.pr_url || steps.run.outputs.pr_url }}
         run: |
           check_verify() {
+            local pr_url="${PR_URL:-}"
+            if [ -z "$pr_url" ]; then
+              return 0
+            fi
             if [ "$VERIFY_RC" = "0" ]; then
               return 0
             elif [ "$VERIFY_RC" = "1" ]; then
