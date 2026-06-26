@@ -434,11 +434,14 @@ jobs:
           VERIFY_RC: ${{ steps.verify.outputs.verify_rc }}
         run: |
           check_verify() {
-            if [ "$VERIFY_RC" = "1" ]; then
+            if [ "$VERIFY_RC" = "0" ]; then
+              return 0
+            elif [ "$VERIFY_RC" = "1" ]; then
               echo "::error::Rebase verification failed"
               exit 1
-            elif [ "$VERIFY_RC" != "0" ]; then
-              echo "::warning::Rebase verification was skipped (rc=${VERIFY_RC:-empty})"
+            else
+              echo "::error::Rebase verification did not run (rc=${VERIFY_RC:-empty})"
+              exit 1
             fi
           }
 
