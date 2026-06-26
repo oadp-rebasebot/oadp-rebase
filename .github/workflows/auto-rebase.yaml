@@ -366,7 +366,7 @@ jobs:
 
   notify:
     needs: [decide, rebase]
-    if: always() && (github.event_name == 'schedule' || inputs.notify_slack == true)
+    if: always() && inputs.notify_slack == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
