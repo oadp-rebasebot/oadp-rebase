@@ -1,0 +1,303 @@
+name: Auto Rebase (v2)
+
+on:
+  workflow_dispatch:
+    inputs:
+      branches:
+        description: 'Branches to process (comma-separated, or "all")'
+        required: false
+        default: 'all'
+      dry_run:
+        description: 'Dry run (no PRs created)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-rebase-v2
+  cancel-in-progress: false
+
+env:
+  GITHUB_APP_ID: '1810299'
+
+jobs:
+  decide:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+      has_targets: ${{ steps.build-matrix.outputs.has_targets }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: tools/rebase-status/go.sum
+
+      - name: Build rebase-status
+        run: make -C tools/rebase-status rebase-status
+
+      - name: Determine targets
+        id: build-matrix
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_BRANCHES: ${{ inputs.branches }}
+        run: |
+          if [ "$INPUT_BRANCHES" = "all" ] || [ -z "$INPUT_BRANCHES" ]; then
+            BRANCHES="oadp-1.6"
+          else
+            BRANCHES=$(echo "$INPUT_BRANCHES" | tr ',' ' ')
+          fi
+
+          all_targets='[]'
+
+          for branch in $BRANCHES; do
+            echo "::group::rebase-status $branch"
+
+            json_file="/tmp/status-${branch}.json"
+            tools/rebase-status/rebase-status \
+              --config-dir rebase-configs \
+              --json \
+              --hide-dependency-details \
+              "$branch" > "$json_file" || true
+
+            targets=$(bash tools/auto-rebase/rebase-decision.sh --reason < "$json_file")
+            count=$(echo "$targets" | grep -c . || echo 0)
+            echo "Branch $branch: $count target(s)"
+
+            while IFS=$(printf '\t') read -r target reason; do
+              [ -z "$target" ] && continue
+              all_targets=$(echo "$all_targets" | jq \
+                --arg branch "$branch" \
+                --arg target "$target" \
+                --arg reason "$reason" \
+                '. + [{"branch": $branch, "target": $target, "reason": $reason}]')
+            done <<< "$targets"
+
+            echo "::endgroup::"
+          done
+
+          total=$(echo "$all_targets" | jq length)
+          echo "Total targets across all branches: $total"
+
+          if [ "$total" -gt 0 ]; then
+            echo "has_targets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_targets=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          matrix=$(echo "$all_targets" | jq -c '{include: .}')
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  rebase:
+    needs: decide
+    if: needs.decide.outputs.has_targets == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix: ${{ fromJSON(needs.decide.outputs.matrix) }}
+      fail-fast: false
+      max-parallel: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup secrets
+        env:
+          APP_KEY: ${{ secrets.OADP_REBASEBOT_APP_KEY }}
+          CLONER_KEY: ${{ secrets.OADP_REBASEBOT_CLONER_KEY }}
+        run: |
+          mkdir -p /tmp/rebasebot-secrets
+          echo "$APP_KEY" > /tmp/rebasebot-secrets/oadp-rebasebot-app-key
+          echo "$CLONER_KEY" > /tmp/rebasebot-secrets/oadp-rebasebot-cloner-key
+          chmod 600 /tmp/rebasebot-secrets/*
+
+      - name: Run rebase pipeline for ${{ matrix.target }}
+        id: pipeline
+        continue-on-error: true
+        env:
+          SECRETS_DIR: /tmp/rebasebot-secrets
+          TARGET: ${{ matrix.target }}
+        run: |
+          flags=""
+          [ "${{ inputs.dry_run }}" = "true" ] && flags="--dry-run-only"
+
+          set +e
+          bash tools/auto-rebase/run-rebase-pipeline.sh "$TARGET" $flags
+          rc=$?
+          set -e
+
+          echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
+
+          # Read result JSON for downstream steps
+          result_file="/tmp/results/${TARGET}.json"
+          if [ -f "$result_file" ]; then
+            echo "pr_url=$(jq -r '.pr_url // ""' "$result_file")" >> "$GITHUB_OUTPUT"
+            echo "pr_info=$(jq -r '.pr_info // ""' "$result_file")" >> "$GITHUB_OUTPUT"
+            echo "verify=$(jq -r '.verify // "skipped"' "$result_file")" >> "$GITHUB_OUTPUT"
+            echo "is_manual=$(jq -r '.is_manual // false' "$result_file")" >> "$GITHUB_OUTPUT"
+          fi
+
+          exit $rc
+
+      - name: Generate app token
+        id: app-token
+        if: always() && steps.pipeline.outputs.pr_url != ''
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ env.GITHUB_APP_ID }}
+          private-key: ${{ secrets.OADP_REBASEBOT_APP_KEY }}
+          owner: oadp-rebasebot
+
+      - name: Post-push verify and comment
+        if: always() && steps.app-token.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TARGET: ${{ matrix.target }}
+          PR_URL: ${{ steps.pipeline.outputs.pr_url }}
+          COMMENT_FILE: /tmp/verify-comment.md
+        run: |
+          eval "$(bash tools/auto-rebase/resolve-config.sh "$TARGET")"
+
+          set +e
+          bash tools/verify-rebase.sh \
+            "$DEST_REPO" "$DEST_BRANCH" \
+            "$REBASE_REPO_SLUG" "$REBASE_BRANCH" \
+            "$UPSTREAM_REPO" "$UPSTREAM_REF"
+          verify_rc=$?
+          set -e
+
+          if [ "$verify_rc" = "0" ]; then
+            echo "::notice title=Verify (${TARGET})::All carry commits and downstream files preserved"
+          else
+            echo "::warning title=Verify (${TARGET})::Post-push verification failed (rc=${verify_rc})"
+          fi
+
+          # Post comment to PR
+          [ -z "$PR_URL" ] && exit 0
+          [ ! -f "$COMMENT_FILE" ] && exit 0
+
+          pr_repo=$(echo "$PR_URL" | sed 's|https://github.com/||' | cut -d/ -f1-2)
+          pr_number=$(echo "$PR_URL" | grep -oE '[0-9]+$')
+          marker="<!-- verify-rebase -->"
+          body="$(printf '%s\n%s' "$marker" "$(cat "$COMMENT_FILE")")"
+
+          existing=$(gh api "repos/${pr_repo}/issues/${pr_number}/comments" \
+            --jq ".[] | select(.body | startswith(\"${marker}\")) | .id" 2>/dev/null | head -1)
+
+          if [ -n "$existing" ]; then
+            gh api "repos/${pr_repo}/issues/comments/${existing}" -X PATCH -f body="$body"
+          else
+            gh api "repos/${pr_repo}/issues/${pr_number}/comments" -f body="$body"
+          fi
+
+      - name: Job summary
+        if: always()
+        env:
+          TARGET: ${{ matrix.target }}
+          BRANCH: ${{ matrix.branch }}
+          REASON: ${{ matrix.reason }}
+        run: |
+          result_file="/tmp/results/${TARGET}.json"
+          [ ! -f "$result_file" ] && { echo "No result file"; exit 0; }
+
+          exit_code=$(jq -r '.exit_code' "$result_file")
+          pr_url=$(jq -r '.pr_url // ""' "$result_file")
+          pr_info=$(jq -r '.pr_info // ""' "$result_file")
+          verify=$(jq -r '.verify' "$result_file")
+          is_manual=$(jq -r '.is_manual' "$result_file")
+          dry_run_rc=$(jq -r '.dry_run_rc' "$result_file")
+          dry_run_policy=$(jq -r '.dry_run_policy' "$result_file")
+          real_run_rc=$(jq -r '.real_run_rc // ""' "$result_file")
+
+          if [ "$exit_code" = "0" ]; then
+            status="✅ Success"
+          elif [ "$is_manual" = "true" ]; then
+            status="⚠️ Manual intervention needed"
+          else
+            status="❌ Failed"
+          fi
+
+          echo "### Rebase: \`${TARGET}\` (\`${BRANCH}\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Step | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Status** | ${status} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Trigger** | ${REASON} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Dry-run** | exit ${dry_run_rc} (${dry_run_policy}) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Dry-run verify** | ${verify} |" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -n "$real_run_rc" ]; then
+            echo "| **Real run** | exit ${real_run_rc} |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ -n "$pr_url" ]; then
+            echo "| **PR** | [${pr_info:-link}](${pr_url}) |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: result-${{ matrix.target }}
+          path: /tmp/results/
+          retention-days: 7
+
+      - name: Check outcome
+        if: always()
+        run: |
+          result_file="/tmp/results/${{ matrix.target }}.json"
+          [ ! -f "$result_file" ] && { echo "::error::No result file"; exit 1; }
+
+          exit_code=$(jq -r '.exit_code' "$result_file")
+          is_manual=$(jq -r '.is_manual' "$result_file")
+
+          [ "$is_manual" = "true" ] && { echo "::warning::Rebase needs manual intervention"; exit 0; }
+          [ "$exit_code" = "0" ] && exit 0
+
+          echo "::error::Pipeline failed (rc=${exit_code})"
+          exit 1
+
+  notify:
+    needs: [decide, rebase]
+    if: always() && (github.event_name == 'schedule' || inputs.notify_slack == true)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Download results
+        if: needs.decide.outputs.has_targets == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: result-*
+          path: /tmp/results
+          merge-multiple: true
+
+      - name: Build Slack payload
+        id: payload
+        env:
+          HAS_TARGETS: ${{ needs.decide.outputs.has_targets }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          args=""
+          [ "$DRY_RUN" = "true" ] && args="$args --dry-run"
+          [ -n "$RUN_URL" ] && args="$args --run-url $RUN_URL"
+          [ "$HAS_TARGETS" != "true" ] && args="$args --no-targets"
+          bash tools/auto-rebase/rebase-notify.sh /tmp/results $args > /tmp/slack-payload.json
+          echo "Slack payload:"
+          cat /tmp/slack-payload.json
+
+      - name: Send Slack notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -sf -X POST -H 'Content-type: application/json' -d @/tmp/slack-payload.json "$SLACK_WEBHOOK_URL"

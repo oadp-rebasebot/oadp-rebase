@@ -27,8 +27,9 @@ Usage: verify-rebase.sh <dest-repo> <dest-branch> \
 Arguments:
   dest-repo       Downstream repo (e.g. openshift/velero)
   dest-branch     Downstream branch (e.g. oadp-1.6)
-  rebase-repo     Rebase working repo (e.g. oadp-rebasebot/velero)
-  rebase-branch   Rebase branch (e.g. rebase-bot-oadp-1.6)
+  rebase-repo     Rebase working repo — GitHub slug (e.g. oadp-rebasebot/velero)
+                  or local path (e.g. /tmp/rebase-workdir/velero)
+  rebase-branch   Rebase branch (e.g. rebase-bot-oadp-1.6, or "rebase" for local)
   upstream-repo   Upstream repo (e.g. velero-io/velero)
   upstream-ref    Upstream tag or branch (e.g. v1.18.2-rc.2)
 
@@ -81,7 +82,11 @@ git init --bare "$BARE_REPO" -q
 cd "$BARE_REPO"
 
 git remote add dest "https://github.com/${DEST_REPO}.git"
-git remote add rebase "https://github.com/${REBASE_REPO}.git"
+if [[ -d "$REBASE_REPO" ]]; then
+  git remote add rebase "$REBASE_REPO"
+else
+  git remote add rebase "https://github.com/${REBASE_REPO}.git"
+fi
 git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
 
 log_info "Fetching dest branch..."
