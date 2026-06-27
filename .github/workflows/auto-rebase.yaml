@@ -451,9 +451,9 @@ jobs:
             exit_code="${DRY_RUN_RC:-1}"
           fi
 
-          if [ -n "$VERIFY_RC" ] && [ "$VERIFY_RC" != "2" ]; then
+          if [ -n "$VERIFY_RC" ]; then
             verify_result=$( [ "$VERIFY_RC" = "0" ] && echo "pass" || echo "fail" )
-          elif [ -n "$DRY_RUN_VERIFY_RC" ] && [ "$DRY_RUN_VERIFY_RC" != "2" ]; then
+          elif [ -n "$DRY_RUN_VERIFY_RC" ]; then
             verify_result=$( [ "$DRY_RUN_VERIFY_RC" = "0" ] && echo "pass" || echo "fail" )
           else
             verify_result="skipped"
