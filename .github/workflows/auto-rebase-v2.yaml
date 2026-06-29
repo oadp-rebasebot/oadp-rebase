@@ -1,6 +1,8 @@
-name: Auto Rebase (v2)
+name: Auto Rebase
 
 on:
+  schedule:
+    - cron: '0 7 * * 1-5'
   workflow_dispatch:
     inputs:
       branches:
@@ -17,11 +19,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: auto-rebase-v2
+  group: auto-rebase
   cancel-in-progress: false
-
-env:
-  GITHUB_APP_ID: '1810299'
 
 jobs:
   decide:
@@ -146,55 +145,23 @@ jobs:
 
           exit $rc
 
-      - name: Generate app token
-        id: app-token
+      - name: Post-push verify
         if: always() && steps.pipeline.outputs.pr_url != ''
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ env.GITHUB_APP_ID }}
-          private-key: ${{ secrets.OADP_REBASEBOT_APP_KEY }}
-          owner: oadp-rebasebot
-
-      - name: Post-push verify and comment
-        if: always() && steps.app-token.outcome == 'success'
+        continue-on-error: true
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           TARGET: ${{ matrix.target }}
-          PR_URL: ${{ steps.pipeline.outputs.pr_url }}
-          COMMENT_FILE: /tmp/verify-comment.md
         run: |
           eval "$(bash tools/auto-rebase/resolve-config.sh "$TARGET")"
 
-          set +e
           bash tools/verify-rebase.sh \
             "$DEST_REPO" "$DEST_BRANCH" \
             "$REBASE_REPO_SLUG" "$REBASE_BRANCH" \
             "$UPSTREAM_REPO" "$UPSTREAM_REF"
-          verify_rc=$?
-          set -e
 
-          if [ "$verify_rc" = "0" ]; then
+          if [ $? -eq 0 ]; then
             echo "::notice title=Verify (${TARGET})::All carry commits and downstream files preserved"
           else
-            echo "::warning title=Verify (${TARGET})::Post-push verification failed (rc=${verify_rc})"
-          fi
-
-          # Post comment to PR
-          [ -z "$PR_URL" ] && exit 0
-          [ ! -f "$COMMENT_FILE" ] && exit 0
-
-          pr_repo=$(echo "$PR_URL" | sed 's|https://github.com/||' | cut -d/ -f1-2)
-          pr_number=$(echo "$PR_URL" | grep -oE '[0-9]+$')
-          marker="<!-- verify-rebase -->"
-          body="$(printf '%s\n%s' "$marker" "$(cat "$COMMENT_FILE")")"
-
-          existing=$(gh api "repos/${pr_repo}/issues/${pr_number}/comments" \
-            --jq ".[] | select(.body | startswith(\"${marker}\")) | .id" 2>/dev/null | head -1)
-
-          if [ -n "$existing" ]; then
-            gh api "repos/${pr_repo}/issues/comments/${existing}" -X PATCH -f body="$body"
-          else
-            gh api "repos/${pr_repo}/issues/${pr_number}/comments" -f body="$body"
+            echo "::warning title=Verify (${TARGET})::Post-push verification failed"
           fi
 
       - name: Job summary
@@ -263,41 +230,3 @@ jobs:
 
           echo "::error::Pipeline failed (rc=${exit_code})"
           exit 1
-
-  notify:
-    needs: [decide, rebase]
-    if: always() && (github.event_name == 'schedule' || inputs.notify_slack == true)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: Download results
-        if: needs.decide.outputs.has_targets == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          pattern: result-*
-          path: /tmp/results
-          merge-multiple: true
-
-      - name: Build Slack payload
-        id: payload
-        env:
-          HAS_TARGETS: ${{ needs.decide.outputs.has_targets }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          DRY_RUN: ${{ inputs.dry_run }}
-        run: |
-          args=""
-          [ "$DRY_RUN" = "true" ] && args="$args --dry-run"
-          [ -n "$RUN_URL" ] && args="$args --run-url $RUN_URL"
-          [ "$HAS_TARGETS" != "true" ] && args="$args --no-targets"
-          bash tools/auto-rebase/rebase-notify.sh /tmp/results $args > /tmp/slack-payload.json
-          echo "Slack payload:"
-          cat /tmp/slack-payload.json
-
-      - name: Send Slack notification
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          curl -sf -X POST -H 'Content-type: application/json' -d @/tmp/slack-payload.json "$SLACK_WEBHOOK_URL"
