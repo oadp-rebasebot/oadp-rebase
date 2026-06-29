@@ -94,46 +94,11 @@ jobs:
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
           # Step summary
-          {
-            echo "## Rebase Decision Summary"
-            echo ""
-            for branch in $BRANCHES; do
-              json_file="/tmp/status-${branch}.json"
-              [ -f "$json_file" ] || continue
-
-              echo "### Branch: \`$branch\`"
-              echo ""
-
-              selected=$(echo "$all_targets" | jq -r ".[] | select(.branch == \"$branch\") | \"| \(.target) | \(.reason) |\"")
-              if [ -n "$selected" ]; then
-                echo "**Selected for rebase:**"
-                echo ""
-                echo "| Target | Reason |"
-                echo "|--------|--------|"
-                echo "$selected"
-              else
-                echo "No targets selected for rebase."
-              fi
-
-              skipped=$(jq -r '
-                [ .[] | select(.skip == true) | {repo: (.repo | split("/") | .[1]), reason: "skip=true"} ] +
-                [ .[] | select(.skip != true) | select(.checks.config.status != "ok") | {repo: (.repo | split("/") | .[1]), reason: "no rebase config"} ] +
-                [ .[] | select(.skip != true) | select(.checks.config.status == "ok") | select(.checks.open_pr.status == "ok") | {repo: (.repo | split("/") | .[1]), reason: "open PR exists"} ] +
-                [ .[] | select(.skip != true) | select(.checks.config.status == "ok") | select(.checks.open_pr.status != "ok") | select(.wave >= 2) | select(.checks.dep_sync.status != "fail") | {repo: (.repo | split("/") | .[1]), reason: "deps in sync"} ]
-                | sort_by(.repo) | .[] | "| \(.repo) | \(.reason) |"
-              ' < "$json_file")
-
-              if [ -n "$skipped" ]; then
-                echo ""
-                echo "**Skipped:**"
-                echo ""
-                echo "| Repo | Reason |"
-                echo "|------|--------|"
-                echo "$skipped"
-              fi
-              echo ""
-            done
-          } >> "$GITHUB_STEP_SUMMARY"
+          status_files=""
+          for branch in $BRANCHES; do
+            [ -f "/tmp/status-${branch}.json" ] && status_files="$status_files /tmp/status-${branch}.json"
+          done
+          bash tools/auto-rebase/decide-summary.sh --targets "$all_targets" $status_files >> "$GITHUB_STEP_SUMMARY"
 
   rebase:
     needs: decide
