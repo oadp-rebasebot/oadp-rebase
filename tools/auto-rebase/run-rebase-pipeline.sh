@@ -37,7 +37,9 @@ done
 log_info()  { printf "ℹ️  %s\n" "$*"; }
 log_ok()    { printf "✅ %s\n" "$*"; }
 log_fail()  { printf "❌ %s\n" "$*"; }
-log_phase() { printf "\n── %s ──\n" "$*"; }
+end_phase() { [ "${_IN_PHASE:-}" = "true" ] && echo "::endgroup::" || true; _IN_PHASE=false; }
+log_phase() { end_phase; echo "::group::$*"; _IN_PHASE=true; }
+trap end_phase EXIT
 
 # Resolve config
 eval "$(bash tools/auto-rebase/resolve-config.sh "$TARGET")"
@@ -147,7 +149,7 @@ else
     fi
 fi
 
-# ── Write result ───────────────────────────────────────────
+log_phase "Write result"
 mkdir -p "$RESULTS_DIR"
 
 # Determine effective exit code
