@@ -153,12 +153,10 @@ jobs:
         run: |
           eval "$(bash tools/auto-rebase/resolve-config.sh "$TARGET")"
 
-          bash tools/verify-rebase.sh \
+          if bash tools/verify-rebase.sh \
             "$DEST_REPO" "$DEST_BRANCH" \
             "$REBASE_REPO_SLUG" "$REBASE_BRANCH" \
-            "$UPSTREAM_REPO" "$UPSTREAM_REF"
-
-          if [ $? -eq 0 ]; then
+            "$UPSTREAM_REPO" "$UPSTREAM_REF"; then
             echo "::notice title=Verify (${TARGET})::All carry commits and downstream files preserved"
           else
             echo "::warning title=Verify (${TARGET})::Post-push verification failed"
