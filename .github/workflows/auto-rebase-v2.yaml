@@ -93,6 +93,13 @@ jobs:
           matrix=$(echo "$all_targets" | jq -c '{include: .}')
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
+          # Step summary
+          status_files=""
+          for branch in $BRANCHES; do
+            [ -f "/tmp/status-${branch}.json" ] && status_files="$status_files /tmp/status-${branch}.json"
+          done
+          bash tools/auto-rebase/decide-summary.sh --targets "$all_targets" $status_files >> "$GITHUB_STEP_SUMMARY"
+
   rebase:
     needs: decide
     if: needs.decide.outputs.has_targets == 'true'
