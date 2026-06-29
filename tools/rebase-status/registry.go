@@ -264,6 +264,17 @@ func parseConfigFileToData(path, targetBranch string) (*configData, string, stri
 		return nil, "", ""
 	}
 
+	// Load SSOT versions file and merge (config vars take precedence)
+	versionsDir := filepath.Join(filepath.Dir(path), "..", "versions")
+	versionsFile := filepath.Join(versionsDir, targetBranch+".env")
+	if versionVars, verr := parseShellVars(versionsFile); verr == nil {
+		for k, v := range versionVars {
+			if _, exists := vars[k]; !exists {
+				vars[k] = v
+			}
+		}
+	}
+
 	expandVars(vars)
 
 	cfg := &configData{

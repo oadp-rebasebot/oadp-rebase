@@ -28,6 +28,13 @@ if [ ! -f "$config_file" ]; then
     exit 1
 fi
 
+# Load SSOT versions file if available (provides $VELERO_UPSTREAM_TAG etc.)
+oadp_version=$(echo "$TARGET" | grep -oE 'oadp-[a-z0-9.]+' | head -1)
+if [ -n "$oadp_version" ]; then
+    versions_file="$SCRIPT_DIR/versions/${oadp_version}.env"
+    [ -f "$versions_file" ] && . "$versions_file"
+fi
+
 # Load config vars
 . "$config_file"
 
