@@ -5,7 +5,7 @@
 # ===============================================================
 
 UPSTREAM_PLUGIN_REPO="vmware-tanzu/velero-plugin-for-csi"
-UPSTREAM_PLUGIN_TAG="$CSI_PLUGIN_TAG"
+UPSTREAM_PLUGIN_TAG="${CSI_PLUGIN_TAG:?Missing CSI_PLUGIN_TAG from versions env}"
 DESTINATION_DOWNSTREAM_BRANCH="oadp-1.3"
 
 SOURCE_UPSTREAM_REPO="https://github.com/${UPSTREAM_PLUGIN_REPO}:${UPSTREAM_PLUGIN_TAG}"

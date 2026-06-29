@@ -5,7 +5,7 @@
 # ===============================================================
 
 UPSTREAM_PLUGIN_REPO="velero-io/velero-plugin-for-gcp"
-UPSTREAM_PLUGIN_TAG="$GCP_PLUGIN_TAG"
+UPSTREAM_PLUGIN_TAG="${GCP_PLUGIN_TAG:?Missing GCP_PLUGIN_TAG from versions env}"
 DESTINATION_DOWNSTREAM_BRANCH="oadp-1.6"
 
 SOURCE_UPSTREAM_REPO="https://github.com/${UPSTREAM_PLUGIN_REPO}:${UPSTREAM_PLUGIN_TAG}"

@@ -27,6 +27,7 @@ if ! git config --file .gitmodules --get "submodule.$SUBMODULE_PATH.url" >/dev/n
     echo "Adding submodule $SUBMODULE_PATH..."
     git submodule add -b "$SUBMODULE_BRANCH" "$SUBMODULE_URL" "$SUBMODULE_PATH"
 else
+    git config -f .gitmodules "submodule.$SUBMODULE_PATH.url" "$SUBMODULE_URL"
     git config -f .gitmodules "submodule.$SUBMODULE_PATH.branch" "$SUBMODULE_BRANCH"
 fi
 

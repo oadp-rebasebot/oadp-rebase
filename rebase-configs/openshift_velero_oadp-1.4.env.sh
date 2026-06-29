@@ -3,7 +3,7 @@
 # Upstream tag sourced from versions/oadp-1.4.env
 # ===============================================================
 
-UPSTREAM_VELERO_BRANCH="$VELERO_UPSTREAM_TAG"
+UPSTREAM_VELERO_BRANCH="${VELERO_UPSTREAM_TAG:?Missing VELERO_UPSTREAM_TAG from versions env}"
 DESTINATION_DOWNSTREAM_VELERO_BRANCH="oadp-1.4"
 
 SOURCE_UPSTREAM_REPO="https://github.com/velero-io/velero:$UPSTREAM_VELERO_BRANCH"

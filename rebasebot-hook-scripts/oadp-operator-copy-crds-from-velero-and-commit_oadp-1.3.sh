@@ -24,10 +24,10 @@ stage_and_commit(){
 # Download CRDs from openshift/velero
 for folder in v1/bases v2alpha1/bases; do
   api_url="https://api.github.com/repos/$DOWNSTREAM_VELERO_REPO/contents/config/crd/$folder?ref=$DOWNSTREAM_VELERO_BRANCH"
-  for file in $(curl -s "$api_url" | jq -r '.[].download_url'); do
+  for file in $(curl -fsS "$api_url" | jq -r '.[].download_url'); do
     echo "Downloading: $file"
     echo "Saving to: $TARGET_DIR/$(basename "$file")"
-    curl -sL "$file" -o "$TARGET_DIR/$(basename "$file")"
+    curl -fsSL "$file" -o "$TARGET_DIR/$(basename "$file")"
   done
 done
 

@@ -17,6 +17,9 @@ if [ ${#versions[@]} -eq 0 ]; then
     exit 1
 fi
 
+tmp_output="$(mktemp)"
+trap 'rm -f "$tmp_output"' EXIT
+
 {
 cat <<'HEADER'
 <!-- Auto-generated from versions/*.env — do not edit manually. Run tools/generate-version-matrix.sh -->
@@ -143,6 +146,9 @@ Each wave groups repositories that can be rebased in parallel. Waves must be exe
 | 5 | oadp-must-gather, oadp-cli, kubevirt-datamover-plugin |
 MID2
 
-} > "$OUTPUT_FILE"
+} > "$tmp_output"
+
+mv "$tmp_output" "$OUTPUT_FILE"
+trap - EXIT
 
 echo "Generated $OUTPUT_FILE"
