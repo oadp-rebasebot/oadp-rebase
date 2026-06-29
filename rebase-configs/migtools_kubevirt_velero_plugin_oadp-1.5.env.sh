@@ -1,19 +1,17 @@
 # ===============================================================
-# AWS plugin rebase configuration for OADP 1.5
+# KubeVirt Velero Plugin rebase configuration for OADP 1.5
 # Upstream tag sourced from versions/oadp-1.5.env
-# which corresponds to the AWS plugin version for Velero 1.16
 # ===============================================================
 
-UPSTREAM_PLUGIN_REPO="velero-io/velero-plugin-for-aws"
-UPSTREAM_PLUGIN_TAG="$AWS_PLUGIN_TAG"
+UPSTREAM_PLUGIN_REPO="kubevirt/kubevirt-velero-plugin"
+UPSTREAM_PLUGIN_TAG="$KUBEVIRT_PLUGIN_TAG"
 DESTINATION_DOWNSTREAM_BRANCH="oadp-1.5"
 
 SOURCE_UPSTREAM_REPO="https://github.com/${UPSTREAM_PLUGIN_REPO}:${UPSTREAM_PLUGIN_TAG}"
-DESTINATION_DOWNSTREAM_REPO="openshift/velero-plugin-for-aws:$DESTINATION_DOWNSTREAM_BRANCH"
-REBASE_REPO="oadp-rebasebot/velero-plugin-for-aws:rebase-bot-$DESTINATION_DOWNSTREAM_BRANCH"
+DESTINATION_DOWNSTREAM_REPO="migtools/kubevirt-velero-plugin:$DESTINATION_DOWNSTREAM_BRANCH"
+REBASE_REPO="oadp-rebasebot/kubevirt-velero-plugin:rebase-bot-$DESTINATION_DOWNSTREAM_BRANCH"
 
 EXTRA_REBASEBOT_ARGS="--always-run-hooks"
-
 HOOK_SCRIPTS_LOCATION="git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:rebasebot-hook-scripts"
 HOOK_SCRIPTS="--post-rebase-hook \
   ${HOOK_SCRIPTS_LOCATION}/go-replace_velero_oadp-1.5.sh \

@@ -1,12 +1,11 @@
 # ===============================================================
 # AWS plugin rebase configuration for OADP 1.6
-# Uses upstream velero-plugin-for-aws v1.14.1
+# Upstream tag sourced from versions/oadp-1.6.env
 # which corresponds to the AWS plugin version for Velero 1.18
-# (v1.14.1 go.mod references github.com/velero-io/velero v1.18.x)
 # ===============================================================
 
 UPSTREAM_PLUGIN_REPO="velero-io/velero-plugin-for-aws"
-UPSTREAM_PLUGIN_TAG="v1.14.1"
+UPSTREAM_PLUGIN_TAG="$AWS_PLUGIN_TAG"
 DESTINATION_DOWNSTREAM_BRANCH="oadp-1.6"
 
 SOURCE_UPSTREAM_REPO="https://github.com/${UPSTREAM_PLUGIN_REPO}:${UPSTREAM_PLUGIN_TAG}"

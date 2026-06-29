@@ -1,10 +1,10 @@
 # ===============================================================
-# Velero rebase configuration for OADP 1.6
-# Upstream tag sourced from versions/oadp-1.6.env
+# Velero rebase configuration for OADP 1.4
+# Upstream tag sourced from versions/oadp-1.4.env
 # ===============================================================
 
 UPSTREAM_VELERO_BRANCH="$VELERO_UPSTREAM_TAG"
-DESTINATION_DOWNSTREAM_VELERO_BRANCH="oadp-1.6"
+DESTINATION_DOWNSTREAM_VELERO_BRANCH="oadp-1.4"
 
 SOURCE_UPSTREAM_REPO="https://github.com/velero-io/velero:$UPSTREAM_VELERO_BRANCH"
 DESTINATION_DOWNSTREAM_REPO="openshift/velero:$DESTINATION_DOWNSTREAM_VELERO_BRANCH"
@@ -13,11 +13,11 @@ REBASE_REPO="oadp-rebasebot/velero:rebase-bot-$DESTINATION_DOWNSTREAM_VELERO_BRA
 EXTRA_REBASEBOT_ARGS="--always-run-hooks"
 HOOK_SCRIPTS_LOCATION="git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:rebasebot-hook-scripts"
 HOOK_SCRIPTS="--pre-rebase-hook \
-  ${HOOK_SCRIPTS_LOCATION}/verify-tag-sha_oadp-1.6.sh \
+  ${HOOK_SCRIPTS_LOCATION}/verify-tag-sha_oadp-1.4.sh \
   --post-rebase-hook \
   ${HOOK_SCRIPTS_LOCATION}/fix-malformed-filenames-and-commit.sh \
-  ${HOOK_SCRIPTS_LOCATION}/go-replace_kopia_oadp-1.6.sh \
+  ${HOOK_SCRIPTS_LOCATION}/go-replace_kopia_oadp-1.4.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-mod-tidy-and-commit.sh \
-  ${HOOK_SCRIPTS_LOCATION}/restic-submodule-and-commit_oadp-1.6.sh \
+  ${HOOK_SCRIPTS_LOCATION}/restic-submodule-and-commit_oadp-1.4.sh \
   ${HOOK_SCRIPTS_LOCATION}/normalize-dockerfiles-and-commit.sh \
   "
