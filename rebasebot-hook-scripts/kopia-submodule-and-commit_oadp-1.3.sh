@@ -1,0 +1,38 @@
+#!/bin/bash
+set -euo pipefail
+
+SUBMODULE_BRANCH="oadp-1.3"
+SUBMODULE_URL="https://github.com/migtools/kopia"
+SUBMODULE_PATH="kopia"
+
+stage_and_commit(){
+    if [[ -z "${REBASEBOT_GIT_USERNAME:-}" || -z "${REBASEBOT_GIT_EMAIL:-}" ]]; then
+        author_flag=()
+    else
+        author_flag=(--author="$REBASEBOT_GIT_USERNAME <$REBASEBOT_GIT_EMAIL>")
+    fi
+
+    if [[ -n $(git status --porcelain) ]]; then
+        local submodule_short_hash
+        submodule_short_hash=$(git -C "$SUBMODULE_PATH" rev-parse --short HEAD)
+
+        git add -A
+        git commit "${author_flag[@]}" -q \
+          -m "UPSTREAM: <drop>: update kopia @ ${submodule_short_hash} (branch $SUBMODULE_BRANCH)"
+    fi
+}
+
+if ! git config --file .gitmodules --get "submodule.$SUBMODULE_PATH.url" >/dev/null 2>&1; then
+    echo "Adding submodule $SUBMODULE_PATH..."
+    git submodule add -b "$SUBMODULE_BRANCH" "$SUBMODULE_URL" "$SUBMODULE_PATH"
+else
+    git config -f .gitmodules "submodule.$SUBMODULE_PATH.url" "$SUBMODULE_URL"
+    git config -f .gitmodules "submodule.$SUBMODULE_PATH.branch" "$SUBMODULE_BRANCH"
+fi
+
+git submodule sync "$SUBMODULE_PATH"
+git submodule update --init --remote --rebase "$SUBMODULE_PATH"
+
+stage_and_commit
+
+echo "Submodule $SUBMODULE_PATH updated to the latest $SUBMODULE_BRANCH."

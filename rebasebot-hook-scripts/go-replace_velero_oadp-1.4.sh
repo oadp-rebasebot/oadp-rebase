@@ -1,0 +1,27 @@
+#!/bin/bash
+set -euo pipefail
+
+DOWNSTREAM_BRANCH="oadp-1.4"
+DOWNSTREAM_MODULE="github.com/openshift/velero"
+GO_MOD_FILE="go.mod"
+
+if grep -qE "require.*github\.com/velero-io/velero " "$GO_MOD_FILE" || \
+   grep -qE "^\s+github\.com/velero-io/velero " "$GO_MOD_FILE"; then
+    UPSTREAM_MODULE="github.com/velero-io/velero"
+else
+    UPSTREAM_MODULE="github.com/vmware-tanzu/velero"
+fi
+
+REPLACE_LINE="replace $UPSTREAM_MODULE => $DOWNSTREAM_MODULE $DOWNSTREAM_BRANCH"
+
+if [ "$UPSTREAM_MODULE" = "github.com/velero-io/velero" ]; then
+    sed -i '/^replace github\.com\/vmware-tanzu\/velero /d' "$GO_MOD_FILE"
+else
+    sed -i '/^replace github\.com\/velero-io\/velero /d' "$GO_MOD_FILE"
+fi
+
+if grep -q "^replace $UPSTREAM_MODULE" "$GO_MOD_FILE"; then
+    sed -i "s|^replace $UPSTREAM_MODULE.*|$REPLACE_LINE|" "$GO_MOD_FILE"
+else
+    echo "$REPLACE_LINE" >> "$GO_MOD_FILE"
+fi
