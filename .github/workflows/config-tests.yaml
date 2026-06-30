@@ -119,3 +119,14 @@ jobs:
             exit 1
           fi
           echo "✅ All hook references valid"
+
+  kopia-alignment:
+    name: Kopia version alignment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Verify kopia tags match Velero go.mod
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: make verify-kopia-alignment

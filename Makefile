@@ -1,4 +1,4 @@
-.PHONY: generate verify-generate test syntax-check config-load verify-hooks
+.PHONY: generate verify-generate test syntax-check config-load verify-hooks verify-kopia-alignment
 
 generate:
 	@bash tools/generate-verify-tag-sha.sh
@@ -54,6 +54,23 @@ verify-hooks:
 		done; \
 	done; \
 	echo "Hook references OK"
+
+verify-kopia-alignment:
+	@echo "=== Kopia alignment check ==="
+	@fail=0; \
+	for f in versions/oadp-1.*.env; do \
+		unset OADP_BRANCH VELERO_UPSTREAM_TAG KOPIA_UPSTREAM_TAG 2>/dev/null; \
+		. "$$f"; \
+		[ -z "$${VELERO_UPSTREAM_TAG:-}" ] && continue; \
+		resolved=$$(bash tools/resolve-kopia-tag.sh "$$VELERO_UPSTREAM_TAG" 2>/dev/null) || { echo "  FAIL: $$OADP_BRANCH — could not resolve kopia for $$VELERO_UPSTREAM_TAG"; fail=1; continue; }; \
+		if [ "$$resolved" = "$$KOPIA_UPSTREAM_TAG" ]; then \
+			echo "  OK: $$OADP_BRANCH — $$KOPIA_UPSTREAM_TAG matches $$VELERO_UPSTREAM_TAG"; \
+		else \
+			echo "  MISMATCH: $$OADP_BRANCH — SSOT has $$KOPIA_UPSTREAM_TAG but Velero $$VELERO_UPSTREAM_TAG expects $$resolved"; \
+			fail=1; \
+		fi; \
+	done; \
+	[ $$fail -eq 0 ] && echo "Kopia alignment OK" || exit 1
 
 test: verify-generate syntax-check config-load verify-hooks
 	@echo ""
