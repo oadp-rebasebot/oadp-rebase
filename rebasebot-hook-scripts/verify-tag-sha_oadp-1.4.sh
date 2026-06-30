@@ -6,10 +6,10 @@ set -o pipefail
 # Verify that the upstream Velero tag still points to the expected commit.
 # Detects silent tag recreation (a supply chain risk).
 #
-# Generated from versions/oadp-1.6.env — do not edit manually.
+# Generated from versions/oadp-1.4.env — do not edit manually.
 # Run: make generate
 
-EXPECTED_SHA="c253c7fe37d78c9b7e55c68544f7c5b2608712d8"
+EXPECTED_SHA="2fc6300f2239f250b40b0488c35feae59520f2d3"
 UPSTREAM_REPO="https://github.com/velero-io/velero"
 TAG="$REBASEBOT_SOURCE"
 

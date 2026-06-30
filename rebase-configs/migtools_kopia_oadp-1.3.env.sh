@@ -1,11 +1,11 @@
 # ===============================================================
-# Kopia rebase configuration for OADP 1.6
-# Upstream tag sourced from versions/oadp-1.6.env
+# Kopia rebase configuration for OADP 1.3
+# Upstream tag sourced from versions/oadp-1.3.env
 # ===============================================================
 
 UPSTREAM_KOPIA_REPO="project-velero/kopia"
 UPSTREAM_KOPIA_TAG_BRANCH_FOR_VELERO="${KOPIA_UPSTREAM_TAG:?Missing KOPIA_UPSTREAM_TAG from versions env}"
-DESTINATION_DOWNSTREAM_BRANCH="oadp-1.6"
+DESTINATION_DOWNSTREAM_BRANCH="oadp-1.3"
 
 SOURCE_UPSTREAM_REPO="https://github.com/$UPSTREAM_KOPIA_REPO:$UPSTREAM_KOPIA_TAG_BRANCH_FOR_VELERO"
 DESTINATION_DOWNSTREAM_REPO="migtools/kopia:$DESTINATION_DOWNSTREAM_BRANCH"

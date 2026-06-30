@@ -1,11 +1,11 @@
 # ===============================================================
-# KubeVirt Velero Plugin rebase configuration for OADP 1.6
-# Upstream tag sourced from versions/oadp-1.6.env
+# KubeVirt Velero Plugin rebase configuration for OADP 1.4
+# Upstream tag sourced from versions/oadp-1.4.env
 # ===============================================================
 
 UPSTREAM_PLUGIN_REPO="kubevirt/kubevirt-velero-plugin"
 UPSTREAM_PLUGIN_TAG="${KUBEVIRT_PLUGIN_TAG:?Missing KUBEVIRT_PLUGIN_TAG from versions env}"
-DESTINATION_DOWNSTREAM_BRANCH="oadp-1.6"
+DESTINATION_DOWNSTREAM_BRANCH="oadp-1.4"
 
 SOURCE_UPSTREAM_REPO="https://github.com/${UPSTREAM_PLUGIN_REPO}:${UPSTREAM_PLUGIN_TAG}"
 DESTINATION_DOWNSTREAM_REPO="migtools/kubevirt-velero-plugin:$DESTINATION_DOWNSTREAM_BRANCH"
@@ -14,7 +14,7 @@ REBASE_REPO="oadp-rebasebot/kubevirt-velero-plugin:rebase-bot-$DESTINATION_DOWNS
 EXTRA_REBASEBOT_ARGS="--always-run-hooks"
 HOOK_SCRIPTS_LOCATION="git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:rebasebot-hook-scripts"
 HOOK_SCRIPTS="--post-rebase-hook \
-  ${HOOK_SCRIPTS_LOCATION}/go-replace_velero_oadp-1.6.sh \
+  ${HOOK_SCRIPTS_LOCATION}/go-replace_velero_oadp-1.4.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-mod-tidy-and-commit.sh \
   ${HOOK_SCRIPTS_LOCATION}/normalize-dockerfiles-and-commit.sh \
   "
