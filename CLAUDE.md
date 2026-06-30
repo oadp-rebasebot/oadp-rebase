@@ -12,6 +12,7 @@ run-oadp-rebase.sh     # Main entry point — config loading, wave definitions, 
 tools/
   auto-rebase/         # CI pipeline scripts (decision, triage, verify)
   rebase-status/       # Go tool for querying repo rebase state
+  generate-go-replace-velero.sh  # Generates go-replace_velero hooks from SSOT
   generate-verify-tag-sha.sh  # Generates verify-tag-sha hooks from SSOT
   generate-version-matrix.sh  # Generates docs/version-matrix.md from SSOT
 docs/                  # auto-rebase.md, version-matrix.md (generated)
@@ -26,7 +27,7 @@ Makefile               # generate, verify-generate, test targets
 
 **Two rebase patterns**: Full upstream rebase (source != dest) cherry-picks downstream commits onto a new upstream tag. Hooks-only rebase (source == dest) just runs hooks to update dependencies like go.mod replaces.
 
-**Hook scripts**: Run by rebasebot after each rebase. Most are version-specific (e.g., `go-replace_velero_oadp-1.6.sh`) because they contain the downstream branch name. The `verify-tag-sha_*.sh` hooks are generated from the SSOT.
+**Hook scripts**: Run by rebasebot after each rebase. Most are version-specific (e.g., `go-replace_velero_oadp-1.6.sh`) because they contain the downstream branch name. The `go-replace_velero_*.sh` and `verify-tag-sha_*.sh` hooks are generated from the SSOT.
 
 ## Common Tasks
 
@@ -42,7 +43,7 @@ make generate          # Regenerate hooks + docs from versions SSOT
 ## Rules
 
 - Always run `make test` before committing changes to configs, hooks, or versions files
-- Never edit `verify-tag-sha_*.sh` or `docs/version-matrix.md` by hand — they are generated
+- Never edit `go-replace_velero_*.sh`, `verify-tag-sha_*.sh`, or `docs/version-matrix.md` by hand — they are generated
 - When changing a version, update only `versions/oadp-1.X.env` then `make generate`
 - Config files use `${VAR:?error}` guards — if a versions file is missing, they fail fast
 - The `rebase-status` Go tool in `tools/rebase-status/` also reads versions files for variable expansion — keep `parseConfigFileToData` in `registry.go` in sync if the SSOT schema changes
