@@ -273,6 +273,9 @@ load_config() {
 
     log_info "Loading ${source_type} configuration: ${config_file}"
 
+    # Ensure GITHUB_TOKEN is set (some configs use it for API calls)
+    : "${GITHUB_TOKEN:=}"
+
     # Required to not left some variables from the previous run that may have been
     # set for different config
     [ -n "${SOURCE_UPSTREAM_REPO:-}" ] && unset SOURCE_UPSTREAM_REPO
