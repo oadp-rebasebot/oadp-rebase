@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# Generated from versions/oadp-1.3.env — do not edit manually.
+# Run: make generate
+
 DOWNSTREAM_BRANCH="oadp-1.3"
 DOWNSTREAM_MODULE="github.com/openshift/velero"
 GO_MOD_FILE="go.mod"
@@ -28,3 +31,13 @@ if grep -q "^replace $UPSTREAM_MODULE" "$GO_MOD_FILE"; then
 else
     echo "$REPLACE_LINE" >> "$GO_MOD_FILE"
 fi
+
+# Update the require version to match the upstream tag from the SSOT.
+go mod edit -require="${UPSTREAM_MODULE}@v1.12.3"
+
+# Exclude kcp monorepo broken pseudo-version.
+# kcp-dev/kcp/cli's go.mod uses "replace kcp/sdk => ./sdk" which produces
+# v0.0.0-00010101000000-000000000000 — a pseudo-version that doesn't exist
+# on the module proxy. This causes go mod tidy to fail in consumers.
+# See: https://github.com/kcp-dev/kcp/blob/cli/v0.27.1/cli/go.mod
+go mod edit -exclude=github.com/kcp-dev/kcp/sdk@v0.0.0-00010101000000-000000000000
