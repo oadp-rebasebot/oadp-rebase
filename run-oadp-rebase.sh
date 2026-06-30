@@ -289,7 +289,7 @@ load_config() {
       CSI_PLUGIN_TAG KUBEVIRT_PLUGIN_TAG 2>/dev/null || true
 
     # Load version-specific variables from the SSOT before sourcing the config
-    oadp_version=$(echo "$config" | grep -oE 'oadp-[a-z0-9.]+' | head -1)
+    oadp_version=$(echo "$config" | grep -oE 'oadp-(1\.[0-9]+|dev)' | tail -1)
     if [ -n "$oadp_version" ]; then
         versions_file="versions/${oadp_version}.env"
         if [ "$source_type" = "local" ]; then

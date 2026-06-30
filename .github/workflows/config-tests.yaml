@@ -9,7 +9,9 @@ on:
       - 'rebasebot-hook-scripts/**'
       - 'run-oadp-rebase.sh'
       - 'tools/**'
+      - 'docs/**'
       - 'Makefile'
+      - '.github/workflows/config-tests.yaml'
   push:
     branches: [oadp-dev]
     paths:
@@ -18,7 +20,9 @@ on:
       - 'rebasebot-hook-scripts/**'
       - 'run-oadp-rebase.sh'
       - 'tools/**'
+      - 'docs/**'
       - 'Makefile'
+      - '.github/workflows/config-tests.yaml'
 
 permissions:
   contents: read
