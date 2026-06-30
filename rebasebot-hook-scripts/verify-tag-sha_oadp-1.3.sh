@@ -13,7 +13,7 @@ if [ -f "$VERSIONS_FILE" ]; then
     . "$VERSIONS_FILE"
     EXPECTED_SHA="$VELERO_TAG_SHA"
 else
-    EXPECTED_SHA="7d8417b2c58792422ed6dd4b4c0cf3848b0beb56"
+    EXPECTED_SHA="684f71306e9c2fda204a16cb012dc209523cfae1"
 fi
 UPSTREAM_REPO="https://github.com/velero-io/velero"
 TAG="$REBASEBOT_SOURCE"
