@@ -33,7 +33,7 @@ else
 fi
 
 # Update the require version to match the upstream tag from the SSOT.
-go mod edit -require="${UPSTREAM_MODULE}@v1.12.3"
+go mod edit -require="${UPSTREAM_MODULE}@v1.12.4"
 
 # Exclude kcp monorepo broken pseudo-version.
 # kcp-dev/kcp/cli's go.mod uses "replace kcp/sdk => ./sdk" which produces
