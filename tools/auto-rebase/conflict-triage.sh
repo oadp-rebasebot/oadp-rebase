@@ -28,6 +28,15 @@ CONFIG_FILE="${1:-}"
 [ -n "$CONFIG_FILE" ] || { echo "Usage: $0 <config-file>" >&2; exit 2; }
 [ -f "$CONFIG_FILE" ] || { echo "Config file not found: $CONFIG_FILE" >&2; exit 2; }
 
+# Source the versions SSOT so config variable guards (e.g. ${AWS_PLUGIN_TAG:?})
+# resolve correctly when this script runs outside the pipeline environment.
+SCRIPT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+oadp_version=$(basename "$CONFIG_FILE" | grep -oE '(oadp-(1\.[0-9]+|dev))' | tail -1)
+if [ -n "$oadp_version" ]; then
+    versions_file="${SCRIPT_DIR}/versions/${oadp_version}.env"
+    [ -f "$versions_file" ] && . "$versions_file"
+fi
+
 # Source the config to get HOOK_SCRIPTS
 HOOK_SCRIPTS=""
 . "$CONFIG_FILE"
