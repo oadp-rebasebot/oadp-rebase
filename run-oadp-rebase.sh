@@ -36,8 +36,6 @@ get_config_name() {
 
         # === Wave 1 ===
         kopia-oadp-dev) echo "migtools_kopia_oadp-dev" ;;
-        kopia-oadp-1.3) echo "migtools_kopia_oadp-1.3" ;;
-        kopia-oadp-1.4) echo "migtools_kopia_oadp-1.4" ;;
         kopia-oadp-1.5) echo "migtools_kopia_oadp-1.5" ;;
         kopia-oadp-1.6) echo "migtools_kopia_oadp-1.6" ;;
         restic-oadp-dev) echo "openshift_restic_oadp-dev" ;;
@@ -151,7 +149,7 @@ get_wave_repos() {
         esac
     elif [ "$branch" = "oadp-1.3" ]; then
         case "$wave" in
-            1) echo "kopia-oadp-1.3 restic-oadp-1.3" ;;
+            1) echo "restic-oadp-1.3" ;;
             2) echo "velero-oadp-1.3" ;;
             3) echo "kubevirt-velero-plugin-oadp-1.3 velero-plugin-for-csi-oadp-1.3 oadp-operator-oadp-1.3 velero-plugin-for-aws-oadp-1.3 velero-plugin-for-gcp-oadp-1.3 velero-plugin-for-microsoft-azure-oadp-1.3" ;;
             4) echo "openshift-velero-plugin-oadp-1.3" ;;
@@ -160,7 +158,7 @@ get_wave_repos() {
         esac
     elif [ "$branch" = "oadp-1.4" ]; then
         case "$wave" in
-            1) echo "kopia-oadp-1.4 restic-oadp-1.4" ;;
+            1) echo "restic-oadp-1.4" ;;
             2) echo "velero-oadp-1.4" ;;
             3) echo "kubevirt-velero-plugin-oadp-1.4 oadp-operator-oadp-1.4 velero-plugin-for-aws-oadp-1.4 velero-plugin-for-legacy-aws-oadp-1.4 velero-plugin-for-gcp-oadp-1.4 velero-plugin-for-microsoft-azure-oadp-1.4" ;;
             4) echo "oadp-non-admin-oadp-1.4 openshift-velero-plugin-oadp-1.4" ;;
