@@ -352,15 +352,19 @@ func parseShellVars(path string) (map[string]string, error) {
 	return vars, scanner.Err()
 }
 
-// expandVars resolves $VAR and ${VAR} references within values.
+// expandVars resolves $VAR, ${VAR}, and ${VAR:?error} references within values.
 func expandVars(vars map[string]string) {
-	varRefRe := regexp.MustCompile(`\$\{?([A-Z_][A-Z_0-9]*)\}?`)
+	varRefRe := regexp.MustCompile(`\$\{([A-Z_][A-Z_0-9]*)(?::[\?+-][^}]*)?\}|\$([A-Z_][A-Z_0-9]*)`)
 
 	for pass := 0; pass < 3; pass++ {
 		changed := false
 		for k, v := range vars {
 			expanded := varRefRe.ReplaceAllStringFunc(v, func(match string) string {
-				name := varRefRe.FindStringSubmatch(match)[1]
+				sub := varRefRe.FindStringSubmatch(match)
+				name := sub[1]
+				if name == "" {
+					name = sub[2]
+				}
 				if val, ok := vars[name]; ok {
 					changed = true
 					return val
