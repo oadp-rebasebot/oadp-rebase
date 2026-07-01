@@ -141,6 +141,23 @@ func RenderHome(w io.Writer, branches []BranchResult) {
 		fmt.Fprintln(w, scoreLine)
 		fmt.Fprintln(w)
 
+		// Velero tag alignment summary
+		if br.VeleroTagAlign != nil {
+			vtaHome := br.VeleroTagAlign
+			aligned := 0
+			for _, r := range vtaHome.Repos {
+				if r.Aligned {
+					aligned++
+				}
+			}
+			if vtaHome.AllAligned {
+				fmt.Fprintf(w, ":white_check_mark: Velero `%s` — all %d repos aligned\n\n", vtaHome.VeleroTag, len(vtaHome.Repos))
+			} else {
+				fmt.Fprintf(w, ":construction: Velero `%s` — %d/%d repos aligned ([details](%s#velero-tag-alignment))\n\n",
+					vtaHome.VeleroTag, aligned, len(vtaHome.Repos), page)
+			}
+		}
+
 		// TODO if no configs exist for this branch
 		hasConfigs := false
 		for _, s := range br.Statuses {
@@ -192,6 +209,21 @@ func RenderHome(w io.Writer, branches []BranchResult) {
 		fmt.Fprintln(w, "```")
 		fmt.Fprintf(w, "*OADP Rebase Status: %s*\n", br.Branch)
 		fmt.Fprintln(w, scoreLine)
+
+		if br.VeleroTagAlign != nil {
+			vtaCopy := br.VeleroTagAlign
+			alignedCopy := 0
+			for _, r := range vtaCopy.Repos {
+				if r.Aligned {
+					alignedCopy++
+				}
+			}
+			if vtaCopy.AllAligned {
+				fmt.Fprintf(w, ":white_check_mark: Velero %s — all %d repos aligned\n", vtaCopy.VeleroTag, len(vtaCopy.Repos))
+			} else {
+				fmt.Fprintf(w, ":construction: Velero %s — %d/%d repos aligned\n", vtaCopy.VeleroTag, alignedCopy, len(vtaCopy.Repos))
+			}
+		}
 
 		if len(attentionWaves) > 0 {
 			fmt.Fprintln(w)

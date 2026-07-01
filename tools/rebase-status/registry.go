@@ -325,6 +325,24 @@ func parseConfigFileToData(path, targetBranch string) (*configData, string, stri
 	return cfg, org, repo
 }
 
+// LoadVersionsVars loads the SSOT versions file for a branch and returns
+// the parsed key-value pairs. Returns nil, nil if the file does not exist.
+func LoadVersionsVars(configDir, branch string) (map[string]string, error) {
+	versionsDir := filepath.Join(configDir, "..", "versions")
+	versionsFile := filepath.Join(versionsDir, branch+".env")
+
+	if _, err := os.Stat(versionsFile); os.IsNotExist(err) {
+		return nil, nil
+	}
+
+	vars, err := parseShellVars(versionsFile)
+	if err != nil {
+		return nil, err
+	}
+	expandVars(vars)
+	return vars, nil
+}
+
 // parseShellVars extracts VAR="value" and VAR=value assignments.
 func parseShellVars(path string) (map[string]string, error) {
 	f, err := os.Open(path)

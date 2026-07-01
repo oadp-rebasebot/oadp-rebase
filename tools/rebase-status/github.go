@@ -268,6 +268,28 @@ func (c *GitHubClient) CompareCommits(org, repo, base, head string) ([]CommitInf
 	return commits, nil
 }
 
+// CompareStatus returns the relationship between base and head commits.
+// Returns one of: "ahead", "behind", "identical", "diverged".
+func (c *GitHubClient) CompareStatus(org, repo, base, head string) (string, error) {
+	apiPath := fmt.Sprintf("/repos/%s/%s/compare/%s...%s", org, repo, base, head)
+
+	body, code, err := c.get(apiPath)
+	if err != nil {
+		return "", err
+	}
+	if code != http.StatusOK {
+		return "", fmt.Errorf("GitHub API %s returned %d", apiPath, code)
+	}
+
+	var result struct {
+		Status string `json:"status"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return "", fmt.Errorf("parsing compare status: %w", err)
+	}
+	return result.Status, nil
+}
+
 // OpenRebasePR searches for an open PR authored by oadp-rebasebot in the
 // given repo targeting the specified base branch. Returns nil if none found.
 func (c *GitHubClient) OpenRebasePR(org, repo, base string) (*OpenPRInfo, error) {
