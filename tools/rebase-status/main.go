@@ -100,7 +100,14 @@ func main() {
 				fetchDepCommitDetails(statuses, client, branch)
 			}
 
-			branchResults = append(branchResults, BranchResult{Branch: branch, Statuses: statuses})
+			var veleroTagAlign *VeleroTagAlignment
+			versionsVars, vErr := LoadVersionsVars(configDir, branch)
+			if vErr != nil {
+				fmt.Fprintf(os.Stderr, "warning: %s: versions: %v\n", branch, vErr)
+			}
+			veleroTagAlign = CheckVeleroTagAlignment(statuses, versionsVars, client)
+
+			branchResults = append(branchResults, BranchResult{Branch: branch, Statuses: statuses, VeleroTagAlign: veleroTagAlign})
 		}
 		RenderHome(os.Stdout, branchResults)
 		if len(failedBranches) > 0 {
@@ -141,15 +148,23 @@ func main() {
 		fetchDepCommitDetails(results, client, branch)
 	}
 
+	// Velero tag alignment check
+	var veleroTagAlign *VeleroTagAlignment
+	versionsVars, vErr := LoadVersionsVars(configDir, branch)
+	if vErr != nil {
+		fmt.Fprintf(os.Stderr, "warning: versions: %v\n", vErr)
+	}
+	veleroTagAlign = CheckVeleroTagAlignment(results, versionsVars, client)
+
 	// Render output
 	if jsonOutput {
-		RenderJSON(os.Stdout, results)
+		RenderJSON(os.Stdout, results, veleroTagAlign)
 	} else if format == "text" {
-		RenderText(os.Stdout, results, branch)
+		RenderText(os.Stdout, results, branch, veleroTagAlign)
 	} else if format == "markdown" || format == "md" {
-		RenderMarkdown(os.Stdout, results, branch)
+		RenderMarkdown(os.Stdout, results, branch, veleroTagAlign)
 	} else {
-		RenderTable(os.Stdout, results, branch)
+		RenderTable(os.Stdout, results, branch, veleroTagAlign)
 	}
 
 	// Exit with error code if any failures

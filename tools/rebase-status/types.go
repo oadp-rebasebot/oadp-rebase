@@ -174,8 +174,28 @@ func (rd *ReleaseData) ArtConfigsFor(orgRepo string) []*ArtBuildConfig {
 
 // BranchResult holds the check results for all repos on a single branch.
 type BranchResult struct {
-	Branch   string
-	Statuses []RepoStatus
+	Branch         string
+	Statuses       []RepoStatus
+	VeleroTagAlign *VeleroTagAlignment
+}
+
+// VeleroTagAlignment holds the branch-level velero tag alignment status.
+// Computed after all checks run by comparing each repo's pinned velero
+// commit against VELERO_TAG_SHA from the versions SSOT.
+type VeleroTagAlignment struct {
+	VeleroTag    string
+	VeleroTagSHA string
+	AllAligned   bool
+	Repos        []VeleroTagRepo
+}
+
+// VeleroTagRepo describes one repo's velero dependency alignment.
+type VeleroTagRepo struct {
+	Org          string
+	Repo         string
+	PinnedHash   string
+	Aligned      bool
+	CompareError string
 }
 
 // Check is a registered check that can run against a repo.

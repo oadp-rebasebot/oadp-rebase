@@ -127,11 +127,38 @@ func groupResult(checks map[string]*CheckResult, checkIDs []string) *CheckResult
 }
 
 // RenderTable prints the status report as a formatted terminal table.
-func RenderTable(w io.Writer, statuses []RepoStatus, branch string) {
+func RenderTable(w io.Writer, statuses []RepoStatus, branch string, vta *VeleroTagAlignment) {
 	// Header
 	fmt.Fprintf(w, "\n%s%sOADP Rebase Status: %s%s\n", cBold, cCyan, branch, cReset)
 	fmt.Fprintf(w, "%s%s%s\n", cDim, time.Now().Format("2006-01-02 15:04 MST"), cReset)
 	fmt.Fprintln(w, strings.Repeat("═", 70))
+
+	// Velero tag alignment summary
+	if vta != nil {
+		fmt.Fprintln(w)
+		aligned := 0
+		for _, r := range vta.Repos {
+			if r.Aligned {
+				aligned++
+			}
+		}
+		if vta.AllAligned {
+			fmt.Fprintf(w, "%s✅ Velero Tag Alignment — All %d repos at or after %s (%s)%s\n",
+				cGreen, len(vta.Repos), vta.VeleroTag, short(vta.VeleroTagSHA), cReset)
+		} else {
+			fmt.Fprintf(w, "%s⚠️  Velero Tag Alignment — %d/%d repos at %s (%s)%s\n",
+				cYellow, aligned, len(vta.Repos), vta.VeleroTag, short(vta.VeleroTagSHA), cReset)
+			for _, r := range vta.Repos {
+				icon := cGreen + "✅" + cReset
+				if r.CompareError != "" {
+					icon = cYellow + "⚠️ " + cReset
+				} else if !r.Aligned {
+					icon = cRed + "❌" + cReset
+				}
+				fmt.Fprintf(w, "    %s %s/%s  pinned=%s\n", icon, r.Org, r.Repo, r.PinnedHash)
+			}
+		}
+	}
 
 	// Group by wave
 	byWave := groupByWave(statuses)
@@ -382,7 +409,7 @@ func colorCell(text string, status Status, width int) string {
 }
 
 // RenderText prints a card-style text view — one block per repo, no table grid.
-func RenderText(w io.Writer, statuses []RepoStatus, branch string) {
+func RenderText(w io.Writer, statuses []RepoStatus, branch string, vta *VeleroTagAlignment) {
 	fmt.Fprintf(w, "\n%s%sOADP Rebase Status: %s%s\n", cBold, cCyan, branch, cReset)
 	fmt.Fprintf(w, "%s%s%s\n\n", cDim, time.Now().Format("2006-01-02 15:04 MST"), cReset)
 
@@ -401,6 +428,29 @@ func RenderText(w io.Writer, statuses []RepoStatus, branch string) {
 		fmt.Fprintf(w, "  %s%d warnings%s", cYellow, warns, cReset)
 	}
 	fmt.Fprintln(w)
+
+	// Velero tag alignment summary
+	if vta != nil {
+		aligned := 0
+		for _, r := range vta.Repos {
+			if r.Aligned {
+				aligned++
+			}
+		}
+		if vta.AllAligned {
+			fmt.Fprintf(w, "  %s✅ Velero Tag: all %d repos at %s%s\n",
+				cGreen, len(vta.Repos), vta.VeleroTag, cReset)
+		} else {
+			fmt.Fprintf(w, "  %s⚠️  Velero Tag: %d/%d at %s%s\n",
+				cYellow, aligned, len(vta.Repos), vta.VeleroTag, cReset)
+			for _, r := range vta.Repos {
+				if r.Aligned {
+					continue
+				}
+				fmt.Fprintf(w, "    %s❌ %s/%s  pinned=%s%s\n", cRed, r.Org, r.Repo, r.PinnedHash, cReset)
+			}
+		}
+	}
 
 	byWave := groupByWave(statuses)
 	waves := sortedWaves(byWave)
@@ -507,7 +557,7 @@ func RenderText(w io.Writer, statuses []RepoStatus, branch string) {
 }
 
 // RenderMarkdown outputs results as clean Markdown suitable for email or docs.
-func RenderMarkdown(w io.Writer, statuses []RepoStatus, branch string) {
+func RenderMarkdown(w io.Writer, statuses []RepoStatus, branch string, vta *VeleroTagAlignment) {
 	total, ready, errs, warns := scoreboard(statuses)
 
 	fmt.Fprintf(w, "# OADP Rebase Status: %s\n\n", branch)
@@ -526,6 +576,9 @@ func RenderMarkdown(w io.Writer, statuses []RepoStatus, branch string) {
 		fmt.Fprintf(w, " | %d warnings", warns)
 	}
 	fmt.Fprintln(w)
+
+	// Velero Tag Alignment section
+	renderMarkdownVeleroTag(w, vta)
 
 	byWave := groupByWave(statuses)
 	waves := sortedWaves(byWave)
@@ -992,10 +1045,31 @@ func mdImageGroupCell(result *CheckResult, images []ImageInfo, spec RepoSpec) st
 }
 
 // RenderJSON outputs results as JSON (for scripting).
-func RenderJSON(w io.Writer, statuses []RepoStatus) {
-	fmt.Fprintln(w, "[")
+func RenderJSON(w io.Writer, statuses []RepoStatus, vta *VeleroTagAlignment) {
+	fmt.Fprintln(w, "{")
+
+	// Velero tag alignment
+	if vta != nil {
+		fmt.Fprintf(w, "  \"velero_tag_alignment\": {\"tag\": \"%s\", \"tag_sha\": \"%s\", \"all_aligned\": %t, \"repos\": [",
+			vta.VeleroTag, vta.VeleroTagSHA, vta.AllAligned)
+		for i, r := range vta.Repos {
+			if i > 0 {
+				fmt.Fprint(w, ", ")
+			}
+			fmt.Fprintf(w, "{\"org\": \"%s\", \"repo\": \"%s\", \"pinned_hash\": \"%s\", \"aligned\": %t",
+				r.Org, r.Repo, r.PinnedHash, r.Aligned)
+			if r.CompareError != "" {
+				escaped := strings.ReplaceAll(r.CompareError, "\"", "\\\"")
+				fmt.Fprintf(w, ", \"error\": \"%s\"", escaped)
+			}
+			fmt.Fprint(w, "}")
+		}
+		fmt.Fprintln(w, "]},")
+	}
+
+	fmt.Fprintln(w, "  \"repos\": [")
 	for i, r := range statuses {
-		fmt.Fprintf(w, "  {\"repo\": \"%s\", \"branch\": \"%s\", \"wave\": %d, \"skip\": %t, \"upstream\": \"%s\", \"checks\": {",
+		fmt.Fprintf(w, "    {\"repo\": \"%s\", \"branch\": \"%s\", \"wave\": %d, \"skip\": %t, \"upstream\": \"%s\", \"checks\": {",
 			r.Spec.FullName(), r.Spec.Branch, r.Spec.Wave, r.Spec.Skip,
 			strings.ReplaceAll(formatUpstream(r.Spec), "\"", "\\\""))
 		j := 0
@@ -1050,7 +1124,48 @@ func RenderJSON(w io.Writer, statuses []RepoStatus) {
 			fmt.Fprintln(w)
 		}
 	}
-	fmt.Fprintln(w, "]")
+	fmt.Fprintln(w, "  ]")
+	fmt.Fprintln(w, "}")
+}
+
+// renderMarkdownVeleroTag writes the Velero Tag Alignment section for markdown output.
+func renderMarkdownVeleroTag(w io.Writer, vta *VeleroTagAlignment) {
+	if vta == nil {
+		return
+	}
+
+	aligned := 0
+	for _, r := range vta.Repos {
+		if r.Aligned {
+			aligned++
+		}
+	}
+
+	fmt.Fprintln(w)
+	if vta.AllAligned {
+		fmt.Fprintf(w, "### :white_check_mark: Velero Tag Alignment\n\n")
+		fmt.Fprintf(w, "All %d repos pinned at or after `%s` (`%s`)\n\n",
+			len(vta.Repos), vta.VeleroTag, short(vta.VeleroTagSHA))
+	} else {
+		fmt.Fprintf(w, "### :construction: Velero Tag Alignment\n\n")
+		fmt.Fprintf(w, "%d/%d repos at or after `%s` (`%s`)\n\n",
+			aligned, len(vta.Repos), vta.VeleroTag, short(vta.VeleroTagSHA))
+	}
+
+	fmt.Fprintln(w, "| Repo | Pinned Commit | Status |")
+	fmt.Fprintln(w, "| --- | --- | :---: |")
+	for _, r := range vta.Repos {
+		repoLink := fmt.Sprintf("[%s/%s](https://github.com/%s/%s)", r.Org, r.Repo, r.Org, r.Repo)
+		commitLink := fmt.Sprintf("[`%s`](https://github.com/openshift/velero/commit/%s)", r.PinnedHash, r.PinnedHash)
+		status := ":white_check_mark:"
+		if r.CompareError != "" {
+			status = ":warning: err"
+		} else if !r.Aligned {
+			status = ":x:"
+		}
+		fmt.Fprintf(w, "| %s | %s | %s |\n", repoLink, commitLink, status)
+	}
+	fmt.Fprintln(w)
 }
 
 // ---------- Formatting helpers ----------
