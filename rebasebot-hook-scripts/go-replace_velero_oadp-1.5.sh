@@ -16,6 +16,19 @@ else
     UPSTREAM_MODULE="github.com/vmware-tanzu/velero"
 fi
 
+# --- Step 1: go mod edit (must run BEFORE the sed replace) ---
+# go mod edit validates the entire go.mod. The sed replace in step 2 writes a
+# branch ref (e.g. "oadp-1.6") which is not valid semver. If go mod edit ran
+# after sed, it would reject the file. So we run it first while the existing
+# replace still has a valid pseudo-version.
+
+# Update the require version to match the upstream tag from the SSOT.
+go mod edit -require="${UPSTREAM_MODULE}@v1.16.2"
+
+# Exclude kcp monorepo broken pseudo-version.
+go mod edit -exclude=github.com/kcp-dev/kcp/sdk@v0.0.0-00010101000000-000000000000
+
+# --- Step 2: sed replace (writes branch ref, resolved later by go mod tidy) ---
 REPLACE_LINE="replace $UPSTREAM_MODULE => $DOWNSTREAM_MODULE $DOWNSTREAM_BRANCH"
 
 # Remove any stale replace for the other module path
@@ -31,13 +44,3 @@ if grep -q "^replace $UPSTREAM_MODULE" "$GO_MOD_FILE"; then
 else
     echo "$REPLACE_LINE" >> "$GO_MOD_FILE"
 fi
-
-# Update the require version to match the upstream tag from the SSOT.
-go mod edit -require="${UPSTREAM_MODULE}@v1.16.2"
-
-# Exclude kcp monorepo broken pseudo-version.
-# kcp-dev/kcp/cli's go.mod uses "replace kcp/sdk => ./sdk" which produces
-# v0.0.0-00010101000000-000000000000 — a pseudo-version that doesn't exist
-# on the module proxy. This causes go mod tidy to fail in consumers.
-# See: https://github.com/kcp-dev/kcp/blob/cli/v0.27.1/cli/go.mod
-go mod edit -exclude=github.com/kcp-dev/kcp/sdk@v0.0.0-00010101000000-000000000000
