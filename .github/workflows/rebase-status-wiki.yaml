@@ -123,10 +123,8 @@ jobs:
               --config-dir rebase-configs \
               --json \
               --hide-dependency-details \
-              "$branch" 2>/dev/null) || {
-              echo "::warning::rebase-status exited non-zero for $branch (check errors in output)"
-              raw_json="[]"
-            }
+              "$branch" 2>/dev/null) || \
+              echo "::notice::rebase-status exited non-zero for $branch (issues found)"
             # Extract .repos array from object format, fall back to raw array
             echo "$raw_json" | jq 'if type == "object" then .repos else . end' > "/tmp/dag-data/${branch}.json" || echo "[]" > "/tmp/dag-data/${branch}.json"
             echo "::endgroup::"
@@ -180,7 +178,7 @@ jobs:
               --config-dir rebase-configs \
               --json \
               --hide-dependency-details \
-              "$branch" 2>/dev/null || echo "[]")
+              "$branch" 2>/dev/null) || true
             # Extract .repos array from object format, fall back to raw array
             branch_repos=$(echo "$branch_json" | jq 'if type == "object" then .repos else . end')
             all_json=$(echo "$all_json" "$branch_repos" | jq -s 'add')
