@@ -31,7 +31,7 @@ echo ""
 for json_file in $FILES; do
     [ -f "$json_file" ] || continue
 
-    branch=$(jq -r '.[0].branch // "unknown"' < "$json_file")
+    branch=$(jq -r '(if type == "object" then .repos else . end)[0].branch // "unknown"' < "$json_file")
 
     echo "### Branch: \`$branch\`"
     echo ""
@@ -48,6 +48,7 @@ for json_file in $FILES; do
     fi
 
     skipped=$(jq -r '
+        (if type == "object" then .repos else . end) |
         [ .[] | select(.skip == true) | {repo: (.repo | split("/") | .[1]), reason: "skip=true"} ] +
         [ .[] | select(.skip != true) | select(.checks.config.status != "ok") | {repo: (.repo | split("/") | .[1]), reason: "no rebase config"} ] +
         [ .[] | select(.skip != true) | select(.checks.config.status == "ok") | select(.checks.open_pr.status == "ok") | {repo: (.repo | split("/") | .[1]), reason: "open PR exists"} ] +

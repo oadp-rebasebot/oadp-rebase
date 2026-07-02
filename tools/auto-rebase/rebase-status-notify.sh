@@ -39,7 +39,8 @@ done
 if [ -n "$FILES" ]; then
     input=""
     for f in $FILES; do
-        content=$(cat "$f")
+        # Extract .repos array from object format, fall back to raw array
+        content=$(jq 'if type == "object" then .repos else . end' "$f")
         if [ -z "$input" ]; then
             input="$content"
         else
@@ -47,7 +48,8 @@ if [ -n "$FILES" ]; then
         fi
     done
 else
-    input=$(cat)
+    # Extract .repos array from object format, fall back to raw array
+    input=$(cat | jq 'if type == "object" then .repos else . end')
 fi
 
 # Detect branch from JSON if not provided

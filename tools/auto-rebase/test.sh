@@ -328,6 +328,65 @@ for variant in oadp-1.6 oadp-dev; do
 done
 
 # ============================================================
+printf "\n=== JSON object format compatibility tests ===\n\n"
+# ============================================================
+
+# rebase-status --json now outputs {"velero_tag_alignment": {...}, "repos": [...]}
+# instead of a bare array. All consumers must handle both formats.
+
+NOTIFY_STATUS="$SCRIPT_DIR/rebase-status-notify.sh"
+
+# --- rebase-decision.sh accepts object format ---
+
+out=$(bash "$DECISION" < "$FIXTURES/decision/mixed-object.json")
+assert_contains "decision: object format includes wave1 target" "$out" "oadp-vmdp-oadp-dev"
+assert_contains "decision: object format includes wave3 target" "$out" "oadp-operator-oadp-dev"
+assert_not_contains "decision: object format excludes PR repo" "$out" "kopia-oadp-dev"
+
+# Same results as bare array format
+out_array=$(bash "$DECISION" < "$FIXTURES/decision/mixed.json")
+out_object=$(bash "$DECISION" < "$FIXTURES/decision/mixed-object.json")
+assert_output "decision: object format matches array format output" "$out_array" "$out_object"
+
+# --- decide-summary.sh accepts object format ---
+
+summary=$(bash "$SCRIPT_DIR/decide-summary.sh" --targets '[]' "$FIXTURES/decision/mixed-object.json")
+assert_contains "decide-summary: object format detects branch" "$summary" "oadp-dev"
+assert_contains "decide-summary: object format lists skipped repos" "$summary" "skip=true"
+
+# --- jq merge pattern works with object format ---
+
+merged=$(echo '[]' "$(cat "$FIXTURES/decision/mixed-object.json")" | jq -s '[ .[] | if type == "object" then .repos else . end ] | add')
+count=$(echo "$merged" | jq 'length')
+assert_output "jq merge: object format produces correct count" "8" "$count"
+
+# --- rebase-status-notify.sh accepts object format via stdin ---
+
+# Wrap a minimal status array in object format
+minimal_status='{"velero_tag_alignment": {"tag": "v1.14.0", "tag_sha": "abc123", "all_aligned": true, "repos": []}, "repos": [{"repo": "openshift/velero", "branch": "oadp-1.4", "wave": 2, "skip": false, "upstream": "", "checks": {"config": {"status": "ok", "summary": ""}, "open_pr": {"status": "na", "summary": ""}, "dep_sync": {"status": "ok", "summary": ""}}}]}'
+notify_out=$(echo "$minimal_status" | bash "$NOTIFY_STATUS")
+if echo "$notify_out" | jq -e '.empty // false' >/dev/null 2>&1 || echo "$notify_out" | jq -e '.blocks' >/dev/null 2>&1; then
+    printf "  PASS  status-notify: object format produces valid payload\n"
+    passed=$((passed + 1))
+else
+    printf "  FAIL  status-notify: object format produces valid payload\n"
+    printf "    output: %s\n" "$(echo "$notify_out" | head -3)"
+    failed=$((failed + 1))
+fi
+
+# Bare array should also still work
+bare_status='[{"repo": "openshift/velero", "branch": "oadp-1.4", "wave": 2, "skip": false, "upstream": "", "checks": {"config": {"status": "ok", "summary": ""}, "open_pr": {"status": "na", "summary": ""}, "dep_sync": {"status": "ok", "summary": ""}}}]'
+notify_bare=$(echo "$bare_status" | bash "$NOTIFY_STATUS")
+if echo "$notify_bare" | jq -e '.empty // false' >/dev/null 2>&1 || echo "$notify_bare" | jq -e '.blocks' >/dev/null 2>&1; then
+    printf "  PASS  status-notify: bare array format still works\n"
+    passed=$((passed + 1))
+else
+    printf "  FAIL  status-notify: bare array format still works\n"
+    printf "    output: %s\n" "$(echo "$notify_bare" | head -3)"
+    failed=$((failed + 1))
+fi
+
+# ============================================================
 printf "\n=== Results ===\n"
 # ============================================================
 

@@ -119,12 +119,16 @@ jobs:
           branches=""
           for branch in $BRANCHES; do
             echo "::group::rebase-status $branch (DAG)"
-            tools/rebase-status/rebase-status \
+            raw_json=$(tools/rebase-status/rebase-status \
               --config-dir rebase-configs \
               --json \
               --hide-dependency-details \
-              "$branch" > "/tmp/dag-data/${branch}.json" || \
+              "$branch" 2>/dev/null) || {
               echo "::warning::rebase-status exited non-zero for $branch (check errors in output)"
+              raw_json="[]"
+            }
+            # Extract .repos array from object format, fall back to raw array
+            echo "$raw_json" | jq 'if type == "object" then .repos else . end' > "/tmp/dag-data/${branch}.json" || echo "[]" > "/tmp/dag-data/${branch}.json"
             echo "::endgroup::"
             branches="${branches:+$branches,}\"$branch\""
           done
@@ -177,7 +181,9 @@ jobs:
               --json \
               --hide-dependency-details \
               "$branch" 2>/dev/null || echo "[]")
-            all_json=$(echo "$all_json" "$branch_json" | jq -s 'add')
+            # Extract .repos array from object format, fall back to raw array
+            branch_repos=$(echo "$branch_json" | jq 'if type == "object" then .repos else . end')
+            all_json=$(echo "$all_json" "$branch_repos" | jq -s 'add')
           done
 
           echo "$all_json" | bash tools/auto-rebase/rebase-status-notify.sh \

@@ -47,11 +47,13 @@ else
     OUTPUT_EXPR='.target'
 fi
 
-input=$(cat)
-if ! echo "$input" | jq empty 2>/dev/null; then
+raw_input=$(cat)
+if ! echo "$raw_input" | jq empty 2>/dev/null; then
     echo "Warning: invalid JSON input, returning no targets" >&2
     exit 0
 fi
+# Extract .repos array from object format, fall back to raw array
+input=$(echo "$raw_input" | jq 'if type == "object" then .repos else . end')
 
 echo "$input" | jq -r "
     [ .[] |
