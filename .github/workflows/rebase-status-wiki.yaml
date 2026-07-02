@@ -123,10 +123,12 @@ jobs:
               --config-dir rebase-configs \
               --json \
               --hide-dependency-details \
-              "$branch" 2>&1) || \
+              "$branch" 2>/dev/null) || {
               echo "::warning::rebase-status exited non-zero for $branch (check errors in output)"
+              raw_json="[]"
+            }
             # Extract .repos array from object format, fall back to raw array
-            echo "$raw_json" | jq 'if type == "object" then .repos else . end' > "/tmp/dag-data/${branch}.json"
+            echo "$raw_json" | jq 'if type == "object" then .repos else . end' > "/tmp/dag-data/${branch}.json" || echo "[]" > "/tmp/dag-data/${branch}.json"
             echo "::endgroup::"
             branches="${branches:+$branches,}\"$branch\""
           done
