@@ -1,0 +1,185 @@
+{
+  "velero_tag_alignment": {
+    "tag": "v1.18.2-rc.2",
+    "tag_sha": "c253c7fe37d7",
+    "all_aligned": true,
+    "repos": [
+      {
+        "org": "openshift",
+        "repo": "oadp-operator",
+        "pinned_hash": "9f9d4dc4bf29",
+        "aligned": true
+      }
+    ]
+  },
+  "repos": [
+    {
+      "repo": "migtools/kopia",
+      "branch": "oadp-dev",
+      "wave": 1,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "ok",
+          "summary": "#23"
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        }
+      }
+    },
+    {
+      "repo": "openshift/restic",
+      "branch": "oadp-dev",
+      "wave": 1,
+      "skip": true,
+      "upstream": "",
+      "checks": {
+        "config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "skip",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "skip",
+          "summary": ""
+        }
+      }
+    },
+    {
+      "repo": "migtools/oadp-vmdp",
+      "branch": "oadp-dev",
+      "wave": 1,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        }
+      }
+    },
+    {
+      "repo": "openshift/velero",
+      "branch": "oadp-dev",
+      "wave": 2,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "ok",
+          "summary": "#494"
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "1/1"
+        }
+      }
+    },
+    {
+      "repo": "openshift/hypershift-oadp-plugin",
+      "branch": "main",
+      "wave": 3,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "config": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "1/1"
+        }
+      }
+    },
+    {
+      "repo": "openshift/oadp-operator",
+      "branch": "oadp-dev",
+      "wave": 3,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/2"
+        }
+      }
+    },
+    {
+      "repo": "openshift/velero-plugin-for-aws",
+      "branch": "oadp-dev",
+      "wave": 3,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "ok",
+          "summary": "#121"
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        }
+      }
+    },
+    {
+      "repo": "migtools/oadp-non-admin",
+      "branch": "oadp-dev",
+      "wave": 4,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "1/2"
+        }
+      }
+    }
+  ]
+}
