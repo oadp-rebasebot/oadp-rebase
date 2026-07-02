@@ -278,6 +278,15 @@ func RenderTable(w io.Writer, statuses []RepoStatus, branch string, vta *VeleroT
 				}
 			}
 
+			// Go.mod drift sub-lines
+			for _, d := range r.GoModDrifts {
+				fmt.Fprintf(w, "  %*s    %s📉 %s: %s%s → %s%s\n",
+					nameWidth, "",
+					cYellow, d.Module,
+					cDim, d.DownstreamVersion, d.UpstreamVersion,
+					cReset)
+			}
+
 			allIssues = append(allIssues, r.Issues...)
 		}
 	}
@@ -285,7 +294,7 @@ func RenderTable(w io.Writer, statuses []RepoStatus, branch string, vta *VeleroT
 	// Issues summary
 	fmt.Fprintln(w)
 
-	// Filter out issues already shown inline (dep sync + image tags)
+	// Filter out issues already shown inline (dep sync + image tags + drift)
 	var filtered []Issue
 	for _, iss := range allIssues {
 		if isInlineIssue(iss) {
@@ -685,6 +694,10 @@ func RenderMarkdown(w io.Writer, statuses []RepoStatus, branch string, vta *Vele
 			if hasAnyDetails {
 				break
 			}
+			if len(r.GoModDrifts) > 0 {
+				hasAnyDetails = true
+				break
+			}
 			if len(r.Images) > 1 {
 				hasAnyDetails = true
 			} else {
@@ -733,6 +746,16 @@ func RenderMarkdown(w io.Writer, statuses []RepoStatus, branch string, vta *Vele
 						commitURL := fmt.Sprintf("https://github.com/%s/%s/commit/%s", ds.Org, ds.Repo, c.SHA)
 						fmt.Fprintf(w, "  - [`%s`](%s) %s\n", short(c.SHA), commitURL, c.Message)
 					}
+				}
+
+				// Go.mod drift
+				for _, d := range r.GoModDrifts {
+					if !hasDetails {
+						fmt.Fprintf(w, "\n**%s**\n", r.Spec.Repo)
+						hasDetails = true
+					}
+					fmt.Fprintf(w, "- :chart_with_downwards_trend: `%s`: `%s` → `%s`\n",
+						d.Module, d.DownstreamVersion, d.UpstreamVersion)
 				}
 
 				// Images — show all when multiple, or just missing when single
@@ -1104,6 +1127,17 @@ func RenderJSON(w io.Writer, statuses []RepoStatus, vta *VeleroTagAlignment) {
 					fmt.Fprint(w, "]")
 				}
 				fmt.Fprint(w, "}")
+			}
+			fmt.Fprint(w, "]")
+		}
+		if len(r.GoModDrifts) > 0 {
+			fmt.Fprint(w, ", \"gomod_drifts\": [")
+			for k, d := range r.GoModDrifts {
+				if k > 0 {
+					fmt.Fprint(w, ", ")
+				}
+				fmt.Fprintf(w, "{\"module\": \"%s\", \"downstream\": \"%s\", \"upstream\": \"%s\"}",
+					d.Module, d.DownstreamVersion, d.UpstreamVersion)
 			}
 			fmt.Fprint(w, "]")
 		}

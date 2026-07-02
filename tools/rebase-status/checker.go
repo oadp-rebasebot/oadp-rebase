@@ -104,6 +104,13 @@ func runRepoChecks(spec RepoSpec, checks []Check, client *GitHubClient) RepoStat
 	}
 	openPRStoreMu.Unlock()
 
+	// Propagate go.mod drift from the store
+	gomodDriftStoreMu.Lock()
+	if drifts, ok := gomodDriftStore[spec.FullName()]; ok {
+		status.GoModDrifts = drifts
+	}
+	gomodDriftStoreMu.Unlock()
+
 	// Propagate release data
 	if currentReleaseData != nil {
 		key := spec.FullName()

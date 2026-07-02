@@ -16,6 +16,7 @@ var DefaultChecks = []Check{
 	{ID: "go_version", Header: "Go", Run: checkGoVersion},
 	{ID: "ci_config", Header: "Prow Cfg", Run: checkCIConfig},
 	{ID: "dep_sync", Header: "Deps", Run: checkDepSync},
+	{ID: "gomod_drift", Header: "Drift", Run: checkGoModDrift},
 	{ID: "konflux", Header: "Konflux", Run: checkKonflux},
 	{ID: "upstream_image", Header: "Quay", Run: checkUpstreamImage},
 	{ID: "art_config", Header: "ART Cfg", Run: checkArtConfig},
@@ -90,6 +91,10 @@ func clearStores() {
 	openPRStoreMu.Lock()
 	openPRStore = map[string]*OpenPRInfo{}
 	openPRStoreMu.Unlock()
+
+	gomodDriftStoreMu.Lock()
+	gomodDriftStore = map[string][]GoModDrift{}
+	gomodDriftStoreMu.Unlock()
 }
 
 // ---------- Individual checks ----------

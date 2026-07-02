@@ -83,6 +83,7 @@ var DisplayGroups = []DisplayGroup{
 	{ID: "go_version", Header: "Go", CheckIDs: []string{"go_version"}},
 	{ID: "ci_config", Header: "CI", CheckIDs: []string{"ci_config"}},
 	{ID: "dep_sync", Header: "Deps", CheckIDs: []string{"dep_sync"}},
+	{ID: "gomod_drift", Header: "Drift", CheckIDs: []string{"gomod_drift"}},
 	{ID: "quay", Header: "Quay", CheckIDs: []string{"upstream_image", "productized"}},
 	{ID: "konflux", Header: "Konflux", CheckIDs: []string{"konflux", "art_config"}},
 }
