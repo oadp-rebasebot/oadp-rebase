@@ -61,7 +61,8 @@ type RepoStatus struct {
 	Spec     RepoSpec
 	Checks   map[string]*CheckResult
 	Issues   []Issue
-	DepSyncs []DepSync    // internal dependency sync details
+	DepSyncs    []DepSync    // internal dependency sync details
+	GoModDrifts []GoModDrift // go.mod dependency drift vs upstream
 	Images   []ImageInfo  // container image tag status
 	Konflux      *KonfluxInfo    // Konflux build config details
 	OpenPR       *OpenPRInfo       // open rebase PR if any
@@ -77,6 +78,14 @@ type ImageInfo struct {
 	Tag          string
 	Exists       bool
 	LastModified time.Time
+}
+
+// GoModDrift describes a direct dependency where the downstream go.mod
+// has an older version than the upstream source go.mod.
+type GoModDrift struct {
+	Module            string // e.g. "google.golang.org/grpc"
+	DownstreamVersion string // version in downstream go.mod
+	UpstreamVersion   string // version in upstream go.mod
 }
 
 // DepSync describes the sync state of one internal dependency.
