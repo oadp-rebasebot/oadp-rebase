@@ -1,9 +1,9 @@
 # OADP Rebase
 
-[![Auto Rebase](https://github.com/Joeavaikath/oadp-rebase/actions/workflows/auto-rebase-v2.yaml/badge.svg?branch=oadp-dev)](https://github.com/Joeavaikath/oadp-rebase/actions/workflows/auto-rebase-v2.yaml)
-[![Prow Audit Status](https://github.com/Joeavaikath/oadp-rebase/actions/workflows/prow-audit-status.yaml/badge.svg?branch=oadp-dev)](https://github.com/Joeavaikath/oadp-rebase/actions/workflows/prow-audit-status.yaml)
-[![Deploy Prow Audit Page](https://github.com/Joeavaikath/oadp-rebase/actions/workflows/prow-audit-pages.yaml/badge.svg?branch=oadp-dev)](https://github.com/Joeavaikath/oadp-rebase/actions/workflows/prow-audit-pages.yaml)
-[![Rebase Status Wiki](https://github.com/Joeavaikath/oadp-rebase/actions/workflows/rebase-status-wiki.yaml/badge.svg?branch=oadp-dev)](https://github.com/Joeavaikath/oadp-rebase/actions/workflows/rebase-status-wiki.yaml)
+[![Auto Rebase](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/auto-rebase-v2.yaml/badge.svg?branch=oadp-dev)](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/auto-rebase-v2.yaml)
+[![Prow Audit Status](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/prow-audit-status.yaml/badge.svg?branch=oadp-dev)](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/prow-audit-status.yaml)
+[![Deploy Prow Audit Page](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/prow-audit-pages.yaml/badge.svg?branch=oadp-dev)](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/prow-audit-pages.yaml)
+[![Rebase Status Wiki](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/rebase-status-wiki.yaml/badge.svg?branch=oadp-dev)](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/rebase-status-wiki.yaml)
 
 This repository manages the rebases and updates of Velero and OADP-related components, ensuring that dependencies remain in sync and compatible.  
 It includes scripts (hooks) used by the rebasebot during the rebase process, as well as mappings between upstream and downstream tags.
