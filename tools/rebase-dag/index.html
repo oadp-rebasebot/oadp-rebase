@@ -130,7 +130,7 @@
 
     async function loadMetadata() {
       try {
-        const resp = await fetch('./data/metadata.json');
+        const resp = await fetch('./dag-metadata.json');
         if (!resp.ok) throw new Error(resp.statusText);
         return await resp.json();
       } catch { return null; }
@@ -138,7 +138,7 @@
 
     async function loadBranchData(branch) {
       try {
-        const resp = await fetch(`./data/${branch}.json`);
+        const resp = await fetch(`./dag-${branch}.json`);
         if (!resp.ok) throw new Error(resp.statusText);
         return await resp.json();
       } catch { return null; }
@@ -384,7 +384,7 @@
 
       if (meta.generated_at) {
         const dt = new Date(meta.generated_at);
-        metaInfo.textContent = `Updated ${dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })} ${dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' })} UTC`;
+        metaInfo.textContent = `Updated ${dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' })} ${dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/New_York' })} ET`;
       }
 
       async function loadBranch(branch) {
