@@ -130,7 +130,7 @@
 
     async function loadMetadata() {
       try {
-        const resp = await fetch('./data/metadata.json');
+        const resp = await fetch('./dag-metadata.json');
         if (!resp.ok) throw new Error(resp.statusText);
         return await resp.json();
       } catch { return null; }
@@ -138,7 +138,7 @@
 
     async function loadBranchData(branch) {
       try {
-        const resp = await fetch(`./data/${branch}.json`);
+        const resp = await fetch(`./dag-${branch}.json`);
         if (!resp.ok) throw new Error(resp.statusText);
         return await resp.json();
       } catch { return null; }
