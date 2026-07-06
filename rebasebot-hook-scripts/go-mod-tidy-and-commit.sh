@@ -103,18 +103,22 @@ process_go_mod_updates() {
             echo "=== No vendor directory found — skipping 'go mod vendor' ==="
         fi
 
-        echo "=== Running 'go vet' in $module_base_path ==="
-        # go vet exits non-zero when there are no packages to vet (e.g. doc-only modules).
-        # Detect that case and skip gracefully.
-        vet_output=$(go vet ${GO_VET_TAGS:+-tags "$GO_VET_TAGS"} ./... 2>&1) || {
-            if echo "$vet_output" | grep -q "no packages to vet\|matched no packages"; then
-                echo "=== No Go packages to vet in $module_base_path — skipping ==="
-            else
-                echo "$vet_output" >&2
-                echo "Unable to run 'go vet' in $module_base_path" >&2
-                exit 1
-            fi
-        }
+        if [ "${GO_VET_SKIP:-}" = "1" ]; then
+            echo "=== Skipping 'go vet' in $module_base_path (GO_VET_SKIP=1) ==="
+        else
+            echo "=== Running 'go vet' in $module_base_path ==="
+            # go vet exits non-zero when there are no packages to vet (e.g. doc-only modules).
+            # Detect that case and skip gracefully.
+            vet_output=$(go vet ${GO_VET_TAGS:+-tags "$GO_VET_TAGS"} ./... 2>&1) || {
+                if echo "$vet_output" | grep -q "no packages to vet\|matched no packages"; then
+                    echo "=== No Go packages to vet in $module_base_path — skipping ==="
+                else
+                    echo "$vet_output" >&2
+                    echo "Unable to run 'go vet' in $module_base_path" >&2
+                    exit 1
+                fi
+            }
+        fi
 
         popd
     done
