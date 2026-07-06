@@ -103,6 +103,7 @@ process_go_mod_updates() {
             echo "=== No vendor directory found — skipping 'go mod vendor' ==="
         fi
 
+        # https://github.com/oadp-rebasebot/oadp-rebase/issues/110
         if [ "${GO_VET_SKIP:-}" = "1" ]; then
             echo "=== Skipping 'go vet' in $module_base_path (GO_VET_SKIP=1) ==="
         else
