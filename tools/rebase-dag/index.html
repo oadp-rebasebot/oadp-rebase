@@ -96,6 +96,7 @@
     <div class="summary-stat"><span class="num" id="stat-progress" style="color:var(--blue)">-</span><span class="lbl">in progress</span></div>
     <div class="summary-stat"><span class="num" id="stat-outdated" style="color:var(--yellow)">-</span><span class="lbl">outdated</span></div>
     <div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <span id="all-done-emoji" style="display:none; font-size:1rem"></span>
     <div class="meta" id="meta-info"></div>
   </div>
 
@@ -115,6 +116,7 @@
   <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
   <script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
   <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <script type="module">
     import { classifyStatus, deriveLabel, transformData } from './dag-data.js';
@@ -127,6 +129,19 @@
     };
 
     let cy;
+    const confettiFiredFor = new Set();
+
+    function fireConfetti() {
+      if (typeof confetti !== 'function') return;
+      const volleys = [
+        { particleCount: 60, spread: 55, origin: { x: 0.3, y: 0.6 } },
+        { particleCount: 60, spread: 55, origin: { x: 0.7, y: 0.6 } },
+        { particleCount: 40, spread: 70, origin: { x: 0.5, y: 0.5 } },
+      ];
+      volleys.forEach((opts, i) => {
+        setTimeout(() => confetti({ ...opts, colors: ['#3fb950', '#58a6ff', '#d29922', '#ffffff'] }), i * 250);
+      });
+    }
 
     async function loadMetadata() {
       try {
@@ -165,7 +180,7 @@
       return html;
     }
 
-    function updateSummary(data) {
+    function updateSummary(data, branch) {
       const repos = data.filter(r => !r.skip);
       const counts = { done: 0, prog: 0, need: 0 };
       for (const r of repos) {
@@ -179,9 +194,19 @@
       document.getElementById('stat-outdated').textContent = counts.need;
       const total = repos.length || 1;
       document.getElementById('progress-fill').style.width = Math.round((counts.done / total) * 100) + '%';
+
+      const emojiEl = document.getElementById('all-done-emoji');
+      const allDone = repos.length > 0 && counts.done === repos.length;
+      emojiEl.style.display = allDone ? 'inline' : 'none';
+      emojiEl.textContent = allDone ? '\u{1F389}' : '';
+
+      if (allDone && branch && !confettiFiredFor.has(branch)) {
+        confettiFiredFor.add(branch);
+        setTimeout(fireConfetti, 400);
+      }
     }
 
-    function renderGraph(data) {
+    function renderGraph(data, branch) {
       const container = document.getElementById('cy');
       const tooltip = document.getElementById('tooltip');
       const { nodes, edges } = transformData(data);
@@ -189,12 +214,12 @@
       if (cy) { cy.destroy(); cy = undefined; }
 
       if (nodes.length === 0) {
-        updateSummary([]);
+        updateSummary([], branch);
         container.innerHTML = '<div class="empty-state"><div>No repos found for this branch</div></div>';
         return;
       }
 
-      updateSummary(data);
+      updateSummary(data, branch);
 
       for (const n of nodes) {
         if (n.data.status === 'prog' && n.data.prSummary) {
@@ -390,10 +415,10 @@
       async function loadBranch(branch) {
         const data = await loadBranchData(branch);
         if (data) {
-          renderGraph(data);
+          renderGraph(data, branch);
         } else {
           if (cy) { cy.destroy(); cy = undefined; }
-          updateSummary([]);
+          updateSummary([], branch);
           container.innerHTML = `<div class="empty-state"><div>No data for ${branch}</div></div>`;
         }
       }
