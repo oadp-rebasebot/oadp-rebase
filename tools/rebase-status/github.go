@@ -329,6 +329,48 @@ func (c *GitHubClient) OpenRebasePR(org, repo, base string) (*OpenPRInfo, error)
 	return nil, nil
 }
 
+// SearchCVEPRs returns open PRs targeting the given base branch that have
+// "cve" (case-insensitive) in the title.
+func (c *GitHubClient) SearchCVEPRs(org, repo, branch string) ([]CVEPRInfo, error) {
+	apiPath := fmt.Sprintf("/repos/%s/%s/pulls?state=open&base=%s&per_page=100", org, repo, branch)
+
+	body, code, err := c.get(apiPath)
+	if err != nil {
+		return nil, err
+	}
+	if code == http.StatusNotFound {
+		return nil, nil
+	}
+	if code != http.StatusOK {
+		return nil, fmt.Errorf("GitHub API %s returned %d", apiPath, code)
+	}
+
+	var prs []struct {
+		Number    int       `json:"number"`
+		Title     string    `json:"title"`
+		HTMLURL   string    `json:"html_url"`
+		CreatedAt time.Time `json:"created_at"`
+	}
+	if err := json.Unmarshal(body, &prs); err != nil {
+		return nil, fmt.Errorf("parsing PRs: %w", err)
+	}
+
+	var result []CVEPRInfo
+	for _, pr := range prs {
+		if strings.Contains(strings.ToLower(pr.Title), "cve") {
+			result = append(result, CVEPRInfo{
+				Org:     org,
+				Repo:    repo,
+				Number:  pr.Number,
+				Title:   pr.Title,
+				URL:     pr.HTMLURL,
+				Created: pr.CreatedAt,
+			})
+		}
+	}
+	return result, nil
+}
+
 // RateLimitRemaining returns the remaining API calls.
 func (c *GitHubClient) RateLimitRemaining() (int, error) {
 	body, code, err := c.get("/rate_limit")

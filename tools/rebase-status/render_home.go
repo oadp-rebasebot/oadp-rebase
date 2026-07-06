@@ -158,6 +158,16 @@ func RenderHome(w io.Writer, branches []BranchResult) {
 			}
 		}
 
+		// CVE PR summary
+		if len(br.CVEPRs) > 0 {
+			page := "Rebase-Status-" + br.Branch
+			fmt.Fprintf(w, ":shield: %d open CVE fix PR(s) — [details](%s#shield-open-cve-fix-prs-%d)\n\n",
+				len(br.CVEPRs), page, len(br.CVEPRs))
+		} else {
+			fmt.Fprintln(w, ":white_check_mark: No open CVE fix PRs")
+			fmt.Fprintln(w)
+		}
+
 		// TODO if no configs exist for this branch
 		hasConfigs := false
 		for _, s := range br.Statuses {
@@ -223,6 +233,15 @@ func RenderHome(w io.Writer, branches []BranchResult) {
 			} else {
 				fmt.Fprintf(w, ":construction: Velero %s — %d/%d repos aligned\n", vtaCopy.VeleroTag, alignedCopy, len(vtaCopy.Repos))
 			}
+		}
+
+		if len(br.CVEPRs) > 0 {
+			fmt.Fprintf(w, ":shield: %d open CVE fix PR(s)\n", len(br.CVEPRs))
+			for _, pr := range br.CVEPRs {
+				fmt.Fprintf(w, "  • %s/%s #%d — %s\n    %s\n", pr.Org, pr.Repo, pr.Number, pr.Title, pr.URL)
+			}
+		} else {
+			fmt.Fprintln(w, ":white_check_mark: No open CVE fix PRs")
 		}
 
 		if len(attentionWaves) > 0 {
