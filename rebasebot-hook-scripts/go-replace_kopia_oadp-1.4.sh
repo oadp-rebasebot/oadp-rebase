@@ -1,13 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-# OADP 1.4 uses project-velero/kopia directly (no OADP-maintained fork).
-DOWNSTREAM_TAG="v0.17.0-velero.1"
-DOWNSTREAM_MODULE="github.com/project-velero/kopia"
+DOWNSTREAM_BRANCH="oadp-1.4"
+DOWNSTREAM_MODULE="github.com/migtools/kopia"
 UPSTREAM_MODULE="github.com/kopia/kopia"
 
 GO_MOD_FILE="go.mod"
-REPLACE_LINE="replace $UPSTREAM_MODULE => $DOWNSTREAM_MODULE $DOWNSTREAM_TAG"
+REPLACE_LINE="replace $UPSTREAM_MODULE => $DOWNSTREAM_MODULE $DOWNSTREAM_BRANCH"
 
 # Replace existing line or append if not present
 if grep -q "^replace $UPSTREAM_MODULE" "$GO_MOD_FILE"; then
