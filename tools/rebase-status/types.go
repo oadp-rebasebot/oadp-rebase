@@ -181,11 +181,22 @@ func (rd *ReleaseData) ArtConfigsFor(orgRepo string) []*ArtBuildConfig {
 	return rd.repoArtConfigs[orgRepo]
 }
 
+// CVEPRInfo describes an open CVE fix PR on a release branch.
+type CVEPRInfo struct {
+	Org     string
+	Repo    string
+	Number  int
+	Title   string
+	URL     string
+	Created time.Time
+}
+
 // BranchResult holds the check results for all repos on a single branch.
 type BranchResult struct {
 	Branch         string
 	Statuses       []RepoStatus
 	VeleroTagAlign *VeleroTagAlignment
+	CVEPRs         []CVEPRInfo
 }
 
 // VeleroTagAlignment holds the branch-level velero tag alignment status.

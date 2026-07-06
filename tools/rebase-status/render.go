@@ -566,7 +566,7 @@ func RenderText(w io.Writer, statuses []RepoStatus, branch string, vta *VeleroTa
 }
 
 // RenderMarkdown outputs results as clean Markdown suitable for email or docs.
-func RenderMarkdown(w io.Writer, statuses []RepoStatus, branch string, vta *VeleroTagAlignment) {
+func RenderMarkdown(w io.Writer, statuses []RepoStatus, branch string, vta *VeleroTagAlignment, cvePRs []CVEPRInfo) {
 	total, ready, errs, warns := scoreboard(statuses)
 
 	fmt.Fprintf(w, "# OADP Rebase Status: %s\n\n", branch)
@@ -588,6 +588,9 @@ func RenderMarkdown(w io.Writer, statuses []RepoStatus, branch string, vta *Vele
 
 	// Velero Tag Alignment section
 	renderMarkdownVeleroTag(w, vta)
+
+	// CVE Fix PRs section
+	renderMarkdownCVEPRs(w, cvePRs)
 
 	byWave := groupByWave(statuses)
 	waves := sortedWaves(byWave)
@@ -1068,7 +1071,7 @@ func mdImageGroupCell(result *CheckResult, images []ImageInfo, spec RepoSpec) st
 }
 
 // RenderJSON outputs results as JSON (for scripting).
-func RenderJSON(w io.Writer, statuses []RepoStatus, vta *VeleroTagAlignment) {
+func RenderJSON(w io.Writer, statuses []RepoStatus, vta *VeleroTagAlignment, cvePRs []CVEPRInfo) {
 	fmt.Fprintln(w, "{")
 
 	// Velero tag alignment
@@ -1158,7 +1161,19 @@ func RenderJSON(w io.Writer, statuses []RepoStatus, vta *VeleroTagAlignment) {
 			fmt.Fprintln(w)
 		}
 	}
-	fmt.Fprintln(w, "  ]")
+	fmt.Fprintln(w, "  ],")
+
+	// CVE PRs
+	fmt.Fprint(w, "  \"cve_prs\": [")
+	for i, pr := range cvePRs {
+		if i > 0 {
+			fmt.Fprint(w, ", ")
+		}
+		escapedTitle := strings.ReplaceAll(pr.Title, "\"", "\\\"")
+		fmt.Fprintf(w, "{\"org\": \"%s\", \"repo\": \"%s\", \"number\": %d, \"title\": \"%s\", \"url\": \"%s\", \"created\": \"%s\"}",
+			pr.Org, pr.Repo, pr.Number, escapedTitle, pr.URL, pr.Created.Format("2006-01-02"))
+	}
+	fmt.Fprintln(w, "]")
 	fmt.Fprintln(w, "}")
 }
 
@@ -1198,6 +1213,26 @@ func renderMarkdownVeleroTag(w io.Writer, vta *VeleroTagAlignment) {
 			status = ":x:"
 		}
 		fmt.Fprintf(w, "| %s | %s | %s |\n", repoLink, commitLink, status)
+	}
+	fmt.Fprintln(w)
+}
+
+// renderMarkdownCVEPRs writes the Open CVE Fix PRs section for markdown output.
+func renderMarkdownCVEPRs(w io.Writer, cvePRs []CVEPRInfo) {
+	fmt.Fprintln(w)
+	if len(cvePRs) == 0 {
+		fmt.Fprintln(w, "### :white_check_mark: No open CVE fix PRs")
+		fmt.Fprintln(w)
+		return
+	}
+
+	fmt.Fprintf(w, "### :shield: Open CVE Fix PRs (%d)\n\n", len(cvePRs))
+	fmt.Fprintln(w, "| Repo | PR | Opened |")
+	fmt.Fprintln(w, "| --- | --- | --- |")
+	for _, pr := range cvePRs {
+		repoLink := fmt.Sprintf("[%s/%s](https://github.com/%s/%s)", pr.Org, pr.Repo, pr.Org, pr.Repo)
+		prLink := fmt.Sprintf("[#%d %s](%s)", pr.Number, pr.Title, pr.URL)
+		fmt.Fprintf(w, "| %s | %s | %s |\n", repoLink, prLink, pr.Created.Format("2006-01-02"))
 	}
 	fmt.Fprintln(w)
 }

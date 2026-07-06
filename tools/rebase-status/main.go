@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 )
 
 func main() {
@@ -107,7 +108,9 @@ func main() {
 			}
 			veleroTagAlign = CheckVeleroTagAlignment(statuses, versionsVars, client)
 
-			branchResults = append(branchResults, BranchResult{Branch: branch, Statuses: statuses, VeleroTagAlign: veleroTagAlign})
+			cvePRs := fetchCVEPRs(client, specs)
+
+			branchResults = append(branchResults, BranchResult{Branch: branch, Statuses: statuses, VeleroTagAlign: veleroTagAlign, CVEPRs: cvePRs})
 		}
 		RenderHome(os.Stdout, branchResults)
 		if len(failedBranches) > 0 {
@@ -156,13 +159,16 @@ func main() {
 	}
 	veleroTagAlign = CheckVeleroTagAlignment(results, versionsVars, client)
 
+	// Fetch CVE PRs
+	cvePRs := fetchCVEPRs(client, specs)
+
 	// Render output
 	if jsonOutput {
-		RenderJSON(os.Stdout, results, veleroTagAlign)
+		RenderJSON(os.Stdout, results, veleroTagAlign, cvePRs)
 	} else if format == "text" {
 		RenderText(os.Stdout, results, branch, veleroTagAlign)
 	} else if format == "markdown" || format == "md" {
-		RenderMarkdown(os.Stdout, results, branch, veleroTagAlign)
+		RenderMarkdown(os.Stdout, results, branch, veleroTagAlign, cvePRs)
 	} else {
 		RenderTable(os.Stdout, results, branch, veleroTagAlign)
 	}
@@ -196,6 +202,33 @@ func fetchDepCommitDetails(results []RepoStatus, client *GitHubClient, branch st
 			ds.Commits = commits
 		}
 	}
+}
+
+func fetchCVEPRs(client *GitHubClient, specs []RepoSpec) []CVEPRInfo {
+	type result struct {
+		prs []CVEPRInfo
+	}
+	results := make([]result, len(specs))
+	var wg sync.WaitGroup
+	for i, spec := range specs {
+		wg.Add(1)
+		go func(i int, spec RepoSpec) {
+			defer wg.Done()
+			prs, err := client.SearchCVEPRs(spec.Org, spec.Repo, spec.Branch)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "warning: CVE PR search for %s/%s: %v\n", spec.Org, spec.Repo, err)
+				return
+			}
+			results[i] = result{prs: prs}
+		}(i, spec)
+	}
+	wg.Wait()
+
+	var all []CVEPRInfo
+	for _, r := range results {
+		all = append(all, r.prs...)
+	}
+	return all
 }
 
 func filterSpecs(specs []RepoSpec, wave int, repo string) []RepoSpec {
