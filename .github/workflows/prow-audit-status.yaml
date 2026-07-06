@@ -1,8 +1,6 @@
 name: Prow Audit Status
 
 on:
-  schedule:
-    - cron: '0 6 * * 1-5'   # Weekdays 6 AM UTC
   workflow_dispatch:
 
 permissions:
