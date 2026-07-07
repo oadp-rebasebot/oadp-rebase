@@ -108,7 +108,7 @@ out=$(bash "$DECISION" --reason < "$FIXTURES/decision/wave1-no-pr.json")
 assert_contains "wave1 reason is wave1-always" "$out" "wave1-always"
 
 out=$(bash "$DECISION" < "$FIXTURES/decision/wave1-with-pr.json")
-assert_empty "wave1 with open PR is skipped" "$out"
+assert_output "wave1 with open PR is eligible" "kopia-oadp-dev" "$out"
 
 out=$(bash "$DECISION" < "$FIXTURES/decision/wave2-deps-fail.json")
 assert_output "wave2 with dep_sync=fail is eligible" "velero-oadp-dev" "$out"
@@ -125,23 +125,23 @@ assert_empty "repo with config=fail is skipped" "$out"
 out=$(bash "$DECISION" < "$FIXTURES/decision/no-rebase.json")
 assert_empty "NoRebase repo (config=na) is skipped" "$out"
 
-# Mixed scenario: only oadp-vmdp (wave1, no PR), oadp-operator (deps fail, no PR),
-# and oadp-non-admin (deps fail, no PR) should appear.
-# Skipped: kopia (has PR), restic (skip=true), velero (has PR),
-# hypershift (config=na), velero-plugin-for-aws (has PR).
+# Mixed scenario: kopia (wave1), oadp-vmdp (wave1), velero-plugin-for-aws (wave3, deps fail),
+# oadp-operator (wave3, deps fail), and oadp-non-admin (wave4, deps fail) should appear.
+# Open PRs no longer cause skipping — rebasebot updates existing PRs.
+# Skipped: restic (skip=true), velero (wave2, deps in sync), hypershift (config=na).
 out=$(bash "$DECISION" < "$FIXTURES/decision/mixed.json")
-assert_contains "mixed: wave1 repo without PR included" "$out" "oadp-vmdp-oadp-dev"
-assert_contains "mixed: wave3 deps-fail without PR included" "$out" "oadp-operator-oadp-dev"
-assert_contains "mixed: wave4 deps-fail without PR included" "$out" "oadp-non-admin-oadp-dev"
-assert_not_contains "mixed: wave1 with PR excluded" "$out" "kopia-oadp-dev"
+assert_contains "mixed: wave1 repo included" "$out" "kopia-oadp-dev"
+assert_contains "mixed: wave1 repo included" "$out" "oadp-vmdp-oadp-dev"
+assert_contains "mixed: wave3 deps-fail included" "$out" "oadp-operator-oadp-dev"
+assert_contains "mixed: wave3 deps-fail with PR included" "$out" "velero-plugin-for-aws-oadp-dev"
+assert_contains "mixed: wave4 deps-fail included" "$out" "oadp-non-admin-oadp-dev"
 assert_not_contains "mixed: skipped repo excluded" "$out" "restic-oadp-dev"
-assert_not_contains "mixed: wave2 with PR excluded" "$out" "velero-oadp-dev"
+assert_not_contains "mixed: wave2 deps-ok excluded" "$out" "velero-oadp-dev"
 assert_not_contains "mixed: NoRebase excluded" "$out" "hypershift-oadp-plugin"
-assert_not_contains "mixed: deps-fail with PR excluded" "$out" "velero-plugin-for-aws"
 
-# Wave ordering: oadp-vmdp (wave1) should come before oadp-operator (wave3)
+# Wave ordering: wave1 repos should come before wave3+
 first_line=$(echo "$out" | head -1)
-assert_output "mixed: wave1 appears first" "oadp-vmdp-oadp-dev" "$first_line"
+assert_output "mixed: wave1 appears first" "kopia-oadp-dev" "$first_line"
 
 # ============================================================
 printf "\n=== rebase-notify.sh tests ===\n\n"
@@ -340,8 +340,8 @@ NOTIFY_STATUS="$SCRIPT_DIR/rebase-status-notify.sh"
 
 out=$(bash "$DECISION" < "$FIXTURES/decision/mixed-object.json")
 assert_contains "decision: object format includes wave1 target" "$out" "oadp-vmdp-oadp-dev"
+assert_contains "decision: object format includes wave1 with PR target" "$out" "kopia-oadp-dev"
 assert_contains "decision: object format includes wave3 target" "$out" "oadp-operator-oadp-dev"
-assert_not_contains "decision: object format excludes PR repo" "$out" "kopia-oadp-dev"
 
 # Same results as bare array format
 out_array=$(bash "$DECISION" < "$FIXTURES/decision/mixed.json")
