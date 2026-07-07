@@ -46,23 +46,23 @@ var allRepos = []RepoDef{
 	{Org: "openshift", Repo: "velero", Wave: 2},
 
 	// Wave 3 — plugins + operator
-	{Org: "openshift", Repo: "hypershift-oadp-plugin", Wave: 3},
+	{Org: "openshift", Repo: "hypershift-oadp-plugin", Wave: 3, MinBranch: "oadp-1.5"},
 	{Org: "openshift", Repo: "velero-plugin-for-csi", Wave: 3, MainOnly: true},
 	{Org: "openshift", Repo: "oadp-operator", Wave: 3},
 	{Org: "openshift", Repo: "velero-plugin-for-aws", Wave: 3},
-	{Org: "openshift", Repo: "velero-plugin-for-legacy-aws", Wave: 3},
+	{Org: "openshift", Repo: "velero-plugin-for-legacy-aws", Wave: 3, MinBranch: "oadp-1.4"},
 	{Org: "openshift", Repo: "velero-plugin-for-microsoft-azure", Wave: 3},
 	{Org: "openshift", Repo: "velero-plugin-for-gcp", Wave: 3},
 
 	// Wave 4 — downstream controllers
-	{Org: "migtools", Repo: "oadp-non-admin", Wave: 4},
+	{Org: "migtools", Repo: "oadp-non-admin", Wave: 4, MinBranch: "oadp-1.5"},
 	{Org: "openshift", Repo: "openshift-velero-plugin", Wave: 4},
 	{Org: "migtools", Repo: "kubevirt-datamover-controller", Wave: 4, MinBranch: "oadp-1.6"},
 	{Org: "migtools", Repo: "oadp-vm-file-restore", Wave: 4, MinBranch: "oadp-1.6"},
 
 	// Wave 5 — final dependents
 	{Org: "openshift", Repo: "oadp-must-gather", Wave: 5},
-	{Org: "migtools", Repo: "oadp-cli", Wave: 5, MinBranch: "oadp-1.6"},
+	{Org: "migtools", Repo: "oadp-cli", Wave: 5, MinBranch: "oadp-1.4"},
 	{Org: "migtools", Repo: "kubevirt-datamover-plugin", Wave: 5, MinBranch: "oadp-1.6"},
 }
 
