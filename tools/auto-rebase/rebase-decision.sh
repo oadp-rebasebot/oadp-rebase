@@ -9,9 +9,8 @@
 # Decision logic per repo:
 #   1. Skip if skip == true
 #   2. Skip if checks.config.status != "ok" (no config or NoRebase)
-#   3. Skip if checks.open_pr.status == "ok" (PR already open)
-#   4. Wave 1: always eligible (no internal deps)
-#   5. Wave 2+: eligible when checks.dep_sync.status == "fail" (deps moved ahead)
+#   3. Wave 1: always eligible (no internal deps)
+#   4. Wave 2+: eligible when checks.dep_sync.status == "fail" (deps moved ahead)
 #
 # Output: one target per line, sorted by wave, e.g. "velero-oadp-dev"
 #   --reason: append tab-separated reason (wave1-always | deps-changed)
@@ -59,7 +58,6 @@ echo "$input" | jq -r "
     [ .[] |
       select(.skip != true) |
       select(.checks.config.status == \"ok\") |
-      select(.checks.open_pr.status != \"ok\") |
       select(
         (.wave == 1) or
         (.wave >= 2 and .checks.dep_sync.status == \"fail\")
