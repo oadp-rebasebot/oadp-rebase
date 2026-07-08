@@ -789,11 +789,11 @@ func extractPseudoHash(version string) string {
 	return ""
 }
 
-// Matches Go pseudo-versions in all three forms:
-//   v0.0.0-20250313160323-584cf1148a74          (base version)
-//   v0.10.2-0.20250313160323-584cf1148a74       (pre-release, e.g. after a tag)
-//   v1.0.2-0.20260202155540-e1dcfd104852        (pre-release)
-var pseudoHashRe = regexp.MustCompile(`v\d+\.\d+\.\d+-(0\.)?\d{14}-[0-9a-f]{12}$`)
+// Matches Go pseudo-versions including pre-release tags:
+//   v0.0.0-20250313160323-584cf1148a74                    (base version)
+//   v0.10.2-0.20250313160323-584cf1148a74                 (pre-release)
+//   v0.13.0-velero.1.0.20260706195151-83febd3dd228        (tagged pre-release)
+var pseudoHashRe = regexp.MustCompile(`v\d+\.\d+\.\d+-([a-zA-Z0-9]+\.)*\d{14}-[0-9a-f]{12}$`)
 
 // ---------- Parsing helpers ----------
 
