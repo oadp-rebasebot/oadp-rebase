@@ -122,11 +122,10 @@ jobs:
             raw_json=$(tools/rebase-status/rebase-status \
               --config-dir rebase-configs \
               --json \
-              --hide-dependency-details \
               "$branch" 2>/dev/null) || \
               echo "::notice::rebase-status exited non-zero for $branch (issues found)"
-            # Extract .repos array from object format, fall back to raw array
-            echo "$raw_json" | jq 'if type == "object" then .repos else . end' > "/tmp/dag-data/${branch}.json" || echo "[]" > "/tmp/dag-data/${branch}.json"
+            # Extract repos + cve_prs for the DAG; fall back to raw array
+            echo "$raw_json" | jq 'if type == "object" then {repos: .repos, cve_prs: (.cve_prs // [])} else {repos: ., cve_prs: []} end' > "/tmp/dag-data/${branch}.json" || echo '{"repos":[],"cve_prs":[]}' > "/tmp/dag-data/${branch}.json"
             echo "::endgroup::"
             branches="${branches:+$branches,}\"$branch\""
           done
@@ -135,6 +134,18 @@ jobs:
           cat > /tmp/dag-data/metadata.json <<EOF
           {"branches": [$branches], "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)", "default_branch": "$default_branch"}
           EOF
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: tools/rebase-dashboard/package-lock.json
+
+      - name: Build Rebase Dashboard
+        run: |
+          cd tools/rebase-dashboard
+          npm ci
+          npm run build
 
       - name: Assemble pages
         run: bash tools/assemble-pages.sh
