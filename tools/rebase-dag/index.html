@@ -155,7 +155,8 @@
       try {
         const resp = await fetch(`./dag-${branch}.json`);
         if (!resp.ok) throw new Error(resp.statusText);
-        return await resp.json();
+        const raw = await resp.json();
+        return Array.isArray(raw) ? raw : (raw.repos ?? null);
       } catch { return null; }
     }
 
