@@ -4,14 +4,15 @@ generate:
 	@bash tools/generate-go-replace-velero.sh
 	@bash tools/generate-verify-tag-sha.sh
 	@bash tools/generate-version-matrix.sh
+	@bash tools/generate-cve-scan-image-map.sh
 
 verify-generate: generate
-	@if ! git diff --quiet -- rebasebot-hook-scripts/go-replace_velero_*.sh rebasebot-hook-scripts/verify-tag-sha_*.sh docs/version-matrix.md; then \
+	@if ! git diff --quiet -- rebasebot-hook-scripts/go-replace_velero_*.sh rebasebot-hook-scripts/verify-tag-sha_*.sh docs/version-matrix.md tools/cve-scan/image-map.sh; then \
 		echo ""; \
 		echo "ERROR: Generated files are out of date."; \
 		echo "Run 'make generate' and commit the changes."; \
 		echo ""; \
-		git diff --stat -- rebasebot-hook-scripts/go-replace_velero_*.sh rebasebot-hook-scripts/verify-tag-sha_*.sh docs/version-matrix.md; \
+		git diff --stat -- rebasebot-hook-scripts/go-replace_velero_*.sh rebasebot-hook-scripts/verify-tag-sha_*.sh docs/version-matrix.md tools/cve-scan/image-map.sh; \
 		exit 1; \
 	fi
 	@echo "Generated files are up to date."
