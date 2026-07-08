@@ -125,7 +125,7 @@ func githubAnchor(heading string) string {
 func RenderHome(w io.Writer, branches []BranchResult) {
 	fmt.Fprintln(w, "# OADP Rebase Status")
 	fmt.Fprintln(w)
-	fmt.Fprintf(w, "[**Dependency Graph**](https://oadp-rebasebot.github.io/oadp-rebase/rebase-dag/) | _Updated automatically by [rebase-status-wiki workflow](%s)_\n", wikiWorkflowURL)
+	fmt.Fprintf(w, "[**Rebase Dashboard**](https://oadp-rebasebot.github.io/oadp-rebase/rebase-dashboard/) | [**Dependency Graph**](https://oadp-rebasebot.github.io/oadp-rebase/rebase-dag/) | _Updated automatically by [rebase-status-wiki workflow](%s)_\n", wikiWorkflowURL)
 	fmt.Fprintln(w)
 
 	for _, br := range branches {
