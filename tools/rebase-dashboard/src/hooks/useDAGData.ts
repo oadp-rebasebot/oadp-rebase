@@ -33,19 +33,23 @@ export function useDAGData() {
 
   useEffect(() => {
     if (!state.branch) return
+    let stale = false
     setState(s => ({ ...s, loading: true }))
     ;(async () => {
       try {
         const resp = await fetch(`./dag-${state.branch}.json`)
         if (!resp.ok) throw new Error(resp.statusText)
         const raw = await resp.json()
+        if (stale) return
         const repos: RepoData[] = Array.isArray(raw) ? raw : (raw.repos ?? [])
         const cvePRs: CvePR[] = Array.isArray(raw) ? [] : (raw.cve_prs ?? [])
         setState(s => ({ ...s, repos, cvePRs, loading: false }))
       } catch {
+        if (stale) return
         setState(s => ({ ...s, repos: [], cvePRs: [], loading: false }))
       }
     })()
+    return () => { stale = true }
   }, [state.branch])
 
   const setBranch = useCallback((branch: string) => {

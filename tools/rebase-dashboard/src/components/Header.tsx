@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { DAGMetadata } from '../types'
 import { colors } from '../styles/theme'
 
@@ -84,10 +84,16 @@ export function Header({ metadata, branch, onBranchChange }: HeaderProps) {
 }
 
 function HelpPanel({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
   return (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200 }} />
-      <div style={{
+      <div role="dialog" aria-modal="true" aria-label="How OADP Rebases Work" style={{
         position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
         width: 560, maxHeight: '80vh', overflowY: 'auto',
         background: colors.surface, border: `1px solid ${colors.border}`,
@@ -95,7 +101,7 @@ function HelpPanel({ onClose }: { onClose: () => void }) {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0 }}>How OADP Rebases Work</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', fontSize: 20 }}>&times;</button>
+          <button onClick={onClose} aria-label="Close help" style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', fontSize: 20 }}>&times;</button>
         </div>
 
         <div style={{ fontSize: 13, color: colors.text, lineHeight: 1.8 }}>
@@ -115,7 +121,7 @@ function HelpPanel({ onClose }: { onClose: () => void }) {
           </Step>
 
           <Step n={4} title="Triggering a rebase">
-            Rebases are triggered by running the <b>Auto Rebase</b> GitHub Actions workflow in <a href="https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/auto-rebase.yaml" target="_blank" rel="noopener noreferrer">oadp-rebase</a>. Select the branches you want to rebase and run the workflow. It will evaluate which repos need rebasing and create PRs automatically.
+            Rebases are triggered by running the <b>Auto Rebase</b> GitHub Actions workflow in <a href="https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/auto-rebase-v2.yaml" target="_blank" rel="noopener noreferrer">oadp-rebase</a>. Select the branches you want to rebase and run the workflow. It will evaluate which repos need rebasing and create PRs automatically.
           </Step>
 
           <Step n={5} title="After rebase">

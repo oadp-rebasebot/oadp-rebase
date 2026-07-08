@@ -57,7 +57,7 @@ npm run build    # outputs to dist/
 
 ## Project structure
 
-```
+```text
 src/
   main.tsx              Entry point
   App.tsx               Top-level layout: header, summary bar, canvas, legend
