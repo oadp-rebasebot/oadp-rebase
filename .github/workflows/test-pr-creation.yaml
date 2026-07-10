@@ -65,17 +65,19 @@ jobs:
           git push staging "$TEST_BRANCH"
           echo "::endgroup::"
 
-          echo "::group::Create PR"
-          PR_URL=$(gh pr create \
-            --repo "${ORG}/${REPO}" \
-            --base "$BRANCH" \
-            --head "${STAGING_ORG}:${TEST_BRANCH}" \
-            --title "[TEST] PR creation test — please close" \
-            --body "Automated test to verify GitHub App can create PRs from the staging fork. Safe to close.")
+          echo "::group::Create PR (REST API with maintainer_can_modify=false)"
+          PR_URL=$(gh api "repos/${ORG}/${REPO}/pulls" \
+            -f base="$BRANCH" \
+            -f head="${STAGING_ORG}:${TEST_BRANCH}" \
+            -f title="[TEST] PR creation test — please close" \
+            -f body="Automated test to verify GitHub App can create PRs from the staging fork. Safe to close." \
+            -f maintainer_can_modify=false \
+            --jq '.html_url')
           echo "PR created: $PR_URL"
           echo "::endgroup::"
 
           echo "::group::Close PR and clean up"
-          gh pr close "$PR_URL" --repo "${ORG}/${REPO}" --delete-branch || true
+          PR_NUMBER=$(basename "$PR_URL")
+          gh api "repos/${ORG}/${REPO}/pulls/${PR_NUMBER}" -X PATCH -f state=closed || true
           git push staging --delete "$TEST_BRANCH" || true
           echo "::endgroup::"
