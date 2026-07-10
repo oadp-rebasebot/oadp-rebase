@@ -1,0 +1,81 @@
+name: Test PR Creation
+
+on:
+  workflow_dispatch:
+    inputs:
+      org:
+        description: 'Target org (e.g. openshift)'
+        type: string
+        default: 'openshift'
+      repo:
+        description: 'Target repo (e.g. velero)'
+        type: string
+        default: 'velero'
+      branch:
+        description: 'Base branch for the PR'
+        type: string
+        default: 'oadp-dev'
+
+jobs:
+  test-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate cloner token (push to staging fork)
+        id: cloner-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.OADP_REBASEBOT_CLONER_ID }}
+          private-key: ${{ secrets.OADP_REBASEBOT_CLONER_KEY }}
+          owner: oadp-rebasebot
+
+      - name: Generate app token (create PR on target repo)
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.OADP_REBASEBOT_APP_ID }}
+          private-key: ${{ secrets.OADP_REBASEBOT_APP_KEY }}
+          owner: ${{ inputs.org }}
+
+      - name: Clone, push test branch, and open PR
+        env:
+          CLONER_TOKEN: ${{ steps.cloner-token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          ORG="${{ inputs.org }}"
+          REPO="${{ inputs.repo }}"
+          BRANCH="${{ inputs.branch }}"
+          STAGING_ORG="oadp-rebasebot"
+          TEST_BRANCH="test/pr-creation-$(date +%s)"
+
+          echo "::group::Clone ${ORG}/${REPO}@${BRANCH}"
+          git clone --depth 1 --branch "$BRANCH" \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${ORG}/${REPO}.git" repo
+          cd repo
+          git config user.name "oadp-rebasebot[bot]"
+          git config user.email "oadp-rebasebot[bot]@users.noreply.github.com"
+          echo "::endgroup::"
+
+          echo "::group::Add staging remote and push test branch"
+          git remote add staging \
+            "https://x-access-token:${CLONER_TOKEN}@github.com/${STAGING_ORG}/${REPO}.git"
+          git checkout -b "$TEST_BRANCH"
+          git commit --allow-empty -m "test: verify PR creation from fork"
+          git push staging "$TEST_BRANCH"
+          echo "::endgroup::"
+
+          echo "::group::Create PR"
+          PR_URL=$(gh pr create \
+            --repo "${ORG}/${REPO}" \
+            --base "$BRANCH" \
+            --head "${STAGING_ORG}:${TEST_BRANCH}" \
+            --title "[TEST] PR creation test — please close" \
+            --body "Automated test to verify GitHub App can create PRs from the staging fork. Safe to close.")
+          echo "PR created: $PR_URL"
+          echo "::endgroup::"
+
+          echo "::group::Close PR and clean up"
+          gh pr close "$PR_URL" --repo "${ORG}/${REPO}" --delete-branch || true
+          git push staging --delete "$TEST_BRANCH" || true
+          echo "::endgroup::"
