@@ -71,7 +71,7 @@ jobs:
             -f head="${STAGING_ORG}:${TEST_BRANCH}" \
             -f title="[TEST] PR creation test — please close" \
             -f body="Automated test to verify GitHub App can create PRs from the staging fork. Safe to close." \
-            -f maintainer_can_modify=false \
+            -F maintainer_can_modify=false \
             --jq '.html_url')
           echo "PR created: $PR_URL"
           echo "::endgroup::"
