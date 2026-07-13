@@ -34,12 +34,12 @@ DESTINATION_DOWNSTREAM_VELERO_BRANCH=oadp-dev
 VELERO_GOMOD_URL="https://raw.githubusercontent.com/velero-io/velero/$UPSTREAM_VELERO_BRANCH/go.mod"
 if [ -n "$GITHUB_TOKEN" ]; then
     KOPIA_HASH=$(curl -s -L -H "Authorization: token $GITHUB_TOKEN" "$VELERO_GOMOD_URL" \
-      | grep 'replace github.com/kopia/kopia' \
+      | grep 'github.com/kopia/kopia =>' \
       | awk '{print $NF}' \
       | awk -F'-' '{print $NF}')
 else
     KOPIA_HASH=$(curl -s -L "$VELERO_GOMOD_URL" \
-      | grep 'replace github.com/kopia/kopia' \
+      | grep 'github.com/kopia/kopia =>' \
       | awk '{print $NF}' \
       | awk -F'-' '{print $NF}')
 fi
