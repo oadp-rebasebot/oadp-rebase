@@ -3,7 +3,7 @@
 fetch_github_api() {
     url="$1"
 
-    if [ -n "$GITHUB_TOKEN" ]; then
+    if [ -n "${GITHUB_TOKEN:-}" ]; then
         response=$(curl -s -L -w "%{http_code}" -H "Authorization: token $GITHUB_TOKEN" "$url")
     else
         response=$(curl -s -L -w "%{http_code}" "$url")
@@ -32,7 +32,7 @@ UPSTREAM_VELERO_BRANCH=main
 DESTINATION_DOWNSTREAM_VELERO_BRANCH=oadp-dev
 
 VELERO_GOMOD_URL="https://raw.githubusercontent.com/velero-io/velero/$UPSTREAM_VELERO_BRANCH/go.mod"
-if [ -n "$GITHUB_TOKEN" ]; then
+if [ -n "${GITHUB_TOKEN:-}" ]; then
     KOPIA_HASH=$(curl -s -L -H "Authorization: token $GITHUB_TOKEN" "$VELERO_GOMOD_URL" \
       | grep 'github.com/kopia/kopia =>' \
       | awk '{print $NF}' \
