@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -41,6 +42,13 @@ func TestSemverCompare(t *testing.T) {
 
 		// Pseudo-version based on a higher tag base
 		{"pseudo higher base", "v1.29.0", "v1.29.1-0.20250403044401-2c4cce9a3a42", "v1.29.1-0.20250403044401-2c4cce9a3a42"},
+
+		// Go directive versions (non-semver, normalized via v-prefix + .0 pad)
+		{"go directive basic", "1.22", "1.23", "1.23"},
+		{"go directive equal", "1.22", "1.22", "1.22"},
+		{"go directive 1.9 vs 1.10", "1.9", "1.10", "1.10"},
+		{"go directive three component", "1.22.0", "1.23.0", "1.23.0"},
+		{"go directive patch", "1.22.1", "1.22.2", "1.22.2"},
 	}
 
 	for _, tc := range tests {
@@ -49,7 +57,7 @@ func TestSemverCompare(t *testing.T) {
 			if err != nil {
 				t.Fatalf("semver-compare %s %s failed: %v", tc.a, tc.b, err)
 			}
-			got := string(out[:len(out)-1]) // trim newline
+			got := strings.TrimSuffix(string(out), "\n")
 			if got != tc.want {
 				t.Errorf("semver-compare %s %s = %s, want %s", tc.a, tc.b, got, tc.want)
 			}

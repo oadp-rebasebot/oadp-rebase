@@ -28,6 +28,8 @@ stage_and_commit() {
 
 # Build a temporary semver-compare binary that uses golang.org/x/mod/semver
 # for correct Go module version ordering (sort -V gets pre-release wrong).
+# Non-semver inputs (e.g., Go directive "1.22") are normalized to valid semver
+# before comparison so that 1.9 < 1.10 is handled correctly.
 # Canonical tested implementation: tools/semver-compare/
 SEMVER_COMPARE_DIR=$(mktemp -d)
 trap 'rm -rf "$SEMVER_COMPARE_DIR"' EXIT
@@ -41,18 +43,31 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"golang.org/x/mod/semver"
 )
 
+func normalize(s string) string {
+	v := s
+	if !strings.HasPrefix(v, "v") { v = "v" + v }
+	parts := strings.SplitN(v[1:], ".", 3)
+	for len(parts) < 3 { parts = append(parts, "0") }
+	return "v" + strings.Join(parts, ".")
+}
+
 func main() {
 	a, b := os.Args[1], os.Args[2]
-	if !semver.IsValid(a) || !semver.IsValid(b) {
-		// Fall back to lexicographic for non-semver (e.g., go directive "1.22")
-		if a >= b { fmt.Println(a) } else { fmt.Println(b) }
+	if semver.IsValid(a) && semver.IsValid(b) {
+		if semver.Compare(a, b) >= 0 { fmt.Println(a) } else { fmt.Println(b) }
 		return
 	}
-	if semver.Compare(a, b) >= 0 { fmt.Println(a) } else { fmt.Println(b) }
+	na, nb := normalize(a), normalize(b)
+	if semver.IsValid(na) && semver.IsValid(nb) {
+		if semver.Compare(na, nb) >= 0 { fmt.Println(a) } else { fmt.Println(b) }
+		return
+	}
+	if a >= b { fmt.Println(a) } else { fmt.Println(b) }
 }
 GOEOF
     go build -o semver-compare . >/dev/null 2>&1
@@ -83,18 +98,28 @@ reconcile_gomod() {
     pushd "$module_dir" > /dev/null
 
     # Build map of upstream requires (both direct and indirect)
+    local upstream_json
+    upstream_json=$(go mod edit -json "$upstream_tmp") || {
+        echo "  ERROR: failed to parse upstream go.mod" >&2
+        popd > /dev/null; rm -f "$upstream_tmp"; return 1
+    }
+
     local -A upstream_reqs=()
     while IFS=$'\t' read -r mod ver; do
         [[ -n "$mod" && -n "$ver" ]] && upstream_reqs["$mod"]="$ver"
-    done < <(go mod edit -json "$upstream_tmp" | \
-        jq -r '.Require[]? | "\(.Path)\t\(.Version)"')
+    done < <(echo "$upstream_json" | jq -r '.Require[]? | "\(.Path)\t\(.Version)"')
 
     # Build map of current requires
+    local current_json
+    current_json=$(go mod edit -json) || {
+        echo "  ERROR: failed to parse current go.mod" >&2
+        popd > /dev/null; rm -f "$upstream_tmp"; return 1
+    }
+
     local -A current_reqs=()
     while IFS=$'\t' read -r mod ver; do
         [[ -n "$mod" && -n "$ver" ]] && current_reqs["$mod"]="$ver"
-    done < <(go mod edit -json | \
-        jq -r '.Require[]? | "\(.Path)\t\(.Version)"')
+    done < <(echo "$current_json" | jq -r '.Require[]? | "\(.Path)\t\(.Version)"')
 
     local bumped=0
 
@@ -115,8 +140,8 @@ reconcile_gomod() {
 
     # Bump the go directive if upstream is higher
     local up_go cur_go
-    up_go=$(go mod edit -json "$upstream_tmp" | jq -r '.Go // empty')
-    cur_go=$(go mod edit -json | jq -r '.Go // empty')
+    up_go=$(echo "$upstream_json" | jq -r '.Go // empty')
+    cur_go=$(echo "$current_json" | jq -r '.Go // empty')
     if [[ -n "$up_go" && -n "$cur_go" ]]; then
         local max_go
         max_go=$(version_max "$cur_go" "$up_go")
@@ -140,6 +165,6 @@ reconcile_gomod() {
 while IFS= read -r -d '' gomod; do
     gomod="${gomod#./}"
     reconcile_gomod "$gomod"
-done < <(find . -name 'go.mod' -not -path './vendor/*' -print0)
+done < <(find . -name 'go.mod' -not -path '*/vendor/*' -print0)
 
 stage_and_commit
