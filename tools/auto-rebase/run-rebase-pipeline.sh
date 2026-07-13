@@ -42,7 +42,8 @@ log_phase() { end_phase; echo "::group::$*"; _IN_PHASE=true; }
 trap end_phase EXIT
 
 # Resolve config
-eval "$(bash tools/auto-rebase/resolve-config.sh "$TARGET")"
+_resolved=$(bash tools/auto-rebase/resolve-config.sh "$TARGET") || { echo "Failed to resolve config for ${TARGET}" >&2; exit 1; }
+eval "$_resolved"
 
 # Result tracking
 dry_run_rc=""
