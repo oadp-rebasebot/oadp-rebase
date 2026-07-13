@@ -34,12 +34,12 @@ DESTINATION_DOWNSTREAM_VELERO_BRANCH=oadp-dev
 VELERO_GOMOD_URL="https://raw.githubusercontent.com/velero-io/velero/$UPSTREAM_VELERO_BRANCH/go.mod"
 if [ -n "${GITHUB_TOKEN:-}" ]; then
     KOPIA_HASH=$(curl -s -L -H "Authorization: token $GITHUB_TOKEN" "$VELERO_GOMOD_URL" \
-      | grep 'github.com/kopia/kopia =>' \
+      | { grep 'github.com/kopia/kopia =>' || true; } \
       | awk '{print $NF}' \
       | awk -F'-' '{print $NF}')
 else
     KOPIA_HASH=$(curl -s -L "$VELERO_GOMOD_URL" \
-      | grep 'github.com/kopia/kopia =>' \
+      | { grep 'github.com/kopia/kopia =>' || true; } \
       | awk '{print $NF}' \
       | awk -F'-' '{print $NF}')
 fi
@@ -51,7 +51,7 @@ tags_body=$(fetch_github_api "https://api.github.com/repos/${UPSTREAM_KOPIA_REPO
 UPSTREAM_KOPIA_TAG_BRANCH_FOR_VELERO=$(printf '%s\n' "$tags_body" \
     | grep -E '"name":|"sha":' \
     | paste - - \
-    | grep "$KOPIA_HASH" \
+    | { grep "$KOPIA_HASH" || true; } \
     | awk -F'"' '{print $4}' \
     | head -n1
 )
