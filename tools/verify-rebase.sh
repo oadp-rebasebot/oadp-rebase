@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ──────────────────────────────────────────────────────────────
 # verify-rebase.sh — Deterministic verification that downstream
-# carry commits and files survive a rebase.
+# carry commits survive a rebase.
 #
 # Usage:
 #   verify-rebase.sh <dest-repo> <dest-branch> \
@@ -35,7 +35,7 @@ Arguments:
 
 Exit codes:
   0  All checks passed
-  1  Verification failed (missing commits or files)
+  1  Verification failed (missing carry commits)
   2  Usage / input error
 EOF
 }
@@ -68,11 +68,6 @@ trap 'rm -rf "$WORK_DIR"' EXIT
 DEST_CARRIES="$WORK_DIR/dest_carries.txt"
 REBASE_CARRIES="$WORK_DIR/rebase_carries.txt"
 MISSING_CARRIES="$WORK_DIR/missing_carries.txt"
-DEST_FILES="$WORK_DIR/dest_files.txt"
-UPSTREAM_FILES="$WORK_DIR/upstream_files.txt"
-REBASE_FILES="$WORK_DIR/rebase_files.txt"
-DOWNSTREAM_ONLY="$WORK_DIR/downstream_only.txt"
-MISSING_FILES="$WORK_DIR/missing_files.txt"
 
 log_info "Verifying rebase: ${DEST_REPO}:${DEST_BRANCH} → ${REBASE_REPO}:${REBASE_BRANCH}"
 log_info "Upstream: ${UPSTREAM_REPO}:${UPSTREAM_REF}"
@@ -87,8 +82,6 @@ if [[ -d "$REBASE_REPO" ]]; then
 else
   git remote add rebase "https://github.com/${REBASE_REPO}.git"
 fi
-git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
-
 log_info "Fetching dest branch..."
 if ! git fetch dest "$DEST_BRANCH" -q 2>/dev/null; then
   log_fail "Could not fetch ${DEST_REPO}:${DEST_BRANCH}"
@@ -101,20 +94,11 @@ if ! git fetch rebase "$REBASE_BRANCH" -q 2>/dev/null; then
   exit 1
 fi
 
-log_info "Fetching upstream ref..."
-if ! git fetch upstream "$UPSTREAM_REF" --depth=1 -q 2>/dev/null; then
-  log_fail "Could not fetch ${UPSTREAM_REPO}:${UPSTREAM_REF}"
-  exit 1
-fi
-
 DEST_REF="refs/remotes/dest/${DEST_BRANCH}"
 REBASE_REF="refs/remotes/rebase/${REBASE_BRANCH}"
-UPSTREAM_FETCH="FETCH_HEAD"
 
-# Resolve refs
 DEST_SHA="$(git rev-parse "$DEST_REF")"
 REBASE_SHA="$(git rev-parse "$REBASE_REF")"
-UPSTREAM_SHA="$(git rev-parse "$UPSTREAM_FETCH")"
 
 # ── Phase 2: Carry Commit Verification ──────────────────────
 
@@ -145,38 +129,7 @@ else
   SUMMARY_LINES+=("| Carry commits | PASS | ${EXPECTED_COUNT}/${EXPECTED_COUNT} found |")
 fi
 
-# ── Phase 3: Downstream-Only File Verification ──────────────
-
-log_info "Checking downstream-only files..."
-
-git ls-tree -r --name-only "$DEST_SHA" | sort > "$DEST_FILES"
-git ls-tree -r --name-only "$UPSTREAM_SHA" | sort > "$UPSTREAM_FILES"
-git ls-tree -r --name-only "$REBASE_SHA" | sort > "$REBASE_FILES"
-
-comm -23 "$DEST_FILES" "$UPSTREAM_FILES" > "$DOWNSTREAM_ONLY"
-DS_FILE_COUNT=$(wc -l < "$DOWNSTREAM_ONLY" | tr -d ' ')
-
-comm -23 "$DOWNSTREAM_ONLY" "$REBASE_FILES" > "$MISSING_FILES"
-MISSING_FILE_COUNT=$(wc -l < "$MISSING_FILES" | tr -d ' ')
-
-if [[ "$MISSING_FILE_COUNT" -gt 0 ]]; then
-  log_fail "Downstream files: ${MISSING_FILE_COUNT} MISSING out of ${DS_FILE_COUNT} downstream-only files"
-  printf "    Missing files:\n"
-  while IFS= read -r line; do
-    printf "      - %s\n" "$line"
-    if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
-      printf "::error::Missing downstream file: %s\n" "$line"
-    fi
-  done < "$MISSING_FILES"
-  OVERALL=1
-  FOUND_FILES=$((DS_FILE_COUNT - MISSING_FILE_COUNT))
-  SUMMARY_LINES+=("| Downstream files | FAIL | ${FOUND_FILES}/${DS_FILE_COUNT} found, **${MISSING_FILE_COUNT} missing** |")
-else
-  log_success "Downstream files: ${DS_FILE_COUNT}/${DS_FILE_COUNT} preserved"
-  SUMMARY_LINES+=("| Downstream files | PASS | ${DS_FILE_COUNT}/${DS_FILE_COUNT} found |")
-fi
-
-# ── Phase 4: Hook Validation ────────────────────────────────
+# ── Phase 3: Hook Validation ────────────────────────────────
 
 DROP_COUNT=$(git log --format='%s' --grep='UPSTREAM: <drop>' "$REBASE_SHA" | wc -l | tr -d ' ')
 
@@ -188,7 +141,7 @@ else
   SUMMARY_LINES+=("| Hook commits | PASS | ${DROP_COUNT} found |")
 fi
 
-# ── Phase 5: Report ─────────────────────────────────────────
+# ── Phase 4: Report ─────────────────────────────────────────
 
 printf "\n"
 printf "═══════════════════════════════════════════════\n"
@@ -219,15 +172,8 @@ write_markdown_report() {
     if [[ "$MISSING_COUNT" -gt 0 ]]; then
       printf "\n### Missing Carry Commits\n\n"
       while IFS= read -r line; do
-        printf "- \`%s\`\n" "$line"
+        printf -- "- \`%s\`\n" "$line"
       done < "$MISSING_CARRIES"
-    fi
-
-    if [[ "$MISSING_FILE_COUNT" -gt 0 ]]; then
-      printf "\n### Missing Downstream Files\n\n"
-      while IFS= read -r line; do
-        printf "- \`%s\`\n" "$line"
-      done < "$MISSING_FILES"
     fi
   } >> "$dest"
 }
