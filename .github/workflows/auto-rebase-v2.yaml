@@ -19,6 +19,10 @@ on:
         description: 'oadp-1.6'
         type: boolean
         default: true
+      oadp_dev:
+        description: 'oadp-dev'
+        type: boolean
+        default: false
       dry_run:
         description: 'Dry run only (no PRs created)'
         type: boolean
@@ -58,12 +62,14 @@ jobs:
           INPUT_OADP_1_4: ${{ inputs.oadp_1_4 }}
           INPUT_OADP_1_5: ${{ inputs.oadp_1_5 }}
           INPUT_OADP_1_6: ${{ inputs.oadp_1_6 }}
+          INPUT_OADP_DEV: ${{ inputs.oadp_dev }}
         run: |
           BRANCHES=""
           [ "$INPUT_OADP_1_3" = "true" ] && BRANCHES="$BRANCHES oadp-1.3"
           [ "$INPUT_OADP_1_4" = "true" ] && BRANCHES="$BRANCHES oadp-1.4"
           [ "$INPUT_OADP_1_5" = "true" ] && BRANCHES="$BRANCHES oadp-1.5"
           [ "$INPUT_OADP_1_6" = "true" ] && BRANCHES="$BRANCHES oadp-1.6"
+          [ "$INPUT_OADP_DEV" = "true" ] && BRANCHES="$BRANCHES oadp-dev"
           BRANCHES="${BRANCHES# }"
           if [ -z "$BRANCHES" ]; then
             echo "::error::No branches selected"
