@@ -16,6 +16,7 @@ HOOK_SCRIPTS="--pre-rebase-hook \
   ${HOOK_SCRIPTS_LOCATION}/verify-tag-sha_oadp-1.4.sh \
   --post-rebase-hook \
   ${HOOK_SCRIPTS_LOCATION}/fix-malformed-filenames-and-commit.sh \
+  ${HOOK_SCRIPTS_LOCATION}/go-mod-reconcile-upstream.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-replace_kopia_oadp-1.4.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-mod-tidy-and-commit.sh \
   ${HOOK_SCRIPTS_LOCATION}/restic-submodule-and-commit_oadp-1.4.sh \
