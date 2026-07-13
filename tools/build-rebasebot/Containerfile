@@ -3,7 +3,7 @@ FROM registry.access.redhat.com/ubi9/python-312 AS base
 USER root
 
 ARG TARGETARCH=amd64
-ARG GO_VERSION=1.25.9
+ARG GO_VERSION=1.26.5
 
 # The Go project uses "arm64" instead of "aarch64" in filenames
 RUN dnf install -y tar gzip gpgme gpgme-devel pkgconfig jq && \
