@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func findReposYAMLForTest(t *testing.T) string {
@@ -63,17 +65,23 @@ func TestRequiredFields(t *testing.T) {
 
 func TestConfigPrefixUnique(t *testing.T) {
 	path := findReposYAMLForTest(t)
-	if err := LoadReposYAML(path); err != nil {
-		t.Fatalf("LoadReposYAML: %v", err)
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading repos.yaml: %v", err)
+	}
+	var cfg yamlRepoConfig
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		t.Fatalf("parsing repos.yaml: %v", err)
 	}
 
 	seen := make(map[string]string)
-	for prefix, entry := range filenameToRepo {
-		key := entry.org + "/" + entry.repo
-		if prev, ok := seen[prefix]; ok {
-			t.Errorf("duplicate config_prefix %q: used by %s and %s", prefix, prev, key)
+	for _, r := range cfg.Repos {
+		key := r.Org + "/" + r.Repo
+		if prev, ok := seen[r.ConfigPrefix]; ok {
+			t.Errorf("duplicate config_prefix %q: used by %s and %s", r.ConfigPrefix, prev, key)
 		}
-		seen[prefix] = key
+		seen[r.ConfigPrefix] = key
 	}
 }
 

@@ -584,18 +584,16 @@ SOURCE_TYPE="local"
 # Resolve bare repo names to composite repo-branch keys
 if [ "$WAVE_MODE" != "true" ]; then
     if ! get_config_name "$TARGET" >/dev/null 2>&1; then
-        default_branch=$(yq -r "
-            .repos[] | select(.repo == \"$TARGET\") |
-            if .main_only == true then \"main\"
-            elif .dev_branch != null and .dev_branch != \"\" then .dev_branch
-            else \"\"
-            end
-        " "$REPOS_YAML" 2>/dev/null)
-
-        if [ -n "$default_branch" ] && [ "$default_branch" != "null" ] && [ -z "${OADP_BRANCH_SET:-}" ]; then
-            TARGET="${TARGET}-${default_branch}"
+        _is_main_only=$(yq -r ".repos[] | select(.repo == \"$TARGET\") | .main_only // false" "$REPOS_YAML" 2>/dev/null)
+        if [ "$_is_main_only" = "true" ]; then
+            TARGET="${TARGET}-main"
         else
-            TARGET="${TARGET}-${OADP_BRANCH}"
+            _dev_branch=$(yq -r ".repos[] | select(.repo == \"$TARGET\") | .dev_branch // \"\"" "$REPOS_YAML" 2>/dev/null)
+            if [ -n "$_dev_branch" ] && [ "$_dev_branch" != "null" ] && [ -z "${OADP_BRANCH_SET:-}" ]; then
+                TARGET="${TARGET}-${_dev_branch}"
+            else
+                TARGET="${TARGET}-${OADP_BRANCH}"
+            fi
         fi
     fi
 fi
