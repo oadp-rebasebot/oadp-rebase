@@ -28,8 +28,10 @@ WORKING_DIR=""
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPOS_YAML="${REPOS_YAML:-${SCRIPT_DIR}/repos.yaml}"
 
-command -v yq >/dev/null 2>&1 || { printf "Error: yq is required but not installed.\nInstall from https://github.com/mikefarah/yq\n" >&2; exit 1; }
-[ -f "$REPOS_YAML" ] || { printf "Error: repos.yaml not found at %s\n" "$REPOS_YAML" >&2; exit 1; }
+_require_yq() {
+    command -v yq >/dev/null 2>&1 || { printf "Error: yq is required but not installed.\nInstall from https://github.com/mikefarah/yq\n" >&2; exit 1; }
+    [ -f "$REPOS_YAML" ] || { printf "Error: repos.yaml not found at %s\n" "$REPOS_YAML" >&2; exit 1; }
+}
 
 _branch_ge() {
     case "$1" in oadp-dev|main) return 0 ;; esac
@@ -50,20 +52,23 @@ _branch_le() {
 }
 
 get_config_name() {
-    repo_name="$(get_repo_name "$1")"
-    branch="$(echo "$1" | sed "s/^${repo_name}-//")"
+    _gcn_repo="$(get_repo_name "$1")"
+    _gcn_branch="$(echo "$1" | sed "s/^${_gcn_repo}-//")"
 
-    prefix=$(yq -r ".repos[] | select(.repo == \"${repo_name}\") | .config_prefix" "$REPOS_YAML")
-    [ -z "$prefix" ] || [ "$prefix" = "null" ] && return 1
+    # Bare repo name without branch suffix — not a valid composite key
+    [ "$_gcn_branch" = "$1" ] && return 1
 
-    echo "${prefix}_${branch}"
+    _gcn_prefix=$(yq -r ".repos[] | select(.repo == \"${_gcn_repo}\") | .config_prefix" "$REPOS_YAML")
+    [ -z "$_gcn_prefix" ] || [ "$_gcn_prefix" = "null" ] && return 1
+
+    echo "${_gcn_prefix}_${_gcn_branch}"
 }
 
 get_wave_repos() {
     _gwr_branch="$1"
     _gwr_wave="$2"
 
-    # Use "~" as placeholder for empty fields (POSIX read collapses consecutive tabs)
+    # Use "_NONE_" as placeholder for empty fields (POSIX read collapses consecutive tabs)
     _gwr_data=$(yq -r ".repos[] | select(.wave == ${_gwr_wave}) | [.repo, (.main_only // false), (.dev_branch // \"~\"), (.min_branch // \"~\"), (.max_branch // \"~\")] | @tsv" "$REPOS_YAML")
     [ -z "$_gwr_data" ] && return 1
 
@@ -76,17 +81,17 @@ get_wave_repos() {
             continue
         fi
 
-        if [ "$_gwr_min" != "~" ]; then
+        if [ "$_gwr_min" != "_NONE_" ]; then
             _branch_ge "$_gwr_branch" "$_gwr_min" || continue
         fi
 
-        if [ "$_gwr_max" != "~" ]; then
+        if [ "$_gwr_max" != "_NONE_" ]; then
             _branch_le "$_gwr_branch" "$_gwr_max" || continue
         fi
 
         if [ "$_gwr_mo" = "true" ]; then
             _gwr_key="${_gwr_repo}-main"
-        elif [ "$_gwr_db" != "~" ] && [ "$_gwr_branch" = "oadp-dev" ]; then
+        elif [ "$_gwr_db" != "_NONE_" ] && [ "$_gwr_branch" = "oadp-dev" ]; then
             _gwr_key="${_gwr_repo}-${_gwr_db}"
         else
             _gwr_key="${_gwr_repo}-${_gwr_branch}"
@@ -570,6 +575,8 @@ while [ $# -gt 0 ]; do
 done
 
 [ -n "$TARGET" ] || { usage; error_exit "Target is required"; }
+
+_require_yq
 
 SOURCE_TYPE="local"
 [ "$REMOTE_MODE" = "true" ] && SOURCE_TYPE="remote"

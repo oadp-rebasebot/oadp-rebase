@@ -138,7 +138,7 @@ jobs:
           persist-credentials: false
 
       - name: Install yq
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@v4.46.1
 
       - name: Setup secrets
         env:

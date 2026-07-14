@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install yq
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@v4.46.1
 
       - name: Verify generated files match SSOT
         run: make verify-generate
@@ -87,7 +87,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install yq
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@v4.46.1
 
       - name: Test all configs load correctly
         run: make config-load
