@@ -134,7 +134,7 @@ repos:
     repo: oadp-non-admin
     wave: 4
     config_prefix: migtools_oadp_non_admin
-    min_branch: oadp-1.4
+    min_branch: oadp-1.5
     images:
       - namespace: konveyor
         repo: oadp-non-admin
