@@ -29,7 +29,7 @@ syntax-check:
 config-load:
 	@echo "=== Config loading test ==="
 	@fail=0; \
-	repo_data=$$(yq -r '.repos[] | [.repo, .config_prefix, (.main_only // false), (.dev_branch // ""), (.min_branch // ""), (.max_branch // "")] | join("\t")' repos.yaml); \
+	repo_data=$$(yq -r '.repos[] | [.repo, .config_prefix, (.main_only // false), (.dev_branch // "_NONE_"), (.min_branch // "_NONE_"), (.max_branch // "_NONE_")] | join("\t")' repos.yaml); \
 	for branch in oadp-1.3 oadp-1.4 oadp-1.5 oadp-1.6 oadp-dev; do \
 		echo "$$repo_data" | while IFS='	' read -r repo prefix main_only dev_br min_br max_br; do \
 			[ -z "$$repo" ] && continue; \
@@ -38,7 +38,7 @@ config-load:
 				[ "$$branch" != "oadp-dev" ] && continue; \
 				effective_branch="main"; \
 			fi; \
-			[ -n "$$dev_br" ] && [ "$$branch" = "oadp-dev" ] && effective_branch="$$dev_br"; \
+			[ "$$dev_br" != "_NONE_" ] && [ "$$branch" = "oadp-dev" ] && effective_branch="$$dev_br"; \
 			config_file="rebase-configs/$${prefix}_$${effective_branch}.env.sh"; \
 			[ -f "$$config_file" ] || continue; \
 			target="$${repo}-$${effective_branch}"; \
@@ -99,7 +99,7 @@ verify-repos-yaml:
 verify-resolve-config:
 	@echo "=== resolve-config.sh test ==="
 	@fail=0; \
-	repo_data=$$(yq -r '.repos[] | [.repo, .config_prefix, (.main_only // false), (.dev_branch // ""), (.min_branch // ""), (.max_branch // "")] | join("\t")' repos.yaml); \
+	repo_data=$$(yq -r '.repos[] | [.repo, .config_prefix, (.main_only // false), (.dev_branch // "_NONE_"), (.min_branch // "_NONE_"), (.max_branch // "_NONE_")] | join("\t")' repos.yaml); \
 	for branch in oadp-1.3 oadp-1.4 oadp-1.5 oadp-1.6 oadp-dev; do \
 		echo "$$repo_data" | while IFS='	' read -r repo prefix main_only dev_br min_br max_br; do \
 			[ -z "$$repo" ] && continue; \
@@ -108,7 +108,7 @@ verify-resolve-config:
 				[ "$$branch" != "oadp-dev" ] && continue; \
 				effective_branch="main"; \
 			fi; \
-			[ -n "$$dev_br" ] && [ "$$branch" = "oadp-dev" ] && effective_branch="$$dev_br"; \
+			[ "$$dev_br" != "_NONE_" ] && [ "$$branch" = "oadp-dev" ] && effective_branch="$$dev_br"; \
 			config_file="rebase-configs/$${prefix}_$${effective_branch}.env.sh"; \
 			[ -f "$$config_file" ] || continue; \
 			grep -q 'SOURCE_UPSTREAM_REPO' "$$config_file" || continue; \
