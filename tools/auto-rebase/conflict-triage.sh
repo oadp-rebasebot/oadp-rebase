@@ -16,6 +16,7 @@
 #   go.mod, go.sum                        go-mod-tidy-and-commit.sh
 #   Dockerfile, Dockerfile-Windows,       normalize-dockerfiles-and-commit.sh
 #     hack/build-image/Dockerfile
+#   **/package-lock.json                  ALWAYS SAFE — generated lockfile
 #   (everything else)                     ALWAYS UNSAFE — needs human review
 #
 # Prerequisite: rebasebot must have failed with "ERROR - Manual intervention
@@ -88,6 +89,10 @@ for file in $warned_files; do
                 covered=true
                 hook_name="normalize-dockerfiles-and-commit.sh"
             fi
+            ;;
+        */package-lock.json|package-lock.json)
+            covered=true
+            hook_name="(generated lockfile — upstream version wins)"
             ;;
     esac
 
