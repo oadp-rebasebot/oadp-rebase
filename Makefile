@@ -1,4 +1,4 @@
-.PHONY: generate verify-generate test syntax-check config-load verify-hooks verify-kopia-alignment
+.PHONY: generate verify-generate test syntax-check config-load verify-hooks verify-kopia-alignment verify-repos-yaml
 
 generate:
 	@bash tools/generate-go-replace-velero.sh
@@ -30,16 +30,27 @@ config-load:
 	@echo "=== Config loading test ==="
 	@fail=0; \
 	for branch in oadp-1.3 oadp-1.4 oadp-1.5 oadp-1.6 oadp-dev; do \
-		for config in $$(grep -E "^\s+[a-z].*-$${branch}\)" run-oadp-rebase.sh | sed 's/).*//' | awk '{print $$1}'); do \
-			output=$$(./run-oadp-rebase.sh -t "$$config" 2>&1); \
-			rc=$$?; \
-			if [ $$rc -ne 0 ]; then \
-				echo "  FAIL: $$config"; \
-				fail=1; \
-			else \
-				upstream=$$(echo "$$output" | grep 'Upstream:' | sed 's/.*Upstream:[[:space:]]*//'); \
-				echo "  OK: $$config -> $$upstream"; \
-			fi; \
+		for wave in 1 2 3 4 5; do \
+			configs=$$(REPOS_YAML=repos.yaml yq -r ".repos[] | select(.wave == $$wave) | .repo" repos.yaml 2>/dev/null) || continue; \
+			for repo in $$configs; do \
+				prefix=$$(yq -r ".repos[] | select(.repo == \"$$repo\") | .config_prefix" repos.yaml); \
+				config_file="rebase-configs/$${prefix}_$${branch}.env.sh"; \
+				[ -f "$$config_file" ] || continue; \
+				target="$${repo}-$${branch}"; \
+				main_only=$$(yq -r ".repos[] | select(.repo == \"$$repo\") | .main_only // false" repos.yaml); \
+				[ "$$main_only" = "true" ] && target="$${repo}-main"; \
+				dev_branch=$$(yq -r ".repos[] | select(.repo == \"$$repo\") | .dev_branch // \"\"" repos.yaml); \
+				[ -n "$$dev_branch" ] && [ "$$branch" = "oadp-dev" ] && target="$${repo}-$${dev_branch}"; \
+				output=$$(./run-oadp-rebase.sh -t "$$target" 2>&1); \
+				rc=$$?; \
+				if [ $$rc -ne 0 ]; then \
+					echo "  FAIL: $$target"; \
+					fail=1; \
+				else \
+					upstream=$$(echo "$$output" | grep 'Upstream:' | sed 's/.*Upstream:[[:space:]]*//'); \
+					echo "  OK: $$target -> $$upstream"; \
+				fi; \
+			done; \
 		done; \
 	done; \
 	[ $$fail -eq 0 ] && echo "All configs OK" || exit 1
@@ -74,6 +85,17 @@ verify-kopia-alignment:
 	done; \
 	[ $$fail -eq 0 ] && echo "Kopia alignment OK" || exit 1
 
-test: verify-generate syntax-check config-load verify-hooks
+verify-repos-yaml:
+	@echo "=== repos.yaml validation ==="
+	@yq eval 'true' repos.yaml > /dev/null || { echo "FAIL: repos.yaml is not valid YAML"; exit 1; }
+	@fail=0; \
+	for prefix in $$(yq -r '.repos[].config_prefix' repos.yaml); do \
+		if ! ls rebase-configs/$${prefix}_*.env.sh >/dev/null 2>&1; then \
+			echo "WARNING: No config files found for prefix: $$prefix"; \
+		fi; \
+	done; \
+	echo "repos.yaml validation OK"
+
+test: verify-repos-yaml verify-generate syntax-check config-load verify-hooks
 	@echo ""
 	@echo "All checks passed."
