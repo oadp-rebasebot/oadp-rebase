@@ -1,0 +1,206 @@
+# repos.yaml — Single source of truth for OADP repository definitions.
+# Every tool reads this file directly; do not duplicate this data elsewhere.
+#
+# Required fields: org, repo, wave, config_prefix
+# Optional fields: main_only, dev_branch, min_branch, max_branch, images
+
+waves:
+  1: "Independent Dependencies"
+  2: "Velero Integration"
+  3: "Plugins and Operator"
+  4: "Downstream Controllers"
+  5: "Final Dependents"
+
+repos:
+  # Wave 1 — base dependencies
+  - org: migtools
+    repo: kopia
+    wave: 1
+    config_prefix: migtools_kopia
+
+  - org: openshift
+    repo: restic
+    wave: 1
+    config_prefix: openshift_restic
+
+  - org: migtools
+    repo: filebrowser
+    wave: 1
+    config_prefix: migtools_filebrowser
+    min_branch: oadp-1.6
+    images:
+      - namespace: konveyor
+        repo: oadp-vmfr-access-filebrowser
+        name: oadp-vmfr-access-filebrowser
+
+  - org: migtools
+    repo: udistribution
+    wave: 1
+    config_prefix: migtools_udistribution
+    main_only: true
+
+  - org: migtools
+    repo: oadp-vmdp
+    wave: 1
+    config_prefix: migtools_oadp_vmdp
+    min_branch: oadp-1.6
+    images:
+      - namespace: konveyor
+        repo: oadp-vmdp-binaries
+        name: oadp-vmdp-binaries
+
+  # Wave 2 — velero
+  - org: openshift
+    repo: velero
+    wave: 2
+    config_prefix: openshift_velero
+    images:
+      - namespace: konveyor
+        repo: velero
+        name: velero
+
+  # Wave 3 — plugins + operator
+  - org: migtools
+    repo: kubevirt-velero-plugin
+    wave: 3
+    config_prefix: migtools_kubevirt_velero_plugin
+    dev_branch: main
+    images:
+      - namespace: konveyor
+        repo: kubevirt-velero-plugin
+        name: kubevirt-velero-plugin
+
+  - org: openshift
+    repo: hypershift-oadp-plugin
+    wave: 3
+    config_prefix: openshift_hypershift_oadp_plugin
+    min_branch: oadp-1.5
+    dev_branch: main
+
+  - org: openshift
+    repo: velero-plugin-for-csi
+    wave: 3
+    config_prefix: openshift_velero_plugin_for_csi
+    max_branch: oadp-1.3
+
+  - org: openshift
+    repo: oadp-operator
+    wave: 3
+    config_prefix: openshift_oadp-operator
+    images:
+      - namespace: konveyor
+        repo: oadp-operator
+        name: oadp-operator
+
+  - org: openshift
+    repo: velero-plugin-for-aws
+    wave: 3
+    config_prefix: openshift_velero_plugin_for_aws
+    images:
+      - namespace: konveyor
+        repo: velero-plugin-for-aws
+        name: velero-plugin-for-aws
+
+  - org: openshift
+    repo: velero-plugin-for-legacy-aws
+    wave: 3
+    config_prefix: openshift_velero_plugin_for_legacy_aws
+    min_branch: oadp-1.4
+    images:
+      - namespace: konveyor
+        repo: velero-plugin-for-legacy-aws
+        name: velero-plugin-for-legacy-aws
+
+  - org: openshift
+    repo: velero-plugin-for-microsoft-azure
+    wave: 3
+    config_prefix: openshift_velero_plugin_for_microsoft_azure
+    images:
+      - namespace: konveyor
+        repo: velero-plugin-for-microsoft-azure
+        name: velero-plugin-for-microsoft-azure
+
+  - org: openshift
+    repo: velero-plugin-for-gcp
+    wave: 3
+    config_prefix: openshift_velero_plugin_for_gcp
+    images:
+      - namespace: konveyor
+        repo: velero-plugin-for-gcp
+        name: velero-plugin-for-gcp
+
+  # Wave 4 — downstream controllers
+  - org: migtools
+    repo: oadp-non-admin
+    wave: 4
+    config_prefix: migtools_oadp_non_admin
+    min_branch: oadp-1.5
+    images:
+      - namespace: konveyor
+        repo: oadp-non-admin
+        name: oadp-non-admin
+
+  - org: openshift
+    repo: openshift-velero-plugin
+    wave: 4
+    config_prefix: openshift_openshift_velero_plugin
+    images:
+      - namespace: konveyor
+        repo: openshift-velero-plugin
+        name: openshift-velero-plugin
+
+  - org: migtools
+    repo: kubevirt-datamover-controller
+    wave: 4
+    config_prefix: migtools_kubevirt_datamover_controller
+    min_branch: oadp-1.6
+    images:
+      - namespace: konveyor
+        repo: kubevirt-datamover-controller
+        name: kubevirt-datamover-controller
+
+  - org: migtools
+    repo: oadp-vm-file-restore
+    wave: 4
+    config_prefix: migtools_oadp_vm_file_restore
+    min_branch: oadp-1.6
+    images:
+      - namespace: konveyor
+        repo: oadp-vm-file-restore
+        name: oadp-vm-file-restore
+      - namespace: konveyor
+        repo: oadp-vmfr-access
+        name: oadp-vmfr-access
+      - namespace: konveyor
+        repo: oadp-vmfr-access-sshd
+        name: oadp-vmfr-access-sshd
+
+  # Wave 5 — final dependents
+  - org: openshift
+    repo: oadp-must-gather
+    wave: 5
+    config_prefix: openshift_oadp_must_gather
+    images:
+      - namespace: konveyor
+        repo: oadp-must-gather
+        name: oadp-must-gather
+
+  - org: migtools
+    repo: oadp-cli
+    wave: 5
+    config_prefix: migtools_oadp_cli
+    min_branch: oadp-1.4
+    images:
+      - namespace: konveyor
+        repo: oadp-cli-binaries
+        name: oadp-cli-binaries
+
+  - org: migtools
+    repo: kubevirt-datamover-plugin
+    wave: 5
+    config_prefix: migtools_kubevirt_datamover_plugin
+    min_branch: oadp-1.6
+    images:
+      - namespace: konveyor
+        repo: kubevirt-datamover-plugin
+        name: kubevirt-datamover-plugin

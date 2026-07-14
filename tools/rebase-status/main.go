@@ -46,7 +46,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Find config directory
+	reposYAML, yamlErr := FindReposYAML()
+	if yamlErr != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", yamlErr)
+		fmt.Fprintf(os.Stderr, "hint: run from the oadp-rebase repo root\n")
+		os.Exit(1)
+	}
+	if yamlErr = LoadReposYAML(reposYAML); yamlErr != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", yamlErr)
+		os.Exit(1)
+	}
+
 	if configDir == "" {
 		var err error
 		configDir, err = FindConfigDir()

@@ -137,6 +137,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install yq
+        uses: mikefarah/yq@v4.46.1
+
       - name: Setup secrets
         env:
           APP_KEY: ${{ secrets.OADP_REBASEBOT_APP_KEY }}

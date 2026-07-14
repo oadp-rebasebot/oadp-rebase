@@ -22,172 +22,92 @@ OADP_BRANCH="${OADP_BRANCH:-oadp-dev}"
 OADP_BRANCH_SET=""
 WORKING_DIR=""
 
-# === Repository Configuration Mapping ===
+# === Repository Registry ===
+# All repo metadata is loaded from repos.yaml (SSOT).
 
-get_config_name() {
-    case "$1" in
-        # === Udistribution ===
-        udistribution-main) echo "migtools_udistribution_main" ;;
-        kubevirt-velero-plugin-main) echo "migtools_kubevirt_velero_plugin_main" ;;
-        kubevirt-velero-plugin-oadp-1.3) echo "migtools_kubevirt_velero_plugin_oadp-1.3" ;;
-        kubevirt-velero-plugin-oadp-1.4) echo "migtools_kubevirt_velero_plugin_oadp-1.4" ;;
-        kubevirt-velero-plugin-oadp-1.5) echo "migtools_kubevirt_velero_plugin_oadp-1.5" ;;
-        kubevirt-velero-plugin-oadp-1.6) echo "migtools_kubevirt_velero_plugin_oadp-1.6" ;;
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPOS_YAML="${REPOS_YAML:-${SCRIPT_DIR}/repos.yaml}"
 
-        # === Wave 1 ===
-        kopia-oadp-dev) echo "migtools_kopia_oadp-dev" ;;
-        kopia-oadp-1.3) echo "migtools_kopia_oadp-1.3" ;;
-        kopia-oadp-1.4) echo "migtools_kopia_oadp-1.4" ;;
-        kopia-oadp-1.5) echo "migtools_kopia_oadp-1.5" ;;
-        kopia-oadp-1.6) echo "migtools_kopia_oadp-1.6" ;;
-        restic-oadp-dev) echo "openshift_restic_oadp-dev" ;;
-        restic-oadp-1.3) echo "openshift_restic_oadp-1.3" ;;
-        restic-oadp-1.4) echo "openshift_restic_oadp-1.4" ;;
-        restic-oadp-1.5) echo "openshift_restic_oadp-1.5" ;;
-        restic-oadp-1.6) echo "openshift_restic_oadp-1.6" ;;
-        filebrowser-oadp-dev) echo "migtools_filebrowser_oadp-dev" ;;
-        filebrowser-oadp-1.6) echo "migtools_filebrowser_oadp-1.6" ;;
-
-        # === Wave 2 ===
-        velero-oadp-dev) echo "openshift_velero_oadp-dev" ;;
-        velero-oadp-1.3) echo "openshift_velero_oadp-1.3" ;;
-        velero-oadp-1.4) echo "openshift_velero_oadp-1.4" ;;
-        velero-oadp-1.5) echo "openshift_velero_oadp-1.5" ;;
-        velero-oadp-1.6) echo "openshift_velero_oadp-1.6" ;;
-
-        # === Wave 3 ===
-        velero-plugin-for-csi-oadp-dev) echo "openshift_velero_plugin_for_csi_oadp-dev" ;;
-        velero-plugin-for-csi-oadp-1.3) echo "openshift_velero_plugin_for_csi_oadp-1.3" ;;
-        oadp-operator-oadp-dev) echo "openshift_oadp-operator_oadp-dev" ;;
-        oadp-operator-oadp-1.3) echo "openshift_oadp-operator_oadp-1.3" ;;
-        oadp-operator-oadp-1.4) echo "openshift_oadp-operator_oadp-1.4" ;;
-        oadp-operator-oadp-1.5) echo "openshift_oadp-operator_oadp-1.5" ;;
-        oadp-operator-oadp-1.6) echo "openshift_oadp-operator_oadp-1.6" ;;
-        velero-plugin-for-aws-oadp-dev) echo "openshift_velero_plugin_for_aws_oadp-dev" ;;
-        velero-plugin-for-aws-oadp-1.3) echo "openshift_velero_plugin_for_aws_oadp-1.3" ;;
-        velero-plugin-for-aws-oadp-1.4) echo "openshift_velero_plugin_for_aws_oadp-1.4" ;;
-        velero-plugin-for-aws-oadp-1.5) echo "openshift_velero_plugin_for_aws_oadp-1.5" ;;
-        velero-plugin-for-aws-oadp-1.6) echo "openshift_velero_plugin_for_aws_oadp-1.6" ;;
-        velero-plugin-for-legacy-aws-oadp-dev) echo "openshift_velero_plugin_for_legacy_aws_oadp-dev" ;;
-        velero-plugin-for-legacy-aws-oadp-1.4) echo "openshift_velero_plugin_for_legacy_aws_oadp-1.4" ;;
-        velero-plugin-for-legacy-aws-oadp-1.5) echo "openshift_velero_plugin_for_legacy_aws_oadp-1.5" ;;
-        velero-plugin-for-legacy-aws-oadp-1.6) echo "openshift_velero_plugin_for_legacy_aws_oadp-1.6" ;;
-        velero-plugin-for-microsoft-azure-oadp-dev) echo "openshift_velero_plugin_for_microsoft_azure_oadp-dev" ;;
-        velero-plugin-for-microsoft-azure-oadp-1.3) echo "openshift_velero_plugin_for_microsoft_azure_oadp-1.3" ;;
-        velero-plugin-for-microsoft-azure-oadp-1.4) echo "openshift_velero_plugin_for_microsoft_azure_oadp-1.4" ;;
-        velero-plugin-for-microsoft-azure-oadp-1.5) echo "openshift_velero_plugin_for_microsoft_azure_oadp-1.5" ;;
-        velero-plugin-for-microsoft-azure-oadp-1.6) echo "openshift_velero_plugin_for_microsoft_azure_oadp-1.6" ;;
-        velero-plugin-for-gcp-oadp-dev) echo "openshift_velero_plugin_for_gcp_oadp-dev" ;;
-        velero-plugin-for-gcp-oadp-1.3) echo "openshift_velero_plugin_for_gcp_oadp-1.3" ;;
-        velero-plugin-for-gcp-oadp-1.4) echo "openshift_velero_plugin_for_gcp_oadp-1.4" ;;
-        velero-plugin-for-gcp-oadp-1.5) echo "openshift_velero_plugin_for_gcp_oadp-1.5" ;;
-        velero-plugin-for-gcp-oadp-1.6) echo "openshift_velero_plugin_for_gcp_oadp-1.6" ;;
-
-        # === Wave 4 ===
-        oadp-non-admin-oadp-dev) echo "migtools_oadp_non_admin_oadp-dev" ;;
-        oadp-non-admin-oadp-1.4) echo "migtools_oadp_non_admin_oadp-1.4" ;;
-        oadp-non-admin-oadp-1.5) echo "migtools_oadp_non_admin_oadp-1.5" ;;
-        oadp-non-admin-oadp-1.6) echo "migtools_oadp_non_admin_oadp-1.6" ;;
-        oadp-vm-file-restore-oadp-dev) echo "migtools_oadp_vm_file_restore_oadp-dev" ;;
-        oadp-vm-file-restore-oadp-1.6) echo "migtools_oadp_vm_file_restore_oadp-1.6" ;;
-        openshift-velero-plugin-oadp-dev) echo "openshift_openshift_velero_plugin_oadp-dev" ;;
-        openshift-velero-plugin-oadp-1.3) echo "openshift_openshift_velero_plugin_oadp-1.3" ;;
-        openshift-velero-plugin-oadp-1.4) echo "openshift_openshift_velero_plugin_oadp-1.4" ;;
-        openshift-velero-plugin-oadp-1.5) echo "openshift_openshift_velero_plugin_oadp-1.5" ;;
-        openshift-velero-plugin-oadp-1.6) echo "openshift_openshift_velero_plugin_oadp-1.6" ;;
-        kubevirt-datamover-controller-oadp-dev) echo "migtools_kubevirt_datamover_controller_oadp-dev" ;;
-        kubevirt-datamover-controller-oadp-1.6) echo "migtools_kubevirt_datamover_controller_oadp-1.6" ;;
-
-        # === Wave 5 ===
-        oadp-must-gather-oadp-dev) echo "openshift_oadp_must_gather_oadp-dev" ;;
-        oadp-must-gather-oadp-1.3) echo "openshift_oadp_must_gather_oadp-1.3" ;;
-        oadp-must-gather-oadp-1.4) echo "openshift_oadp_must_gather_oadp-1.4" ;;
-        oadp-must-gather-oadp-1.5) echo "openshift_oadp_must_gather_oadp-1.5" ;;
-        oadp-must-gather-oadp-1.6) echo "openshift_oadp_must_gather_oadp-1.6" ;;
-        kubevirt-datamover-plugin-oadp-dev) echo "migtools_kubevirt_datamover_plugin_oadp-dev" ;;
-        kubevirt-datamover-plugin-oadp-1.6) echo "migtools_kubevirt_datamover_plugin_oadp-1.6" ;;
-
-        # === OADP CLI ===
-        oadp-cli-oadp-dev) echo "migtools_oadp_cli_oadp-dev" ;;
-        oadp-cli-oadp-1.4) echo "migtools_oadp_cli_oadp-1.4" ;;
-        oadp-cli-oadp-1.5) echo "migtools_oadp_cli_oadp-1.5" ;;
-        oadp-cli-oadp-1.6) echo "migtools_oadp_cli_oadp-1.6" ;;
-
-        # === HyperShift OADP Plugin ===
-        hypershift-oadp-plugin-main) echo "openshift_hypershift_oadp_plugin_main" ;;
-        hypershift-oadp-plugin-oadp-1.5) echo "openshift_hypershift_oadp_plugin_oadp-1.5" ;;
-        hypershift-oadp-plugin-oadp-1.6) echo "openshift_hypershift_oadp_plugin_oadp-1.6" ;;
-
-        # === OADP VMDP ===
-        oadp-vmdp-oadp-dev) echo "migtools_oadp_vmdp_oadp-dev" ;;
-        oadp-vmdp-oadp-1.6) echo "migtools_oadp_vmdp_oadp-1.6" ;;
-
-        # === Unknown ===
-        *) return 1 ;;
-    esac
+_require_yq() {
+    command -v yq >/dev/null 2>&1 || { printf "Error: yq is required but not installed.\nInstall from https://github.com/mikefarah/yq\n" >&2; exit 1; }
+    [ -f "$REPOS_YAML" ] || { printf "Error: repos.yaml not found at %s\n" "$REPOS_YAML" >&2; exit 1; }
 }
 
-# === Wave Configuration ===
+_branch_ge() {
+    case "$1" in oadp-dev|main) return 0 ;; esac
+    cur=$(echo "$1" | sed -n 's/oadp-1\.\([0-9]*\)/\1/p')
+    min=$(echo "$2" | sed -n 's/oadp-1\.\([0-9]*\)/\1/p')
+    [ -z "$cur" ] && return 0
+    [ -z "$min" ] && return 0
+    [ "$cur" -ge "$min" ]
+}
+
+_branch_le() {
+    case "$1" in oadp-dev|main) return 0 ;; esac
+    cur=$(echo "$1" | sed -n 's/oadp-1\.\([0-9]*\)/\1/p')
+    max=$(echo "$2" | sed -n 's/oadp-1\.\([0-9]*\)/\1/p')
+    [ -z "$cur" ] && return 0
+    [ -z "$max" ] && return 0
+    [ "$cur" -le "$max" ]
+}
+
+get_config_name() {
+    _gcn_repo="$(get_repo_name "$1")"
+    _gcn_branch="$(echo "$1" | sed "s/^${_gcn_repo}-//")"
+
+    # Bare repo name without branch suffix — not a valid composite key
+    [ "$_gcn_branch" = "$1" ] && return 1
+
+    _gcn_prefix=$(yq -r ".repos[] | select(.repo == \"${_gcn_repo}\") | .config_prefix" "$REPOS_YAML")
+    [ -z "$_gcn_prefix" ] || [ "$_gcn_prefix" = "null" ] && return 1
+
+    echo "${_gcn_prefix}_${_gcn_branch}"
+}
 
 get_wave_repos() {
-    branch="$1"
-    wave="$2"
+    _gwr_branch="$1"
+    _gwr_wave="$2"
 
-    # Special case for udistribution: always include main in wave 1
-    if [ "$wave" -eq 1 ]; then
-        if [ "$branch" = "oadp-dev" ] || [ "$branch" = "main" ]; then
-            echo "udistribution-main kopia-oadp-dev restic-oadp-dev filebrowser-oadp-dev oadp-vmdp-oadp-dev"
-            return 0
+    # Use "_NONE_" as placeholder for empty fields (POSIX read collapses consecutive tabs)
+    _gwr_data=$(yq -r ".repos[] | select(.wave == ${_gwr_wave}) | [.repo, (.main_only // false), (.dev_branch // \"_NONE_\"), (.min_branch // \"_NONE_\"), (.max_branch // \"_NONE_\")] | @tsv" "$REPOS_YAML")
+    [ -z "$_gwr_data" ] && return 1
+
+    _gwr_result=""
+    while IFS="$(printf '\t')" read -r _gwr_repo _gwr_mo _gwr_db _gwr_min _gwr_max; do
+        [ -z "$_gwr_repo" ] && continue
+
+        # Skip main_only repos on release branches
+        if [ "$_gwr_mo" = "true" ] && [ "$_gwr_branch" != "oadp-dev" ] && [ "$_gwr_branch" != "main" ]; then
+            continue
         fi
-    fi
 
-    if [ "$branch" = "oadp-dev" ]; then
-        case "$wave" in
-            2) echo "velero-oadp-dev" ;;
-            3) echo "kubevirt-velero-plugin-main velero-plugin-for-csi-oadp-dev oadp-operator-oadp-dev velero-plugin-for-aws-oadp-dev velero-plugin-for-legacy-aws-oadp-dev velero-plugin-for-microsoft-azure-oadp-dev velero-plugin-for-gcp-oadp-dev hypershift-oadp-plugin-main" ;;
-            4) echo "oadp-non-admin-oadp-dev openshift-velero-plugin-oadp-dev kubevirt-datamover-controller-oadp-dev oadp-vm-file-restore-oadp-dev" ;;
-            5) echo "oadp-must-gather-oadp-dev oadp-cli-oadp-dev kubevirt-datamover-plugin-oadp-dev" ;;
-            *) return 1 ;;
-        esac
-    elif [ "$branch" = "oadp-1.3" ]; then
-        case "$wave" in
-            1) echo "kopia-oadp-1.3 restic-oadp-1.3" ;;
-            2) echo "velero-oadp-1.3" ;;
-            3) echo "kubevirt-velero-plugin-oadp-1.3 velero-plugin-for-csi-oadp-1.3 oadp-operator-oadp-1.3 velero-plugin-for-aws-oadp-1.3 velero-plugin-for-gcp-oadp-1.3 velero-plugin-for-microsoft-azure-oadp-1.3" ;;
-            4) echo "openshift-velero-plugin-oadp-1.3" ;;
-            5) echo "oadp-must-gather-oadp-1.3" ;;
-            *) return 1 ;;
-        esac
-    elif [ "$branch" = "oadp-1.4" ]; then
-        case "$wave" in
-            1) echo "kopia-oadp-1.4 restic-oadp-1.4" ;;
-            2) echo "velero-oadp-1.4" ;;
-            3) echo "kubevirt-velero-plugin-oadp-1.4 oadp-operator-oadp-1.4 velero-plugin-for-aws-oadp-1.4 velero-plugin-for-legacy-aws-oadp-1.4 velero-plugin-for-gcp-oadp-1.4 velero-plugin-for-microsoft-azure-oadp-1.4" ;;
-            4) echo "oadp-non-admin-oadp-1.4 openshift-velero-plugin-oadp-1.4" ;;
-            5) echo "oadp-must-gather-oadp-1.4 oadp-cli-oadp-1.4" ;;
-            *) return 1 ;;
-        esac
-    elif [ "$branch" = "oadp-1.5" ]; then
-        case "$wave" in
-            1) echo "kopia-oadp-1.5 restic-oadp-1.5" ;;
-            2) echo "velero-oadp-1.5" ;;
-            3) echo "kubevirt-velero-plugin-oadp-1.5 oadp-operator-oadp-1.5 velero-plugin-for-aws-oadp-1.5 velero-plugin-for-legacy-aws-oadp-1.5 velero-plugin-for-microsoft-azure-oadp-1.5 velero-plugin-for-gcp-oadp-1.5 hypershift-oadp-plugin-oadp-1.5" ;;
-            4) echo "oadp-non-admin-oadp-1.5 openshift-velero-plugin-oadp-1.5" ;;
-            5) echo "oadp-must-gather-oadp-1.5 oadp-cli-oadp-1.5" ;;
-            *) return 1 ;;
-        esac
-    elif [ "$branch" = "oadp-1.6" ]; then
-        case "$wave" in
-            1) echo "kopia-oadp-1.6 restic-oadp-1.6 filebrowser-oadp-1.6 oadp-vmdp-oadp-1.6" ;;
-            2) echo "velero-oadp-1.6" ;;
-            3) echo "kubevirt-velero-plugin-oadp-1.6 oadp-operator-oadp-1.6 velero-plugin-for-aws-oadp-1.6 velero-plugin-for-legacy-aws-oadp-1.6 velero-plugin-for-microsoft-azure-oadp-1.6 velero-plugin-for-gcp-oadp-1.6 hypershift-oadp-plugin-oadp-1.6" ;;
-            4) echo "oadp-non-admin-oadp-1.6 openshift-velero-plugin-oadp-1.6 kubevirt-datamover-controller-oadp-1.6 oadp-vm-file-restore-oadp-1.6" ;;
-            5) echo "oadp-must-gather-oadp-1.6 oadp-cli-oadp-1.6 kubevirt-datamover-plugin-oadp-1.6" ;;
-            *) return 1 ;;
-        esac
-    else
-        return 1
-    fi
+        if [ "$_gwr_min" != "_NONE_" ]; then
+            _branch_ge "$_gwr_branch" "$_gwr_min" || continue
+        fi
+
+        if [ "$_gwr_max" != "_NONE_" ]; then
+            _branch_le "$_gwr_branch" "$_gwr_max" || continue
+        fi
+
+        if [ "$_gwr_mo" = "true" ]; then
+            _gwr_key="${_gwr_repo}-main"
+        elif [ "$_gwr_db" != "_NONE_" ] && [ "$_gwr_branch" = "oadp-dev" ]; then
+            _gwr_key="${_gwr_repo}-${_gwr_db}"
+        else
+            _gwr_key="${_gwr_repo}-${_gwr_branch}"
+        fi
+
+        if [ -z "$_gwr_result" ]; then
+            _gwr_result="$_gwr_key"
+        else
+            _gwr_result="$_gwr_result $_gwr_key"
+        fi
+    done <<EOF
+$_gwr_data
+EOF
+
+    [ -z "$_gwr_result" ] && return 1
+    echo "$_gwr_result"
 }
 
 # === Utility Functions ===
@@ -656,19 +576,25 @@ done
 
 [ -n "$TARGET" ] || { usage; error_exit "Target is required"; }
 
+_require_yq
+
 SOURCE_TYPE="local"
 [ "$REMOTE_MODE" = "true" ] && SOURCE_TYPE="remote"
 
-# Special handling for udistribution and kubevirt-velero-plugin default branch
+# Resolve bare repo names to composite repo-branch keys
 if [ "$WAVE_MODE" != "true" ]; then
-    if [ "$TARGET" = "udistribution" ] && [ -z "${OADP_BRANCH_SET:-}" ]; then
-        TARGET="udistribution-main"
-    elif [ "$TARGET" = "kubevirt-velero-plugin" ] && [ -z "${OADP_BRANCH_SET:-}" ]; then
-        TARGET="kubevirt-velero-plugin-main"
-    elif [ "$TARGET" = "hypershift-oadp-plugin" ] && [ -z "${OADP_BRANCH_SET:-}" ]; then
-        TARGET="hypershift-oadp-plugin-main"
-    elif ! get_config_name "$TARGET" >/dev/null 2>&1; then
-        TARGET="${TARGET}-${OADP_BRANCH}"
+    if ! get_config_name "$TARGET" >/dev/null 2>&1; then
+        _is_main_only=$(yq -r ".repos[] | select(.repo == \"$TARGET\") | .main_only // false" "$REPOS_YAML" 2>/dev/null)
+        if [ "$_is_main_only" = "true" ]; then
+            TARGET="${TARGET}-main"
+        else
+            _dev_branch=$(yq -r ".repos[] | select(.repo == \"$TARGET\") | .dev_branch // \"\"" "$REPOS_YAML" 2>/dev/null)
+            if [ -n "$_dev_branch" ] && [ "$_dev_branch" != "null" ] && [ -z "${OADP_BRANCH_SET:-}" ]; then
+                TARGET="${TARGET}-${_dev_branch}"
+            else
+                TARGET="${TARGET}-${OADP_BRANCH}"
+            fi
+        fi
     fi
 fi
 

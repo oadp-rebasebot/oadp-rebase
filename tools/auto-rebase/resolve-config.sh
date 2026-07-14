@@ -15,12 +15,18 @@ fi
 
 TARGET="$1"
 
-# Resolve config name using run-oadp-rebase.sh's get_config_name
-config_name=$(grep -E "^[[:space:]]+${TARGET}\)" "$SCRIPT_DIR/run-oadp-rebase.sh" | head -1 | sed 's/.*echo "\(.*\)".*/\1/' || true)
-if [ -z "$config_name" ]; then
+# Resolve config name from repos.yaml
+REPOS_YAML="$SCRIPT_DIR/repos.yaml"
+command -v yq >/dev/null 2>&1 || { echo "Error: yq is required" >&2; exit 1; }
+
+repo_name=$(echo "$TARGET" | sed -E 's/-(oadp-dev|oadp-1\.[0-9]+|main)$//')
+branch=$(echo "$TARGET" | sed "s/^${repo_name}-//")
+prefix=$(yq -r ".repos[] | select(.repo == \"${repo_name}\") | .config_prefix" "$REPOS_YAML")
+if [ -z "$prefix" ] || [ "$prefix" = "null" ]; then
     echo "Could not resolve config for target: ${TARGET}" >&2
     exit 1
 fi
+config_name="${prefix}_${branch}"
 
 config_file="$SCRIPT_DIR/rebase-configs/${config_name}.env.sh"
 if [ ! -f "$config_file" ]; then

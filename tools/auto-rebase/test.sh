@@ -223,11 +223,15 @@ assert_contains "conflict-policy flag parsed before config lookup" "$out" "Unkno
 default_val=$(grep '^CONFLICT_POLICY=' "$REBASE_SCRIPT" | head -1 | sed 's/.*="//' | sed 's/"//')
 assert_output "default conflict policy is strict" "strict" "$default_val"
 
-# --- Config resolution: workflow grep pattern works for all targets ---
+# --- Config resolution: yq-based lookup works for all targets ---
 
 resolve_config() {
     target="$1"
-    grep -E "^[[:space:]]+${target}\)" "$REBASE_SCRIPT" | head -1 | sed 's/.*echo "\(.*\)".*/\1/'
+    repo_name=$(echo "$target" | sed -E 's/-(oadp-dev|oadp-1\.[0-9]+|main)$//')
+    branch=$(echo "$target" | sed "s/^${repo_name}-//")
+    prefix=$(yq -r ".repos[] | select(.repo == \"${repo_name}\") | .config_prefix" "$SCRIPT_DIR/../../repos.yaml")
+    [ -z "$prefix" ] || [ "$prefix" = "null" ] && return 1
+    echo "${prefix}_${branch}"
 }
 
 assert_output "config resolves: velero-oadp-1.6" \
