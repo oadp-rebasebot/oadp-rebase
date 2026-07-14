@@ -69,7 +69,7 @@ get_wave_repos() {
     _gwr_wave="$2"
 
     # Use "_NONE_" as placeholder for empty fields (POSIX read collapses consecutive tabs)
-    _gwr_data=$(yq -r ".repos[] | select(.wave == ${_gwr_wave}) | [.repo, (.main_only // false), (.dev_branch // \"~\"), (.min_branch // \"~\"), (.max_branch // \"~\")] | @tsv" "$REPOS_YAML")
+    _gwr_data=$(yq -r ".repos[] | select(.wave == ${_gwr_wave}) | [.repo, (.main_only // false), (.dev_branch // \"_NONE_\"), (.min_branch // \"_NONE_\"), (.max_branch // \"_NONE_\")] | @tsv" "$REPOS_YAML")
     [ -z "$_gwr_data" ] && return 1
 
     _gwr_result=""
