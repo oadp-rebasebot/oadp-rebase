@@ -1,4 +1,4 @@
-.PHONY: generate verify-generate test syntax-check config-load verify-hooks verify-kopia-alignment verify-repos-yaml
+.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-repos-yaml
 
 generate:
 	@bash tools/generate-go-replace-velero.sh
@@ -96,6 +96,30 @@ verify-repos-yaml:
 	done; \
 	echo "repos.yaml validation OK"
 
-test: verify-repos-yaml verify-generate syntax-check config-load verify-hooks
+verify-resolve-config:
+	@echo "=== resolve-config.sh test ==="
+	@fail=0; \
+	for branch in oadp-1.3 oadp-1.4 oadp-1.5 oadp-1.6 oadp-dev; do \
+		for wave in 1 2 3 4 5; do \
+			configs=$$(yq -r ".repos[] | select(.wave == $$wave) | .repo" repos.yaml 2>/dev/null) || continue; \
+			for repo in $$configs; do \
+				prefix=$$(yq -r ".repos[] | select(.repo == \"$$repo\") | .config_prefix" repos.yaml); \
+				config_file="rebase-configs/$${prefix}_$${branch}.env.sh"; \
+				[ -f "$$config_file" ] || continue; \
+				grep -q 'SOURCE_UPSTREAM_REPO' "$$config_file" || continue; \
+				target="$${repo}-$${branch}"; \
+				main_only=$$(yq -r ".repos[] | select(.repo == \"$$repo\") | .main_only // false" repos.yaml); \
+				[ "$$main_only" = "true" ] && target="$${repo}-main"; \
+				dev_branch=$$(yq -r ".repos[] | select(.repo == \"$$repo\") | .dev_branch // \"\"" repos.yaml); \
+				[ -n "$$dev_branch" ] && [ "$$branch" = "oadp-dev" ] && target="$${repo}-$${dev_branch}"; \
+				output=$$(bash tools/auto-rebase/resolve-config.sh "$$target" 2>&1) || { echo "  FAIL: $$target"; fail=1; continue; }; \
+				config_name=$$(echo "$$output" | grep 'CONFIG_NAME=' | cut -d'"' -f2); \
+				echo "  OK: $$target -> $$config_name"; \
+			done; \
+		done; \
+	done; \
+	[ $$fail -eq 0 ] && echo "All resolve-config OK" || exit 1
+
+test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks
 	@echo ""
 	@echo "All checks passed."
