@@ -193,14 +193,25 @@ type CVEPRInfo struct {
 
 // PRTally holds the per-branch tally state persisted in the wiki repo.
 type PRTally struct {
-	ResetAt time.Time `json:"reset_at"`
+	ResetAt time.Time        `json:"reset_at"`
+	History []PRCycleHistory `json:"history,omitempty"`
+}
+
+// PRCycleHistory records the final tally of a completed rebase cycle.
+type PRCycleHistory struct {
+	Date      string `json:"date"`
+	Score     string `json:"score"`
+	Triggered int    `json:"triggered"`
+	Opened    int    `json:"opened"`
+	Merged    int    `json:"merged"`
 }
 
 // PRTallyResult holds the computed PR counts for display.
 type PRTallyResult struct {
-	Opened  int
-	Merged  int
-	ResetAt time.Time
+	Triggered int
+	Opened    int
+	Merged    int
+	ResetAt   time.Time
 }
 
 // BranchResult holds the check results for all repos on a single branch.

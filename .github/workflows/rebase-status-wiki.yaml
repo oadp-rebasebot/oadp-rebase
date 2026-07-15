@@ -102,6 +102,7 @@ jobs:
             --config-dir rebase-configs \
             --format home \
             --tally-file /tmp/wiki/pr-tallies.json \
+            --rebase-log /tmp/wiki/Auto-Rebase-V2-Log.md \
             $BRANCHES \
             > /tmp/Home.md
 

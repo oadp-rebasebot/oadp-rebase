@@ -67,8 +67,8 @@ func TestHomeScoreLine(t *testing.T) {
 		{0, 0, 0, 0, nil, "0/0 repos ready"},
 		{5, 3, 2, 0, nil, "3/5 repos ready (60%) | 2 error(s)"},
 		{8, 7, 0, 1, nil, "7/8 repos ready (87%) | 1 warning(s)"},
-		{18, 3, 15, 0, &PRTallyResult{Opened: 12, Merged: 8}, "3/18 repos ready (16%) | 15 error(s) | :mailbox_with_mail: 12 opened, 8 merged"},
-		{18, 18, 0, 0, &PRTallyResult{Opened: 0, Merged: 0}, "18/18 repos ready (100%) | :mailbox_with_mail: 0 opened, 0 merged"},
+		{18, 3, 15, 0, &PRTallyResult{Triggered: 20, Opened: 12, Merged: 8}, "3/18 repos ready (16%) | 15 error(s) | :mailbox_with_mail: bot triggered 20 times, 12 opened prs, 8 merged prs"},
+		{18, 18, 0, 0, &PRTallyResult{Triggered: 0, Opened: 0, Merged: 0}, "18/18 repos ready (100%) | :mailbox_with_mail: bot triggered 0 times, 0 opened prs, 0 merged prs"},
 	}
 	for _, tt := range tests {
 		got := homeScoreLine(tt.total, tt.ready, tt.errs, tt.warns, tt.tally)
@@ -214,7 +214,7 @@ func TestRenderHomeWithTally(t *testing.T) {
 					Issues: []Issue{{Severity: "error", Message: "missing"}},
 				},
 			},
-			Tally: &PRTallyResult{Opened: 5, Merged: 3, ResetAt: now.Add(-72 * time.Hour)},
+			Tally: &PRTallyResult{Triggered: 10, Opened: 5, Merged: 3, ResetAt: now.Add(-72 * time.Hour)},
 		},
 	}
 
@@ -222,11 +222,11 @@ func TestRenderHomeWithTally(t *testing.T) {
 	RenderHome(&buf, branches)
 	out := buf.String()
 
-	if !strings.Contains(out, ":mailbox_with_mail: 5 opened, 3 merged") {
+	if !strings.Contains(out, ":mailbox_with_mail: bot triggered 10 times, 5 opened prs, 3 merged prs") {
 		t.Error("missing tally in score line")
 	}
 	// Tally should also appear in the Slack copy snippet
-	if count := strings.Count(out, ":mailbox_with_mail: 5 opened, 3 merged"); count < 2 {
+	if count := strings.Count(out, ":mailbox_with_mail: bot triggered 10 times, 5 opened prs, 3 merged prs"); count < 2 {
 		t.Errorf("tally should appear in both display and Slack copy, found %d times", count)
 	}
 }
@@ -248,6 +248,72 @@ func TestRenderHomeNoTally(t *testing.T) {
 
 	if strings.Contains(out, "mailbox_with_mail") {
 		t.Error("should not show tally when Tally is nil")
+	}
+}
+
+func TestRenderHomeCycleHistory(t *testing.T) {
+	branches := []BranchResult{
+		{
+			Branch: "oadp-1.6",
+			Statuses: []RepoStatus{
+				{Spec: RepoSpec{Repo: "velero", Wave: 2, HasConfig: true}},
+			},
+			Tally: &PRTallyResult{Triggered: 5, Opened: 3, Merged: 3},
+		},
+	}
+	tallies := map[string]*PRTally{
+		"oadp-1.6": {
+			ResetAt: time.Now(),
+			History: []PRCycleHistory{
+				{Date: "2026-06-01", Score: "18/18 repos ready (100%)", Triggered: 25, Opened: 18, Merged: 18},
+				{Date: "2026-07-01", Score: "18/18 repos ready (100%)", Triggered: 30, Opened: 20, Merged: 20},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+	RenderHome(&buf, branches, tallies)
+	out := buf.String()
+
+	if !strings.Contains(out, "## Completed Rebase Cycles") {
+		t.Error("missing history section header")
+	}
+	if !strings.Contains(out, "### oadp-1.6") {
+		t.Error("missing branch history header")
+	}
+	if !strings.Contains(out, "| 2026-07-01 |") {
+		t.Error("missing most recent history entry")
+	}
+	if !strings.Contains(out, "| 2026-06-01 |") {
+		t.Error("missing older history entry")
+	}
+	// Most recent should appear first (before older entry in the output)
+	recentIdx := strings.Index(out, "2026-07-01")
+	olderIdx := strings.Index(out, "2026-06-01")
+	if recentIdx > olderIdx {
+		t.Error("history should show most recent first")
+	}
+}
+
+func TestRenderHomeNoHistory(t *testing.T) {
+	branches := []BranchResult{
+		{
+			Branch: "oadp-1.6",
+			Statuses: []RepoStatus{
+				{Spec: RepoSpec{Repo: "velero", Wave: 2, HasConfig: true}},
+			},
+		},
+	}
+	tallies := map[string]*PRTally{
+		"oadp-1.6": {ResetAt: time.Now()},
+	}
+
+	var buf bytes.Buffer
+	RenderHome(&buf, branches, tallies)
+	out := buf.String()
+
+	if strings.Contains(out, "Completed Rebase Cycles") {
+		t.Error("should not render history section when no history exists")
 	}
 }
 
