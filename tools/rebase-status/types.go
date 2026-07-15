@@ -191,12 +191,25 @@ type CVEPRInfo struct {
 	Created time.Time
 }
 
+// PRTally holds the per-branch tally state persisted in the wiki repo.
+type PRTally struct {
+	ResetAt time.Time `json:"reset_at"`
+}
+
+// PRTallyResult holds the computed PR counts for display.
+type PRTallyResult struct {
+	Opened  int
+	Merged  int
+	ResetAt time.Time
+}
+
 // BranchResult holds the check results for all repos on a single branch.
 type BranchResult struct {
 	Branch         string
 	Statuses       []RepoStatus
 	VeleroTagAlign *VeleroTagAlignment
 	CVEPRs         []CVEPRInfo
+	Tally          *PRTallyResult
 }
 
 // VeleroTagAlignment holds the branch-level velero tag alignment status.

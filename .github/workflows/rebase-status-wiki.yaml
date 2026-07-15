@@ -94,6 +94,7 @@ jobs:
           tools/rebase-status/rebase-status \
             --config-dir rebase-configs \
             --format home \
+            --tally-file /tmp/wiki/pr-tallies.json \
             $BRANCHES \
             > /tmp/Home.md
 

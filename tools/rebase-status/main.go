@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 func main() {
@@ -17,6 +19,7 @@ func main() {
 		verbose        bool
 		format         string
 		hideDepDetails bool
+		tallyFile      string
 	)
 
 	flag.StringVar(&configDir, "config-dir", "", "Path to rebase-configs/ (auto-detected if empty)")
@@ -26,6 +29,7 @@ func main() {
 	flag.BoolVar(&verbose, "verbose", false, "Show detailed check output")
 	flag.StringVar(&format, "format", "table", "Output format: table, text, or markdown")
 	flag.BoolVar(&hideDepDetails, "hide-dependency-details", false, "Hide commits between current and target hash for out-of-sync dependencies")
+	flag.StringVar(&tallyFile, "tally-file", "", "Path to pr-tallies.json for PR opened/merged counts (used with --format home)")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: rebase-status [flags] <branch>\n\n")
 		fmt.Fprintf(os.Stderr, "Check OADP rebase readiness for a given branch.\n\n")
@@ -87,6 +91,8 @@ func main() {
 
 	// Home page mode: multiple branches → single Home.md
 	if format == "home" {
+		tallies := loadTallies(tallyFile)
+
 		var branchResults []BranchResult
 		var failedBranches []string
 		for _, branch := range flag.Args() {
@@ -120,9 +126,18 @@ func main() {
 
 			cvePRs := fetchCVEPRs(client, specs)
 
-			branchResults = append(branchResults, BranchResult{Branch: branch, Statuses: statuses, VeleroTagAlign: veleroTagAlign, CVEPRs: cvePRs})
+			// Compute PR tallies for this branch
+			var tallyResult *PRTallyResult
+			if tallyFile != "" {
+				tallyResult = computeTally(client, branch, tallies, statuses, cvePRs)
+			}
+
+			branchResults = append(branchResults, BranchResult{Branch: branch, Statuses: statuses, VeleroTagAlign: veleroTagAlign, CVEPRs: cvePRs, Tally: tallyResult})
 		}
 		RenderHome(os.Stdout, branchResults)
+		if tallyFile != "" {
+			saveTallies(tallyFile, tallies)
+		}
 		if len(failedBranches) > 0 {
 			fmt.Fprintf(os.Stderr, "warning: failed to load %d branch(es): %v\n", len(failedBranches), failedBranches)
 		}
@@ -253,4 +268,63 @@ func filterSpecs(specs []RepoSpec, wave int, repo string) []RepoSpec {
 		filtered = append(filtered, s)
 	}
 	return filtered
+}
+
+func loadTallies(path string) map[string]*PRTally {
+	tallies := make(map[string]*PRTally)
+	if path == "" {
+		return tallies
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		// File doesn't exist yet — start fresh
+		return tallies
+	}
+	if err := json.Unmarshal(data, &tallies); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: could not parse %s: %v (starting fresh)\n", path, err)
+		return make(map[string]*PRTally)
+	}
+	return tallies
+}
+
+func saveTallies(path string, tallies map[string]*PRTally) {
+	data, err := json.MarshalIndent(tallies, "", "  ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: could not marshal tallies: %v\n", err)
+		return
+	}
+	data = append(data, '\n')
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "error: could not write %s: %v\n", path, err)
+	}
+}
+
+// computeTally queries GitHub for PR counts and handles reset logic.
+// It returns the tally result for display and updates the tallies map in place.
+func computeTally(client *GitHubClient, branch string, tallies map[string]*PRTally, statuses []RepoStatus, cvePRs []CVEPRInfo) *PRTallyResult {
+	tally, ok := tallies[branch]
+	if !ok {
+		tally = &PRTally{ResetAt: time.Now().UTC()}
+		tallies[branch] = tally
+	}
+
+	opened, merged, err := client.SearchRebasePRCounts(branch, tally.ResetAt)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warning: %s: PR tally search: %v\n", branch, err)
+		return nil
+	}
+
+	result := &PRTallyResult{
+		Opened:  opened,
+		Merged:  merged,
+		ResetAt: tally.ResetAt,
+	}
+
+	// Check reset condition: all repos ready, no errors, no CVE PRs
+	total, ready, errs, _ := scoreboard(statuses)
+	if total > 0 && ready == total && errs == 0 && len(cvePRs) == 0 {
+		tally.ResetAt = time.Now().UTC()
+	}
+
+	return result
 }
