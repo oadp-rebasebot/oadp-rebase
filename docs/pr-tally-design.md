@@ -35,7 +35,7 @@ Only the reset timestamp is persisted — counts are computed live each run.
 
 Two GitHub Search API calls per branch:
 
-```
+```text
 GET /search/issues?q=is:pr+author:oadp-rebasebot+base:{branch}+created:>={reset_at}
 → response.total_count = total PRs opened this cycle (includes already-merged ones)
 
@@ -71,13 +71,13 @@ been created/merged after the new reset timestamp.
 
 Inline with the existing score line on the wiki Home page:
 
-```
+```text
 3/18 repos ready (16%) | 15 error(s) | 📬 12 opened, 8 merged
 ```
 
 After a branch completes and resets:
 
-```
+```text
 18/18 repos ready (100%) | 📬 0 opened, 0 merged
 ```
 
@@ -85,7 +85,7 @@ The Slack copy snippet includes the same tally.
 
 ## Data Flow
 
-```
+```text
 Workflow starts
     │
     ├─ Clone wiki repo (/tmp/wiki)

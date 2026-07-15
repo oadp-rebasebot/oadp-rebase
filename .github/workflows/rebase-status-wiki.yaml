@@ -87,6 +87,13 @@ jobs:
           {"branches": [$branches], "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)", "default_branch": "$default_branch"}
           EOF
 
+      - name: Clone wiki repo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          wiki_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.wiki.git"
+          git clone "$wiki_url" /tmp/wiki
+
       - name: Generate Home page
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -99,12 +106,7 @@ jobs:
             > /tmp/Home.md
 
       - name: Push to wiki
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          wiki_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.wiki.git"
-          git clone "$wiki_url" /tmp/wiki
-
           for branch in $BRANCHES; do
             cp "/tmp/Rebase-Status-${branch}.md" "/tmp/wiki/Rebase-Status-${branch}.md"
           done

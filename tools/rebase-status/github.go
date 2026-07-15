@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -375,7 +376,7 @@ func (c *GitHubClient) SearchCVEPRs(org, repo, branch string) ([]CVEPRInfo, erro
 // for a given base branch since the specified time. Uses the GitHub Search API
 // which returns total_count without requiring pagination.
 func (c *GitHubClient) SearchRebasePRCounts(branch string, since time.Time) (opened, merged int, err error) {
-	sinceStr := since.Format("2006-01-02")
+	sinceStr := since.Format(time.RFC3339)
 
 	// Count PRs opened since reset
 	openedQuery := fmt.Sprintf("is:pr author:oadp-rebasebot base:%s created:>=%s", branch, sinceStr)
@@ -395,7 +396,7 @@ func (c *GitHubClient) SearchRebasePRCounts(branch string, since time.Time) (ope
 }
 
 func (c *GitHubClient) searchIssuesCount(query string) (int, error) {
-	apiPath := "/search/issues?per_page=1&q=" + strings.ReplaceAll(query, " ", "+")
+	apiPath := "/search/issues?per_page=1&q=" + url.QueryEscape(query)
 
 	body, code, err := c.get(apiPath)
 	if err != nil {
