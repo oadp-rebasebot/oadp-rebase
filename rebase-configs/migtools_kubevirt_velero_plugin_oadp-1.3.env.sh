@@ -16,6 +16,7 @@ HOOK_SCRIPTS_LOCATION="git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-de
 HOOK_SCRIPTS="--post-rebase-hook \
   ${HOOK_SCRIPTS_LOCATION}/go-replace_velero_oadp-1.3.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-replace_kopia_oadp-1.3.sh \
+  ${HOOK_SCRIPTS_LOCATION}/go-mod-reconcile-upstream.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-mod-tidy-and-commit.sh \
   ${HOOK_SCRIPTS_LOCATION}/normalize-dockerfiles-and-commit.sh \
   "
