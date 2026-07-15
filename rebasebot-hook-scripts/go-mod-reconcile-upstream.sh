@@ -6,6 +6,9 @@ set -euo pipefail
 # hook compares each require against the upstream source go.mod and
 # bumps any that were downgraded.  Replace directives are left alone
 # — the existing go-replace hooks handle those.
+#
+# Results are visible in the rebase PR as the commit diff for
+# "UPSTREAM: <drop>: reconcile go.mod versions with upstream".
 
 if [[ -z "${REBASEBOT_SOURCE:-}" ]]; then
     echo "REBASEBOT_SOURCE is not set." >&2
