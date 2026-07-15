@@ -29,7 +29,7 @@ on:
         default: false
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: auto-rebase
@@ -41,6 +41,7 @@ jobs:
     outputs:
       matrix: ${{ steps.build-matrix.outputs.matrix }}
       has_targets: ${{ steps.build-matrix.outputs.has_targets }}
+      branches: ${{ steps.build-matrix.outputs.branches }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -115,6 +116,7 @@ jobs:
 
           matrix=$(echo "$all_targets" | jq -c '{include: .}')
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "branches=$BRANCHES" >> "$GITHUB_OUTPUT"
 
           # Step summary
           status_files=""
@@ -261,3 +263,115 @@ jobs:
 
           echo "::error::Pipeline failed (rc=${exit_code})"
           exit 1
+
+  log:
+    needs: [decide, rebase]
+    if: always() && needs.decide.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download result artifacts
+        if: needs.decide.outputs.has_targets == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: result-*
+          path: /tmp/results
+          merge-multiple: true
+
+      - name: Clone wiki repo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          wiki_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.wiki.git"
+          git clone "$wiki_url" /tmp/wiki
+
+      - name: Build and push log entry
+        env:
+          BRANCHES: ${{ needs.decide.outputs.branches }}
+          MATRIX: ${{ needs.decide.outputs.matrix }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          HAS_TARGETS: ${{ needs.decide.outputs.has_targets }}
+          REBASE_RESULT: ${{ needs.rebase.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ACTOR: ${{ github.actor }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          log_file="/tmp/wiki/Auto-Rebase-V2-Log.md"
+
+          entry_file="/tmp/log-entry.md"
+          {
+            echo "## ${timestamp}"
+            echo ""
+            echo "**Run:** [#${{ github.run_number }}](${RUN_URL})"
+            echo "**Triggered by:** ${ACTOR} (${EVENT})"
+            echo "**Branches:** \`${BRANCHES}\`"
+            echo "**Dry run:** ${DRY_RUN}"
+            echo "**Overall result:** ${REBASE_RESULT}"
+            echo ""
+
+            if [ "$HAS_TARGETS" != "true" ]; then
+              echo "_No rebase targets found._"
+            else
+              echo "| Target | Branch | Reason | Status | PR |"
+              echo "|--------|--------|--------|--------|----|"
+
+              echo "$MATRIX" | jq -r '.include[] | "\(.target)\t\(.branch)\t\(.reason)"' | \
+              while IFS=$(printf '\t') read -r target branch reason; do
+                result_file="/tmp/results/${target}.json"
+                if [ -f "$result_file" ]; then
+                  exit_code=$(jq -r '.exit_code' "$result_file")
+                  is_manual=$(jq -r '.is_manual // false' "$result_file")
+                  pr_url=$(jq -r '.pr_url // ""' "$result_file")
+                  pr_info=$(jq -r '.pr_info // ""' "$result_file")
+
+                  if [ "$exit_code" = "0" ]; then
+                    status="✅ Success"
+                  elif [ "$is_manual" = "true" ]; then
+                    status="⚠️ Manual"
+                  else
+                    status="❌ Failed (rc=${exit_code})"
+                  fi
+
+                  if [ -n "$pr_url" ]; then
+                    pr_col="[${pr_info:-link}](${pr_url})"
+                  else
+                    pr_col="—"
+                  fi
+                else
+                  status="⚠️ No result"
+                  pr_col="—"
+                fi
+
+                echo "| \`${target}\` | ${branch} | ${reason} | ${status} | ${pr_col} |"
+              done
+            fi
+
+            echo ""
+            echo "---"
+            echo ""
+          } > "$entry_file"
+
+          # Prepend new entry after the title (newest first)
+          if [ -f "$log_file" ]; then
+            head -n 2 "$log_file" > /tmp/log-combined.md
+            cat "$entry_file" >> /tmp/log-combined.md
+            tail -n +3 "$log_file" >> /tmp/log-combined.md
+            mv /tmp/log-combined.md "$log_file"
+          else
+            {
+              echo "# Auto Rebase Log"
+              echo ""
+              cat "$entry_file"
+            } > "$log_file"
+          fi
+
+          cd /tmp/wiki
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to wiki"
+          else
+            git commit -m "Auto-rebase log ${timestamp}"
+            git push
+          fi

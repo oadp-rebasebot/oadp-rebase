@@ -20,6 +20,7 @@ func main() {
 		format         string
 		hideDepDetails bool
 		tallyFile      string
+		rebaseLog      string
 	)
 
 	flag.StringVar(&configDir, "config-dir", "", "Path to rebase-configs/ (auto-detected if empty)")
@@ -30,6 +31,7 @@ func main() {
 	flag.StringVar(&format, "format", "table", "Output format: table, text, or markdown")
 	flag.BoolVar(&hideDepDetails, "hide-dependency-details", false, "Hide commits between current and target hash for out-of-sync dependencies")
 	flag.StringVar(&tallyFile, "tally-file", "", "Path to pr-tallies.json for PR opened/merged counts (used with --format home)")
+	flag.StringVar(&rebaseLog, "rebase-log", "", "Path to Auto-Rebase-V2-Log.md wiki file for trigger counts")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: rebase-status [flags] <branch>\n\n")
 		fmt.Fprintf(os.Stderr, "Check OADP rebase readiness for a given branch.\n\n")
@@ -129,7 +131,7 @@ func main() {
 			// Compute PR tallies for this branch
 			var tallyResult *PRTallyResult
 			if tallyFile != "" {
-				tallyResult = computeTally(client, branch, tallies, statuses, cvePRs)
+				tallyResult = computeTally(client, branch, tallies, statuses, cvePRs, rebaseLog)
 			}
 
 			branchResults = append(branchResults, BranchResult{Branch: branch, Statuses: statuses, VeleroTagAlign: veleroTagAlign, CVEPRs: cvePRs, Tally: tallyResult})
@@ -301,12 +303,10 @@ func saveTallies(path string, tallies map[string]*PRTally) {
 	}
 }
 
-const rebaseRepoOwner = "oadp-rebasebot"
-const rebaseRepoName = "oadp-rebase"
-
-// computeTally queries GitHub for PR counts and handles reset logic.
-// It returns the tally result for display and updates the tallies map in place.
-func computeTally(client *GitHubClient, branch string, tallies map[string]*PRTally, statuses []RepoStatus, cvePRs []CVEPRInfo) *PRTallyResult {
+// computeTally queries GitHub for PR counts, reads the wiki log for trigger
+// counts, and handles reset logic. It returns the tally result for display
+// and updates the tallies map in place.
+func computeTally(client *GitHubClient, branch string, tallies map[string]*PRTally, statuses []RepoStatus, cvePRs []CVEPRInfo, rebaseLog string) *PRTallyResult {
 	tally, ok := tallies[branch]
 	if !ok {
 		tally = &PRTally{ResetAt: time.Now().UTC()}
@@ -319,10 +319,12 @@ func computeTally(client *GitHubClient, branch string, tallies map[string]*PRTal
 		return nil
 	}
 
-	triggered, err := client.CountBranchWorkflowRuns(rebaseRepoOwner, rebaseRepoName, branch, tally.ResetAt)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "warning: %s: workflow trigger count: %v\n", branch, err)
-		triggered = 0
+	triggered := 0
+	if rebaseLog != "" {
+		triggered, err = countTriggeredFromLog(rebaseLog, branch, tally.ResetAt)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: %s: rebase log trigger count: %v\n", branch, err)
+		}
 	}
 
 	result := &PRTallyResult{
@@ -350,4 +352,64 @@ func computeTally(client *GitHubClient, branch string, tallies map[string]*PRTal
 	}
 
 	return result
+}
+
+// countTriggeredFromLog parses Auto-Rebase-V2-Log.md and counts non-dry-run
+// entries that targeted the given branch since the specified time.
+func countTriggeredFromLog(logPath, branch string, since time.Time) (int, error) {
+	data, err := os.ReadFile(logPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return 0, nil
+		}
+		return 0, err
+	}
+
+	lines := strings.Split(string(data), "\n")
+	count := 0
+
+	var entryTime time.Time
+	var entryBranches string
+	var entryDryRun bool
+	inEntry := false
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+
+		if strings.HasPrefix(line, "## ") {
+			// Flush previous entry
+			if inEntry && !entryTime.Before(since) &&
+				strings.Contains(entryBranches, branch) && !entryDryRun {
+				count++
+			}
+
+			tsStr := strings.TrimPrefix(line, "## ")
+			t, parseErr := time.Parse(time.RFC3339, tsStr)
+			if parseErr != nil {
+				inEntry = false
+				continue
+			}
+			entryTime = t
+			entryBranches = ""
+			entryDryRun = false
+			inEntry = true
+			continue
+		}
+
+		if inEntry {
+			if strings.HasPrefix(line, "**Branches:**") {
+				entryBranches = line
+			} else if strings.HasPrefix(line, "**Dry run:**") {
+				entryDryRun = strings.Contains(line, "true")
+			}
+		}
+	}
+
+	// Flush last entry
+	if inEntry && !entryTime.Before(since) &&
+		strings.Contains(entryBranches, branch) && !entryDryRun {
+		count++
+	}
+
+	return count, nil
 }
