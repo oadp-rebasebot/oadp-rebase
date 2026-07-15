@@ -379,14 +379,16 @@ func (c *GitHubClient) SearchRebasePRCounts(branch string, since time.Time) (ope
 	sinceStr := since.Format(time.RFC3339)
 
 	// Count PRs opened since reset
-	openedQuery := fmt.Sprintf("is:pr author:oadp-rebasebot base:%s created:>=%s", branch, sinceStr)
+	// PRs are authored by the oadp-rebasebot-app GitHub App; the Search API
+	// requires the "app/" prefix to match GitHub App authors.
+	openedQuery := fmt.Sprintf("is:pr author:app/oadp-rebasebot-app base:%s created:>=%s", branch, sinceStr)
 	openedCount, err := c.searchIssuesCount(openedQuery)
 	if err != nil {
 		return 0, 0, fmt.Errorf("searching opened PRs: %w", err)
 	}
 
 	// Count PRs merged since reset
-	mergedQuery := fmt.Sprintf("is:pr author:oadp-rebasebot base:%s merged:>=%s", branch, sinceStr)
+	mergedQuery := fmt.Sprintf("is:pr author:app/oadp-rebasebot-app base:%s merged:>=%s", branch, sinceStr)
 	mergedCount, err := c.searchIssuesCount(mergedQuery)
 	if err != nil {
 		return 0, 0, fmt.Errorf("searching merged PRs: %w", err)
