@@ -59,19 +59,22 @@ func TestFormatDaysAgo(t *testing.T) {
 func TestHomeScoreLine(t *testing.T) {
 	tests := []struct {
 		total, ready, errs, warns int
+		tally                     *PRTallyResult
 		want                      string
 	}{
-		{18, 14, 4, 1, "14/18 repos ready (77%) | 4 error(s) | 1 warning(s)"},
-		{10, 10, 0, 0, "10/10 repos ready (100%)"},
-		{0, 0, 0, 0, "0/0 repos ready"},
-		{5, 3, 2, 0, "3/5 repos ready (60%) | 2 error(s)"},
-		{8, 7, 0, 1, "7/8 repos ready (87%) | 1 warning(s)"},
+		{18, 14, 4, 1, nil, "14/18 repos ready (77%) | 4 error(s) | 1 warning(s)"},
+		{10, 10, 0, 0, nil, "10/10 repos ready (100%)"},
+		{0, 0, 0, 0, nil, "0/0 repos ready"},
+		{5, 3, 2, 0, nil, "3/5 repos ready (60%) | 2 error(s)"},
+		{8, 7, 0, 1, nil, "7/8 repos ready (87%) | 1 warning(s)"},
+		{18, 3, 15, 0, &PRTallyResult{Opened: 12, Merged: 8}, "3/18 repos ready (16%) | 15 error(s) | :mailbox_with_mail: 12 opened, 8 merged"},
+		{18, 18, 0, 0, &PRTallyResult{Opened: 0, Merged: 0}, "18/18 repos ready (100%) | :mailbox_with_mail: 0 opened, 0 merged"},
 	}
 	for _, tt := range tests {
-		got := homeScoreLine(tt.total, tt.ready, tt.errs, tt.warns)
+		got := homeScoreLine(tt.total, tt.ready, tt.errs, tt.warns, tt.tally)
 		if got != tt.want {
-			t.Errorf("homeScoreLine(%d, %d, %d, %d) = %q, want %q",
-				tt.total, tt.ready, tt.errs, tt.warns, got, tt.want)
+			t.Errorf("homeScoreLine(%d, %d, %d, %d, %v) = %q, want %q",
+				tt.total, tt.ready, tt.errs, tt.warns, tt.tally, got, tt.want)
 		}
 	}
 }
@@ -193,6 +196,58 @@ func TestRenderHome(t *testing.T) {
 	// Should NOT show TODO (configs exist)
 	if strings.Contains(out, "TODO") {
 		t.Error("should not show TODO when configs exist")
+	}
+}
+
+func TestRenderHomeWithTally(t *testing.T) {
+	now := time.Now()
+	branches := []BranchResult{
+		{
+			Branch: "oadp-1.6",
+			Statuses: []RepoStatus{
+				{
+					Spec:   RepoSpec{Repo: "velero", Wave: 2, HasConfig: true},
+					Issues: []Issue{{Severity: "error", Message: "out of sync"}},
+				},
+				{
+					Spec:   RepoSpec{Repo: "kopia", Wave: 1, HasConfig: true},
+					Issues: []Issue{{Severity: "error", Message: "missing"}},
+				},
+			},
+			Tally: &PRTallyResult{Opened: 5, Merged: 3, ResetAt: now.Add(-72 * time.Hour)},
+		},
+	}
+
+	var buf bytes.Buffer
+	RenderHome(&buf, branches)
+	out := buf.String()
+
+	if !strings.Contains(out, ":mailbox_with_mail: 5 opened, 3 merged") {
+		t.Error("missing tally in score line")
+	}
+	// Tally should also appear in the Slack copy snippet
+	if count := strings.Count(out, ":mailbox_with_mail: 5 opened, 3 merged"); count < 2 {
+		t.Errorf("tally should appear in both display and Slack copy, found %d times", count)
+	}
+}
+
+func TestRenderHomeNoTally(t *testing.T) {
+	branches := []BranchResult{
+		{
+			Branch: "oadp-1.6",
+			Statuses: []RepoStatus{
+				{Spec: RepoSpec{Repo: "velero", Wave: 2, HasConfig: true}},
+			},
+			Tally: nil,
+		},
+	}
+
+	var buf bytes.Buffer
+	RenderHome(&buf, branches)
+	out := buf.String()
+
+	if strings.Contains(out, "mailbox_with_mail") {
+		t.Error("should not show tally when Tally is nil")
 	}
 }
 

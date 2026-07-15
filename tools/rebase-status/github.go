@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -369,6 +370,49 @@ func (c *GitHubClient) SearchCVEPRs(org, repo, branch string) ([]CVEPRInfo, erro
 		}
 	}
 	return result, nil
+}
+
+// SearchRebasePRCounts returns the number of rebase PRs opened and merged
+// for a given base branch since the specified time. Uses the GitHub Search API
+// which returns total_count without requiring pagination.
+func (c *GitHubClient) SearchRebasePRCounts(branch string, since time.Time) (opened, merged int, err error) {
+	sinceStr := since.Format(time.RFC3339)
+
+	// Count PRs opened since reset
+	openedQuery := fmt.Sprintf("is:pr author:oadp-rebasebot base:%s created:>=%s", branch, sinceStr)
+	openedCount, err := c.searchIssuesCount(openedQuery)
+	if err != nil {
+		return 0, 0, fmt.Errorf("searching opened PRs: %w", err)
+	}
+
+	// Count PRs merged since reset
+	mergedQuery := fmt.Sprintf("is:pr author:oadp-rebasebot base:%s merged:>=%s", branch, sinceStr)
+	mergedCount, err := c.searchIssuesCount(mergedQuery)
+	if err != nil {
+		return 0, 0, fmt.Errorf("searching merged PRs: %w", err)
+	}
+
+	return openedCount, mergedCount, nil
+}
+
+func (c *GitHubClient) searchIssuesCount(query string) (int, error) {
+	apiPath := "/search/issues?per_page=1&q=" + url.QueryEscape(query)
+
+	body, code, err := c.get(apiPath)
+	if err != nil {
+		return 0, err
+	}
+	if code != http.StatusOK {
+		return 0, fmt.Errorf("GitHub Search API returned %d", code)
+	}
+
+	var result struct {
+		TotalCount int `json:"total_count"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return 0, fmt.Errorf("parsing search response: %w", err)
+	}
+	return result.TotalCount, nil
 }
 
 // RateLimitRemaining returns the remaining API calls.

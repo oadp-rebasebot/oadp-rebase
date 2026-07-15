@@ -91,7 +91,7 @@ func formatDaysAgo(days int) string {
 	}
 }
 
-func homeScoreLine(total, ready, errs, warns int) string {
+func homeScoreLine(total, ready, errs, warns int, tally *PRTallyResult) string {
 	s := fmt.Sprintf("%d/%d repos ready", ready, total)
 	if total > 0 {
 		s += fmt.Sprintf(" (%d%%)", ready*100/total)
@@ -101,6 +101,9 @@ func homeScoreLine(total, ready, errs, warns int) string {
 	}
 	if warns > 0 {
 		s += fmt.Sprintf(" | %d warning(s)", warns)
+	}
+	if tally != nil {
+		s += fmt.Sprintf(" | :mailbox_with_mail: %d opened, %d merged", tally.Opened, tally.Merged)
 	}
 	return s
 }
@@ -131,7 +134,7 @@ func RenderHome(w io.Writer, branches []BranchResult) {
 	for _, br := range branches {
 		page := "Rebase-Status-" + br.Branch
 		total, ready, errs, warns := scoreboard(br.Statuses)
-		scoreLine := homeScoreLine(total, ready, errs, warns)
+		scoreLine := homeScoreLine(total, ready, errs, warns, br.Tally)
 		waveStats := computeWaveStatuses(br.Statuses)
 		openPRs := collectOpenPRs(br.Statuses)
 		latest := latestOpenPR(openPRs)
