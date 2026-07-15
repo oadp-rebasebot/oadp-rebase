@@ -61,6 +61,24 @@ export function Header({ metadata, branch, onBranchChange }: HeaderProps) {
           >
             Run rebase for {branch}
           </a>
+          <a
+            href="https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/rebase-status-wiki.yaml"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex', alignItems: 'center',
+              background: colors.blue + '20',
+              border: `1px solid ${colors.blue}50`,
+              color: colors.blue,
+              padding: '.3rem .75rem',
+              borderRadius: 6,
+              fontSize: '.8rem',
+              fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            Refresh status wiki
+          </a>
           <button
             onClick={() => setShowHelp(true)}
             style={{
