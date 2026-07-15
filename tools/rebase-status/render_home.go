@@ -103,7 +103,7 @@ func homeScoreLine(total, ready, errs, warns int, tally *PRTallyResult) string {
 		s += fmt.Sprintf(" | %d warning(s)", warns)
 	}
 	if tally != nil {
-		s += fmt.Sprintf(" | :mailbox_with_mail: %d opened, %d merged", tally.Opened, tally.Merged)
+		s += fmt.Sprintf(" | :mailbox_with_mail: bot triggered %d times, %d opened prs, %d merged prs", tally.Triggered, tally.Opened, tally.Merged)
 	}
 	return s
 }
@@ -125,7 +125,8 @@ func githubAnchor(heading string) string {
 }
 
 // RenderHome generates the wiki Home.md from multiple branch results.
-func RenderHome(w io.Writer, branches []BranchResult) {
+// tallies is optional — if provided, cycle history is rendered at the bottom.
+func RenderHome(w io.Writer, branches []BranchResult, tallies ...map[string]*PRTally) {
 	fmt.Fprintln(w, "# OADP Rebase Status")
 	fmt.Fprintln(w)
 	fmt.Fprintf(w, "[**Rebase Dashboard**](https://oadp-rebasebot.github.io/oadp-rebase/rebase-dashboard/) | [**Dependency Graph**](https://oadp-rebasebot.github.io/oadp-rebase/rebase-dag/) | _Updated automatically by [rebase-status-wiki workflow](%s)_\n", wikiWorkflowURL)
@@ -270,6 +271,46 @@ func RenderHome(w io.Writer, branches []BranchResult) {
 		fmt.Fprintln(w, "```")
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "</details>")
+		fmt.Fprintln(w)
+	}
+
+	// Render cycle history table if tallies are provided
+	if len(tallies) > 0 && tallies[0] != nil {
+		renderCycleHistory(w, branches, tallies[0])
+	}
+}
+
+func renderCycleHistory(w io.Writer, branches []BranchResult, tallies map[string]*PRTally) {
+	hasHistory := false
+	for _, br := range branches {
+		if t, ok := tallies[br.Branch]; ok && len(t.History) > 0 {
+			hasHistory = true
+			break
+		}
+	}
+	if !hasHistory {
+		return
+	}
+
+	fmt.Fprintln(w, "---")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "## Completed Rebase Cycles")
+	fmt.Fprintln(w)
+
+	for _, br := range branches {
+		t, ok := tallies[br.Branch]
+		if !ok || len(t.History) == 0 {
+			continue
+		}
+
+		fmt.Fprintf(w, "### %s\n\n", br.Branch)
+		fmt.Fprintln(w, "| Date | Score | Triggered | Opened | Merged |")
+		fmt.Fprintln(w, "|------|-------|-----------|--------|--------|")
+		// Show most recent first
+		for i := len(t.History) - 1; i >= 0; i-- {
+			h := t.History[i]
+			fmt.Fprintf(w, "| %s | %s | %d | %d | %d |\n", h.Date, h.Score, h.Triggered, h.Opened, h.Merged)
+		}
 		fmt.Fprintln(w)
 	}
 }

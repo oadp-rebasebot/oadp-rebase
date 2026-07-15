@@ -134,9 +134,11 @@ func main() {
 
 			branchResults = append(branchResults, BranchResult{Branch: branch, Statuses: statuses, VeleroTagAlign: veleroTagAlign, CVEPRs: cvePRs, Tally: tallyResult})
 		}
-		RenderHome(os.Stdout, branchResults)
 		if tallyFile != "" {
+			RenderHome(os.Stdout, branchResults, tallies)
 			saveTallies(tallyFile, tallies)
+		} else {
+			RenderHome(os.Stdout, branchResults)
 		}
 		if len(failedBranches) > 0 {
 			fmt.Fprintf(os.Stderr, "warning: failed to load %d branch(es): %v\n", len(failedBranches), failedBranches)
@@ -299,6 +301,9 @@ func saveTallies(path string, tallies map[string]*PRTally) {
 	}
 }
 
+const rebaseRepoOwner = "oadp-rebasebot"
+const rebaseRepoName = "oadp-rebase"
+
 // computeTally queries GitHub for PR counts and handles reset logic.
 // It returns the tally result for display and updates the tallies map in place.
 func computeTally(client *GitHubClient, branch string, tallies map[string]*PRTally, statuses []RepoStatus, cvePRs []CVEPRInfo) *PRTallyResult {
@@ -314,15 +319,33 @@ func computeTally(client *GitHubClient, branch string, tallies map[string]*PRTal
 		return nil
 	}
 
+	triggered, err := client.CountWorkflowRunsSince(rebaseRepoOwner, rebaseRepoName, tally.ResetAt)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warning: %s: workflow runs count: %v\n", branch, err)
+		triggered = -1
+	}
+
 	result := &PRTallyResult{
-		Opened:  opened,
-		Merged:  merged,
-		ResetAt: tally.ResetAt,
+		Opened:    opened,
+		Merged:    merged,
+		Triggered: triggered,
+		ResetAt:   tally.ResetAt,
 	}
 
 	// Check reset condition: all repos ready, no errors, no CVE PRs
 	total, ready, errs, _ := scoreboard(statuses)
 	if total > 0 && ready == total && errs == 0 && len(cvePRs) == 0 {
+		// Record the completed cycle in history before resetting
+		if opened > 0 || merged > 0 || triggered > 0 {
+			score := fmt.Sprintf("%d/%d repos ready (100%%)", total, total)
+			tally.History = append(tally.History, PRCycleHistory{
+				Date:      time.Now().UTC().Format("2006-01-02"),
+				Score:     score,
+				Triggered: triggered,
+				Opened:    opened,
+				Merged:    merged,
+			})
+		}
 		tally.ResetAt = time.Now().UTC()
 	}
 

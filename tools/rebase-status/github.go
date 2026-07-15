@@ -415,6 +415,30 @@ func (c *GitHubClient) searchIssuesCount(query string) (int, error) {
 	return result.TotalCount, nil
 }
 
+// CountWorkflowRunsSince returns the number of runs of the Auto Rebase workflow
+// since the given time. Uses the GitHub Actions API which returns total_count.
+func (c *GitHubClient) CountWorkflowRunsSince(owner, repo string, since time.Time) (int, error) {
+	sinceStr := since.Format(time.RFC3339)
+	apiPath := fmt.Sprintf("/repos/%s/%s/actions/workflows/auto-rebase-v2.yaml/runs?created=%%3E%%3D%s&per_page=1",
+		owner, repo, url.QueryEscape(sinceStr))
+
+	body, code, err := c.get(apiPath)
+	if err != nil {
+		return 0, err
+	}
+	if code != http.StatusOK {
+		return 0, fmt.Errorf("GitHub Actions API returned %d", code)
+	}
+
+	var result struct {
+		TotalCount int `json:"total_count"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return 0, fmt.Errorf("parsing workflow runs response: %w", err)
+	}
+	return result.TotalCount, nil
+}
+
 // RateLimitRemaining returns the remaining API calls.
 func (c *GitHubClient) RateLimitRemaining() (int, error) {
 	body, code, err := c.get("/rate_limit")
