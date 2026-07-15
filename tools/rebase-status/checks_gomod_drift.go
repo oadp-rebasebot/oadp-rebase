@@ -14,7 +14,7 @@ var (
 )
 
 // checkGoModDrift compares direct dependency versions between the downstream
-// go.mod and the upstream source go.mod. Reports downgrades as warnings.
+// go.mod and the upstream source go.mod. Reports downgrades as errors.
 func checkGoModDrift(client *GitHubClient, spec *RepoSpec) *CheckResult {
 	if spec.Upstream == "" {
 		return &CheckResult{StatusNA, "", "no upstream source configured"}
@@ -63,7 +63,7 @@ func checkGoModDrift(client *GitHubClient, spec *RepoSpec) *CheckResult {
 	}
 
 	return &CheckResult{
-		StatusWarn,
+		StatusFail,
 		fmt.Sprintf("%d", len(drifts)),
 		fmt.Sprintf("%d direct deps downgraded vs upstream", len(drifts)),
 	}
