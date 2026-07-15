@@ -208,9 +208,9 @@ type PRCycleHistory struct {
 
 // PRTallyResult holds the computed PR counts for display.
 type PRTallyResult struct {
+	Triggered int
 	Opened    int
 	Merged    int
-	Triggered int
 	ResetAt   time.Time
 }
 

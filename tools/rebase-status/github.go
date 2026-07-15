@@ -395,6 +395,108 @@ func (c *GitHubClient) SearchRebasePRCounts(branch string, since time.Time) (ope
 	return openedCount, mergedCount, nil
 }
 
+// CountBranchWorkflowRuns returns the number of auto-rebase-v2 workflow runs
+// that targeted the given branch (based on workflow_dispatch inputs) since the
+// specified time. It fetches each run's details to inspect the per-branch input.
+func (c *GitHubClient) CountBranchWorkflowRuns(owner, repo, branch string, since time.Time) (int, error) {
+	inputKey := branchToInputKey(branch)
+	if inputKey == "" {
+		return 0, fmt.Errorf("no input key mapping for branch %q", branch)
+	}
+
+	sinceStr := since.Format(time.RFC3339)
+	count := 0
+	page := 1
+
+	for {
+		apiPath := fmt.Sprintf("/repos/%s/%s/actions/workflows/auto-rebase-v2.yaml/runs?per_page=100&page=%d&created=%s",
+			owner, repo, page, url.QueryEscape(">="+sinceStr))
+
+		body, code, err := c.get(apiPath)
+		if err != nil {
+			return 0, err
+		}
+		if code != http.StatusOK {
+			return 0, fmt.Errorf("GitHub Actions API returned %d", code)
+		}
+
+		var listResult struct {
+			TotalCount   int `json:"total_count"`
+			WorkflowRuns []struct {
+				ID int `json:"id"`
+			} `json:"workflow_runs"`
+		}
+		if err := json.Unmarshal(body, &listResult); err != nil {
+			return 0, fmt.Errorf("parsing workflow runs list: %w", err)
+		}
+
+		if len(listResult.WorkflowRuns) == 0 {
+			break
+		}
+
+		for _, run := range listResult.WorkflowRuns {
+			targeted, err := c.runTargetsBranch(owner, repo, run.ID, inputKey)
+			if err != nil {
+				continue
+			}
+			if targeted {
+				count++
+			}
+		}
+
+		if len(listResult.WorkflowRuns) < 100 {
+			break
+		}
+		page++
+	}
+
+	return count, nil
+}
+
+func (c *GitHubClient) runTargetsBranch(owner, repo string, runID int, inputKey string) (bool, error) {
+	apiPath := fmt.Sprintf("/repos/%s/%s/actions/runs/%d", owner, repo, runID)
+
+	body, code, err := c.get(apiPath)
+	if err != nil {
+		return false, err
+	}
+	if code != http.StatusOK {
+		return false, fmt.Errorf("GitHub Actions API returned %d for run %d", code, runID)
+	}
+
+	var runDetail struct {
+		Event string `json:"event"`
+		// workflow_dispatch inputs are a map of string→string
+		Inputs map[string]string `json:"inputs"`
+	}
+	if err := json.Unmarshal(body, &runDetail); err != nil {
+		return false, fmt.Errorf("parsing run detail: %w", err)
+	}
+
+	if runDetail.Inputs == nil {
+		return false, nil
+	}
+	return runDetail.Inputs[inputKey] == "true", nil
+}
+
+// branchToInputKey maps a branch name to its workflow_dispatch input key.
+func branchToInputKey(branch string) string {
+	switch branch {
+	case "oadp-1.3":
+		return "oadp_1_3"
+	case "oadp-1.4":
+		return "oadp_1_4"
+	case "oadp-1.5":
+		return "oadp_1_5"
+	case "oadp-1.6":
+		return "oadp_1_6"
+	case "oadp-dev":
+		return "oadp_dev"
+	default:
+		return ""
+	}
+}
+
 func (c *GitHubClient) searchIssuesCount(query string) (int, error) {
 	apiPath := "/search/issues?per_page=1&q=" + url.QueryEscape(query)
 
@@ -411,30 +513,6 @@ func (c *GitHubClient) searchIssuesCount(query string) (int, error) {
 	}
 	if err := json.Unmarshal(body, &result); err != nil {
 		return 0, fmt.Errorf("parsing search response: %w", err)
-	}
-	return result.TotalCount, nil
-}
-
-// CountWorkflowRunsSince returns the number of runs of the Auto Rebase workflow
-// since the given time. Uses the GitHub Actions API which returns total_count.
-func (c *GitHubClient) CountWorkflowRunsSince(owner, repo string, since time.Time) (int, error) {
-	sinceStr := since.Format(time.RFC3339)
-	apiPath := fmt.Sprintf("/repos/%s/%s/actions/workflows/auto-rebase-v2.yaml/runs?created=%%3E%%3D%s&per_page=1",
-		owner, repo, url.QueryEscape(sinceStr))
-
-	body, code, err := c.get(apiPath)
-	if err != nil {
-		return 0, err
-	}
-	if code != http.StatusOK {
-		return 0, fmt.Errorf("GitHub Actions API returned %d", code)
-	}
-
-	var result struct {
-		TotalCount int `json:"total_count"`
-	}
-	if err := json.Unmarshal(body, &result); err != nil {
-		return 0, fmt.Errorf("parsing workflow runs response: %w", err)
 	}
 	return result.TotalCount, nil
 }

@@ -319,16 +319,16 @@ func computeTally(client *GitHubClient, branch string, tallies map[string]*PRTal
 		return nil
 	}
 
-	triggered, err := client.CountWorkflowRunsSince(rebaseRepoOwner, rebaseRepoName, tally.ResetAt)
+	triggered, err := client.CountBranchWorkflowRuns(rebaseRepoOwner, rebaseRepoName, branch, tally.ResetAt)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "warning: %s: workflow runs count: %v\n", branch, err)
-		triggered = -1
+		fmt.Fprintf(os.Stderr, "warning: %s: workflow trigger count: %v\n", branch, err)
+		triggered = 0
 	}
 
 	result := &PRTallyResult{
+		Triggered: triggered,
 		Opened:    opened,
 		Merged:    merged,
-		Triggered: triggered,
 		ResetAt:   tally.ResetAt,
 	}
 
