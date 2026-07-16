@@ -113,11 +113,22 @@ reconcile_gomod() {
     done < <(echo "$upstream_json" | jq -r '.Require[]? | "\(.Path)\t\(.Version)"')
 
     # Build map of current requires
+    # go mod edit -json may fail if a previous hook wrote a non-semver replace
+    # directive (e.g., branch name "oadp-1.4"). This hook only reads Require
+    # entries, so strip all replace directives (both block and single-line)
+    # and retry when that happens.
     local current_json
-    current_json=$(go mod edit -json) || {
-        echo "  ERROR: failed to parse current go.mod" >&2
-        popd > /dev/null; rm -f "$upstream_tmp"; return 1
-    }
+    current_json=$(go mod edit -json 2>/dev/null) || true
+    if [[ -z "$current_json" ]]; then
+        local current_tmp
+        current_tmp=$(mktemp)
+        sed '/^replace (/,/^)/d; /^replace /d' go.mod > "$current_tmp"
+        current_json=$(go mod edit -json "$current_tmp") || {
+            echo "  ERROR: failed to parse current go.mod (even after stripping replaces)" >&2
+            popd > /dev/null; rm -f "$upstream_tmp" "$current_tmp"; return 1
+        }
+        rm -f "$current_tmp"
+    fi
 
     local -A current_reqs=()
     while IFS=$'\t' read -r mod ver; do
