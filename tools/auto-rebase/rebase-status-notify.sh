@@ -163,7 +163,7 @@ else
     ),
 
     {type: "context", elements: [{type: "mrkdwn",
-        text: ("<" + $wiki_url + "|Wiki> | <https://oadp-rebasebot.github.io/oadp-rebase/rebase-dag/|Dependency Graph> | " + (now | strftime("%Y-%m-%d %H:%M UTC")))
+        text: ("<" + $wiki_url + "|Wiki> | <https://oadp-rebasebot.github.io/oadp-rebase/rebase-dashboard/|Dashboard> | <https://oadp-rebasebot.github.io/oadp-rebase/rebase-dag/|Dependency Graph> | " + (now | strftime("%Y-%m-%d %H:%M UTC")))
     }]}
 ] | {blocks: .}
 
