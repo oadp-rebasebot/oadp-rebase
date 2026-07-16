@@ -112,22 +112,25 @@ reconcile_gomod() {
         [[ -n "$mod" && -n "$ver" ]] && upstream_reqs["$mod"]="$ver"
     done < <(echo "$upstream_json" | jq -r '.Require[]? | "\(.Path)\t\(.Version)"')
 
-    # Build map of current requires
-    # go mod edit -json may fail if a previous hook wrote a non-semver replace
-    # directive (e.g., branch name "oadp-1.4"). This hook only reads Require
-    # entries, so strip all replace directives (both block and single-line)
-    # and retry when that happens.
+    # go mod edit (both -json reads and -require/-go writes) rejects go.mod
+    # files containing non-semver replace directives such as branch names
+    # (e.g., "oadp-1.4") written by the go-replace hooks. When that happens,
+    # temporarily strip all replace directives (block and single-line) so
+    # every go mod edit call in this function succeeds, then restore them.
+    local has_nonsemver_replace=false
+    local gomod_replace_backup=""
     local current_json
     current_json=$(go mod edit -json 2>/dev/null) || true
     if [[ -z "$current_json" ]]; then
-        local current_tmp
-        current_tmp=$(mktemp)
-        sed '/^replace (/,/^)/d; /^replace /d' go.mod > "$current_tmp"
-        current_json=$(go mod edit -json "$current_tmp") || {
+        has_nonsemver_replace=true
+        gomod_replace_backup=$(mktemp)
+        cp go.mod "$gomod_replace_backup"
+        sed -i '/^replace (/,/^)/d; /^replace /d' go.mod
+        current_json=$(go mod edit -json) || {
             echo "  ERROR: failed to parse current go.mod (even after stripping replaces)" >&2
-            popd > /dev/null; rm -f "$upstream_tmp" "$current_tmp"; return 1
+            cp "$gomod_replace_backup" go.mod
+            popd > /dev/null; rm -f "$upstream_tmp" "$gomod_replace_backup"; return 1
         }
-        rm -f "$current_tmp"
     fi
 
     local -A current_reqs=()
@@ -164,6 +167,13 @@ reconcile_gomod() {
             go mod edit -go="$max_go"
             bumped=$((bumped + 1))
         fi
+    fi
+
+    # Restore replace directives that were stripped for editing
+    if [[ "$has_nonsemver_replace" == "true" && -n "$gomod_replace_backup" ]]; then
+        sed -n '/^replace (/,/^)/p' "$gomod_replace_backup" >> go.mod
+        grep '^replace [^(]' "$gomod_replace_backup" >> go.mod || true
+        rm -f "$gomod_replace_backup"
     fi
 
     popd > /dev/null
