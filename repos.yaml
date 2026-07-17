@@ -2,7 +2,8 @@
 # Every tool reads this file directly; do not duplicate this data elsewhere.
 #
 # Required fields: org, repo, wave, config_prefix
-# Optional fields: main_only, dev_branch, min_branch, max_branch, images
+# Optional fields: main_only, dev_branch, min_branch, max_branch, images,
+#                  expected_conflicts
 
 waves:
   1: "Independent Dependencies"
@@ -44,6 +45,9 @@ repos:
     wave: 1
     config_prefix: migtools_oadp_vmdp
     min_branch: oadp-1.6
+    expected_conflicts:
+      - cli/app.go
+      - repo/blob/sftp/sftp_storage_test.go
     images:
       - namespace: konveyor
         repo: oadp-vmdp-binaries
