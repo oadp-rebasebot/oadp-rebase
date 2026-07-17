@@ -4,8 +4,12 @@ set -euo pipefail
 # After cherry-picking with --conflict-policy warn (-Xtheirs), go.mod
 # may have stale downstream versions pinned by <drop> commits. This
 # hook compares each require against the upstream source go.mod and
-# bumps any that were downgraded.  Replace directives are left alone
-# — the existing go-replace hooks handle those.
+# bumps any that were downgraded.
+#
+# It also restores any upstream replace directives that were lost during
+# cherry-pick (e.g. submodule replaces like pkg/apis => ./pkg/apis).
+# Downstream-specific replaces (managed by go-replace hooks) are left
+# alone — only replaces that are completely absent are restored.
 #
 # Results are visible in the rebase PR as the commit diff for
 # "UPSTREAM: <drop>: reconcile go.mod versions with upstream".
@@ -168,6 +172,29 @@ reconcile_gomod() {
             bumped=$((bumped + 1))
         fi
     fi
+
+    # Reconcile replace directives: restore any upstream replaces that are
+    # completely absent from the current go.mod.  If the module path already
+    # has a replace (even with a different target — e.g. downstream kopia
+    # override), leave it alone.
+    local -A upstream_replaces=()
+    while IFS=$'\t' read -r old new; do
+        [[ -n "$old" && -n "$new" ]] && upstream_replaces["$old"]="$new"
+    done < <(echo "$upstream_json" | jq -r '.Replace[]? | "\(.Old.Path)\t\(.New.Path // "")\(if .New.Version then "@" + .New.Version else "" end)"')
+
+    local -A current_replaces=()
+    while IFS=$'\t' read -r old new; do
+        [[ -n "$old" ]] && current_replaces["$old"]=1
+    done < <(echo "$current_json" | jq -r '.Replace[]? | "\(.Old.Path)\t1"')
+
+    for mod in "${!upstream_replaces[@]}"; do
+        if [[ ! -v "current_replaces[$mod]" ]]; then
+            local replacement="${upstream_replaces[$mod]}"
+            echo "  restore replace $mod => $replacement"
+            go mod edit -replace="${mod}=${replacement}"
+            bumped=$((bumped + 1))
+        fi
+    done
 
     # Restore replace directives that were stripped for editing
     if [[ "$has_nonsemver_replace" == "true" && -n "$gomod_replace_backup" ]]; then
