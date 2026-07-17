@@ -288,6 +288,47 @@ else
     failed=$((failed + 1))
 fi
 
+# --- expected_conflicts allowlist tests ---
+
+expected_fixture="$TRIAGE_FIXTURES/safe-expected-conflicts.txt"
+partial_fixture="$TRIAGE_FIXTURES/unsafe-partial-allowlist.txt"
+
+# Allowlisted files (cli/app.go, repo/blob/sftp/sftp_storage_test.go) + go.mod → safe with repo name
+ec_verdict=$(bash "$TRIAGE_SCRIPT" "$config_with_tidy" "oadp-vmdp" < "$expected_fixture") && ec_rc=0 || ec_rc=$?
+assert_output "expected_conflicts: allowlisted files + go.mod → exit 0" "0" "$ec_rc"
+assert_json_field "expected_conflicts: verdict is safe" "$ec_verdict" '.safe' "true"
+
+# Verify the allowlisted files show covered_by expected_conflicts
+ec_cli_hook=$(echo "$ec_verdict" | jq -r '.affected_files[] | select(.file == "cli/app.go") | .hook_name')
+assert_output "expected_conflicts: cli/app.go covered by expected_conflicts" "expected_conflicts" "$ec_cli_hook"
+
+ec_sftp_hook=$(echo "$ec_verdict" | jq -r '.affected_files[] | select(.file == "repo/blob/sftp/sftp_storage_test.go") | .hook_name')
+assert_output "expected_conflicts: sftp test covered by expected_conflicts" "expected_conflicts" "$ec_sftp_hook"
+
+# go.mod should still be covered by go-mod-tidy hook (not expected_conflicts)
+ec_gomod_hook=$(echo "$ec_verdict" | jq -r '.affected_files[] | select(.file == "go.mod") | .hook_name')
+assert_output "expected_conflicts: go.mod still covered by hook" "go-mod-tidy-and-commit.sh" "$ec_gomod_hook"
+
+# Same fixture without repo name → unsafe (no allowlist loaded)
+ec_norepo_verdict=$(bash "$TRIAGE_SCRIPT" "$config_with_tidy" < "$expected_fixture") && ec_norepo_rc=0 || ec_norepo_rc=$?
+assert_output "expected_conflicts: without repo name → exit 1" "1" "$ec_norepo_rc"
+assert_json_field "expected_conflicts: without repo name → unsafe" "$ec_norepo_verdict" '.safe' "false"
+
+# Partial allowlist: cli/app.go is allowed but internal/server/api.go is not → unsafe
+partial_verdict=$(bash "$TRIAGE_SCRIPT" "$config_with_tidy" "oadp-vmdp" < "$partial_fixture") && partial_rc=0 || partial_rc=$?
+assert_output "expected_conflicts: partial allowlist → exit 1" "1" "$partial_rc"
+assert_json_field "expected_conflicts: partial allowlist → unsafe" "$partial_verdict" '.safe' "false"
+assert_contains "expected_conflicts: reason mentions uncovered file" "$partial_verdict" "internal/server/api.go"
+
+# Repo with no expected_conflicts → allowlist is empty, no effect
+ec_empty_verdict=$(bash "$TRIAGE_SCRIPT" "$config_with_tidy" "velero" < "$expected_fixture") && ec_empty_rc=0 || ec_empty_rc=$?
+assert_output "expected_conflicts: repo without allowlist → exit 1" "1" "$ec_empty_rc"
+assert_json_field "expected_conflicts: repo without allowlist → unsafe" "$ec_empty_verdict" '.safe' "false"
+
+# Verify repos.yaml has expected_conflicts for oadp-vmdp (SSOT check)
+ec_count=$(yq -r '.repos[] | select(.repo == "oadp-vmdp") | .expected_conflicts | length' "$SCRIPT_DIR/../../repos.yaml")
+assert_output "repos.yaml: oadp-vmdp has 2 expected_conflicts" "2" "$ec_count"
+
 # ============================================================
 printf "\n=== must-gather submodule hook tests ===\n\n"
 # ============================================================

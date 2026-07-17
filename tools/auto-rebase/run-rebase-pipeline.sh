@@ -78,7 +78,7 @@ else
     log_phase "Triage"
 
     set +e
-    triage_verdict=$(bash tools/auto-rebase/conflict-triage.sh "rebase-configs/${CONFIG_NAME}.env.sh" < /tmp/rebase-output.txt)
+    triage_verdict=$(bash tools/auto-rebase/conflict-triage.sh "rebase-configs/${CONFIG_NAME}.env.sh" "$REPO_NAME" < /tmp/rebase-output.txt)
     set -e
 
     triage_safe=$(echo "$triage_verdict" | jq -r '.safe // false')

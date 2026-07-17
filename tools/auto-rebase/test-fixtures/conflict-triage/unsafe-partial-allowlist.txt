@@ -1,0 +1,14 @@
+INFO - Using working directory: /tmp/.cache/rebasebot
+INFO - Destination repository is https://github.com/migtools/oadp-vmdp.git
+INFO - rebase repository is https://github.com/oadp-rebasebot/oadp-vmdp.git
+INFO - source repository is https://github.com/migtools/kopia.git
+INFO - Fetching oadp-1.6 from dest
+INFO - Fetching oadp-1.6 from source
+INFO - Checking out source/oadp-1.6
+INFO - Performing rebase
+INFO - Picking commit: 08dba39fce749fa8504045809cc3f6470422d7c4 - UPSTREAM: <carry>: Introduce oadp-vmdp CLI
+WARNING - Upstream content may have been dropped from 'cli/app.go' by cherry-pick of: 08dba39fce749fa8504045809cc3f6470422d7c4 - UPSTREAM: <carry>: Introduce oadp-vmdp CLI
+WARNING -   lost line: const appName = "kopia"
+WARNING - Upstream content may have been dropped from 'internal/server/api.go' by cherry-pick of: 08dba39fce749fa8504045809cc3f6470422d7c4 - UPSTREAM: <carry>: Introduce oadp-vmdp CLI
+WARNING -   lost line: func handleAPIRequest(w http.ResponseWriter, r *http.Request) {
+ERROR - Manual intervention is needed to rebase https://github.com/migtools/kopia:oadp-1.6 into migtools/oadp-vmdp:oadp-1.6

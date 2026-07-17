@@ -1,0 +1,18 @@
+INFO - Using working directory: /tmp/.cache/rebasebot
+INFO - Destination repository is https://github.com/migtools/oadp-vmdp.git
+INFO - rebase repository is https://github.com/oadp-rebasebot/oadp-vmdp.git
+INFO - source repository is https://github.com/migtools/kopia.git
+INFO - Fetching oadp-1.6 from dest
+INFO - Fetching oadp-1.6 from source
+INFO - Checking out source/oadp-1.6
+INFO - Performing rebase
+INFO - Picking commit: 08dba39fce749fa8504045809cc3f6470422d7c4 - UPSTREAM: <carry>: Introduce oadp-vmdp CLI
+WARNING - Upstream content may have been dropped from 'go.mod' by cherry-pick of: 08dba39fce749fa8504045809cc3f6470422d7c4 - UPSTREAM: <carry>: Introduce oadp-vmdp CLI
+WARNING -   lost line: github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.2 // indirect
+INFO - Picking commit: d2f99f929fb25eb972749c25060bc1ce61dfb292 - UPSTREAM: <carry>: Rename KOPIA to OADP
+WARNING - Upstream content may have been dropped from 'cli/app.go' by cherry-pick of: d2f99f929fb25eb972749c25060bc1ce61dfb292 - UPSTREAM: <carry>: Rename KOPIA to OADP
+WARNING -   lost line: const appName = "kopia"
+INFO - Picking commit: 06a2ea1a6f279f30025c401a4ff9c49b57cccfa0 - UPSTREAM: <carry>: Fix SFTP test
+WARNING - Upstream content may have been dropped from 'repo/blob/sftp/sftp_storage_test.go' by cherry-pick of: 06a2ea1a6f279f30025c401a4ff9c49b57cccfa0 - UPSTREAM: <carry>: Fix SFTP test
+WARNING -   lost line: func TestSFTPStorageValid(t *testing.T) {
+ERROR - Manual intervention is needed to rebase https://github.com/migtools/kopia:oadp-1.6 into migtools/oadp-vmdp:oadp-1.6
