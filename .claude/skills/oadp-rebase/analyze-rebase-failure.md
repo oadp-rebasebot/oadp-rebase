@@ -35,12 +35,17 @@ If given a **target name** (e.g. `velero-oadp-1.6`), find the most recent failed
 gh run list --repo oadp-rebasebot/oadp-rebase --workflow auto-rebase-v2.yaml \
   --status failure --limit 10 --json databaseId,displayTitle,startedAt,conclusion
 ```
-Then look for a run whose matrix included the given target. If ambiguous, show the user the list and ask which run to analyze.
+Note: `displayTitle` is always generic ("Auto Rebase") and cannot identify which targets were in the run. Instead, inspect the job matrix of candidate runs to find the one that included the given target:
+```bash
+gh run view <RUN_ID> --repo oadp-rebasebot/oadp-rebase --json jobs --jq '.jobs[].name'
+```
+Job names follow the pattern `rebase (<branch>, <target>, <trigger>)`, e.g. `rebase (oadp-dev, velero-oadp-dev, deps-changed)`. Check each candidate run until you find one whose job names include the target. If ambiguous, show the user the list and ask which run to analyze.
 
 Verify the run exists and get its metadata:
 ```bash
 gh run view <RUN_ID> --repo oadp-rebasebot/oadp-rebase --json jobs,status,conclusion,startedAt
 ```
+The `jobs` field is the primary way to determine which branch and targets were included in the run, since `displayTitle` is always generic ("Auto Rebase"). Each job name encodes `(branch, target, trigger)` -- check which jobs failed to focus the analysis.
 </step_1>
 
 <step_2>
