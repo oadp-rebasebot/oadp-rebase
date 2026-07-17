@@ -80,6 +80,8 @@ If a result JSON exists, read it for structured data (exit codes, PR URLs, triag
 
 Analyze the log output to determine the failure category. Work through these in order -- the first match is the primary category.
 
+Note: For hooks-only runs (source == dest, triggered by `deps-changed`), the log will show `No rebase needed, but --always-run-hooks is set. Running hooks on top of dest branch.` These runs skip cherry-picking entirely — failures are always in the hook scripts or the code they operate on. This narrows the categories to hook-script-failure, go-module-issue, transitive-dep-breakage, or infrastructure-failure.
+
 <category name="cherry-pick-conflict">
 **Cherry-pick conflict**
 
@@ -103,9 +105,9 @@ Determine if the conflict is **hook-coverable** by checking the file against the
 - `Dockerfile`, `Dockerfile-Windows`, `hack/build-image/Dockerfile` -- covered by `normalize-dockerfiles-and-commit.sh`
 - Everything else -- needs human review
 
-Read the affected config file to check which hooks are configured:
+Read the affected config file to check which hooks are configured. Config filenames follow the pattern `<org>_<repo_with_underscores>_<branch>.env.sh` (e.g., `openshift_openshift_velero_plugin_oadp-dev.env.sh`). Derive the name from the job's `--dest` argument, or list matching files:
 ```bash
-cat rebase-configs/<CONFIG_NAME>.env.sh
+ls rebase-configs/ | grep <branch>
 ```
 </category>
 
@@ -206,6 +208,9 @@ denied: access forbidden
 GITHUB_TOKEN
 rate limit
 clock drift
+reading https://sum.golang.org/lookup/...: 500 Internal Server Error
+reading https://sum.golang.org/lookup/...: 410 Gone
+GONOSUMCHECK
 ```
 
 These are transient issues, not rebase logic problems.
@@ -239,6 +244,31 @@ This means the rebase target's configuration is broken:
 - `yq` could not parse `repos.yaml`
 
 Read the config and versions files to identify the gap.
+</category>
+
+<category name="transitive-dep-breakage">
+**Transitive dependency breakage**
+
+Signature lines in log:
+```
+module <module>@latest found (v<X>), but does not contain package <package>
+does not implement <interface> (missing method <method>)
+cannot use <expr> as <type> value: <type> does not implement <interface>
+```
+
+These occur when a dependency bump (usually velero) pulls in a newer version of a transitive dependency (k8s.io/api, controller-runtime, etc.) that has breaking API changes. The hook scripts themselves work correctly — the failure is in downstream code that's incompatible with the new API surface.
+
+Distinguish from `go-module-issue`: in that category, the module itself can't be found (404) or has checksum problems. Here the module resolves fine but its contents changed (removed packages, new interface methods).
+
+Check:
+1. Which transitive dependency changed? Compare the version in the downstream repo's go.mod with what `go mod tidy` resolves to after the replace hook runs.
+2. What upstream change caused the bump? Usually a velero rebase that updated k8s deps. Check the most recent merged velero rebase PR.
+3. Is this oadp-dev only or does it affect release branches? Check the k8s/controller-runtime versions on release branches — if they pin an older velero minor, they won't see this.
+
+Common patterns:
+- **Removed API groups**: k8s.io/api removes deprecated API versions (e.g., `autoscaling/v2beta1` removed in v0.36). Downstream code importing the removed package fails at `go mod tidy`.
+- **New interface methods**: controller-runtime adds methods to interfaces like `client.SubResourceWriter` or `manager.Manager`. Test mocks that implement the old interface no longer compile.
+- **Renamed/moved packages**: A module restructures its package layout. Import paths in downstream code become invalid.
 </category>
 
 </step_3>
@@ -290,6 +320,16 @@ Based on the failure category, propose specific changes. Always reference exact 
 - Show the exact config file or versions file that needs to be created or fixed.
 - If a new repo needs configuration, reference AGENTS.md for the setup procedure.
 - If repos.yaml is wrong, show the corrected entry.
+</fix_for>
+
+<fix_for category="transitive-dep-breakage">
+These require code changes in the downstream repo, not config or hook fixes.
+
+- **Removed API packages**: Migrate imports to the replacement API version (e.g., `autoscaling/v2beta1` → `autoscaling/v2`). Check upstream migration guides.
+- **New interface methods**: Add stub implementations to test mocks. Look up the interface definition in the new dependency version to get exact method signatures.
+- **Check release branch impact**: Compare the dependency versions on release branches (e.g., `oadp-1.6`) with `oadp-dev`. If release branches pin an older upstream tag, they won't need the fix — scope the fix to `oadp-dev` only.
+- Create issues in the affected repos referencing the CI failure and the specific compilation errors.
+- Fixes should use `UPSTREAM: <carry>:` commit prefix since they're downstream-only changes.
 </fix_for>
 
 </step_4>
