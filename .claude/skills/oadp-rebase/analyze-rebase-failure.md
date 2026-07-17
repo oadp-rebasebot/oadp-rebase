@@ -250,7 +250,7 @@ Based on the failure category, propose specific changes. Always reference exact 
 
 **If conflicts are in source code files** (.go, .yaml, etc.):
 - The downstream carry commit needs to be manually rebased. Show which commit and files need attention.
-- Suggest using the manual-rebase skill: `/manual-rebase <target>`
+- Suggest using `/oadp-rebase:manual-rebase <target>`
 - If the conflict is because upstream incorporated the downstream change, suggest dropping the carry commit by renaming it from `<carry>` to `<drop>` in the downstream repo.
 </fix_for>
 
@@ -272,7 +272,7 @@ Based on the failure category, propose specific changes. Always reference exact 
 <fix_for category="verify-failure">
 - List the missing carry commits with their SHA and subject.
 - For each, determine if it was intentionally dropped or accidentally lost.
-- If accidentally lost, the rebase needs to be re-run. Check if a conflict resolution silently emptied the commit.
+- If accidentally lost, re-run with `/oadp-rebase:rebase <target> --branch <branch>`. Check if a conflict resolution silently emptied the commit.
 </fix_for>
 
 <fix_for category="infrastructure-failure">
@@ -290,6 +290,24 @@ Based on the failure category, propose specific changes. Always reference exact 
 </step_4>
 
 <step_5>
+**Reproduce locally when logs are insufficient**
+
+CI logs often show WHAT failed but not WHY. When the root cause isn't clear from logs alone (e.g., a hook failed but the error is truncated, or a go.mod issue needs investigation), reproduce the failure locally using the rebase skill:
+
+```
+/oadp-rebase:rebase <target> --branch <branch> --dry-run
+```
+
+This runs the same rebasebot + hooks pipeline locally with full output, letting you:
+- See the complete cherry-pick diff and conflict markers
+- Inspect the working tree mid-rebase (go.mod state, missing files, replace directives)
+- Test hook fixes by editing hook scripts and re-running
+- Trace exactly which hook or cherry-pick step produces the failure
+
+Use the local reproduction to validate your diagnosis before proposing fixes. The pattern from a real session: CI showed `go mod tidy` failing on `pkg/apis@v0.0.0`, but only by inspecting the working tree's go.mod locally could we see that the upstream `replace` directive was dropped during cherry-pick.
+</step_5>
+
+<step_6>
 **Present findings**
 
 Format the analysis as:
@@ -318,11 +336,11 @@ Format the analysis as:
 1. <Apply the fix>
 2. <Run `make test` to validate>
 3. <Commit and push>
-4. <Re-run the rebase -- reference the rebase skill or manual-rebase skill>
+4. Re-run the rebase with `/oadp-rebase:rebase <target> --branch <branch>`, or `/oadp-rebase:manual-rebase` for cherry-pick conflicts requiring human judgment
 ```
 
 If multiple targets failed in the same run, analyze each one separately.
-</step_5>
+</step_6>
 
 </process>
 
@@ -381,5 +399,12 @@ Pipeline wrapper adds phase markers:
 - Failure classified into one of the defined categories
 - Root cause identified with specific log evidence
 - Concrete fix proposed with exact file paths and edits
-- Next steps include validation (`make test`) and re-running the rebase
+- Next steps include validation (`make test`) and re-running via `/oadp-rebase:rebase`
 </success_criteria>
+
+<see_also>
+- `/oadp-rebase:rebase` — Run a rebase (from `migtools/oadp-rebase-ai-helpers` plugin). Use with `--dry-run` to reproduce failures locally.
+- `/oadp-rebase:manual-rebase` — Handle repos with cherry-pick conflicts requiring manual intervention.
+- `/oadp-rebase:verify-commits` — Verify downstream carry commits are preserved after rebase.
+- `/oadp-rebase:status` — Check current rebase status across all repos.
+</see_also>
