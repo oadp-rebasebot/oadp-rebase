@@ -68,6 +68,10 @@ var (
 
 	openPRStore   = map[string]*OpenPRInfo{}
 	openPRStoreMu sync.Mutex
+
+	// specBranchMap maps "org/repo" to its resolved branch for the current run.
+	// Populated once before checks run; read-only during checks (no mutex needed).
+	specBranchMap = map[string]string{}
 )
 
 // clearStores resets all global check stores between branch runs.
@@ -95,6 +99,17 @@ func clearStores() {
 	gomodDriftStoreMu.Lock()
 	gomodDriftStore = map[string][]GoModDrift{}
 	gomodDriftStoreMu.Unlock()
+
+	specBranchMap = map[string]string{}
+}
+
+// initSpecBranchMap builds the org/repo → branch lookup from all specs.
+func initSpecBranchMap(specs []RepoSpec) {
+	m := make(map[string]string, len(specs))
+	for _, s := range specs {
+		m[s.FullName()] = s.Branch
+	}
+	specBranchMap = m
 }
 
 // ---------- Individual checks ----------
@@ -636,8 +651,11 @@ func checkDepSync(client *GitHubClient, spec *RepoSpec) *CheckResult {
 	unresolved := 0
 	for i := range syncs {
 		dep := &syncs[i]
-		// Submodule deps use the branch from .gitmodules, go.mod deps use the spec branch
+		depKey := dep.Org + "/" + dep.Repo
 		depBranch := spec.Branch
+		if b, ok := specBranchMap[depKey]; ok {
+			depBranch = b
+		}
 		if dep.SubmoduleBranch != "" {
 			depBranch = dep.SubmoduleBranch
 		}
