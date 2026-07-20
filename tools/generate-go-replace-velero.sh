@@ -71,10 +71,23 @@ else
 fi
 
 # Replace existing line or append if not present
-if grep -q "^replace \$UPSTREAM_MODULE" "\$GO_MOD_FILE"; then
-    sed -i "s|^replace \$UPSTREAM_MODULE.*|\$REPLACE_LINE|" "\$GO_MOD_FILE"
+if grep -q "^replace \$UPSTREAM_MODULE " "\$GO_MOD_FILE"; then
+    sed -i "s|^replace \$UPSTREAM_MODULE .*|\$REPLACE_LINE|" "\$GO_MOD_FILE"
 else
     echo "\$REPLACE_LINE" >> "\$GO_MOD_FILE"
+fi
+
+# --- Step 3: handle velero/pkg/apis submodule if present ---
+APIS_UPSTREAM="\${UPSTREAM_MODULE}/pkg/apis"
+APIS_DOWNSTREAM="\${DOWNSTREAM_MODULE}/pkg/apis"
+if grep -qE "^\\s+\$APIS_UPSTREAM " "\$GO_MOD_FILE" || \\
+   grep -qE "require.*\$APIS_UPSTREAM " "\$GO_MOD_FILE"; then
+    APIS_REPLACE_LINE="replace \$APIS_UPSTREAM => \$APIS_DOWNSTREAM \$DOWNSTREAM_BRANCH"
+    if grep -q "^replace \$APIS_UPSTREAM " "\$GO_MOD_FILE"; then
+        sed -i "s|^replace \$APIS_UPSTREAM .*|\$APIS_REPLACE_LINE|" "\$GO_MOD_FILE"
+    else
+        echo "\$APIS_REPLACE_LINE" >> "\$GO_MOD_FILE"
+    fi
 fi
 HOOK
 
