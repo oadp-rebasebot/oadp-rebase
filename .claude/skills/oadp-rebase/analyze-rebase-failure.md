@@ -68,14 +68,6 @@ gh run view <RUN_ID> --repo oadp-rebasebot/oadp-rebase --log-failed 2>/dev/null 
   head -200
 ```
 
-Extract PR URLs from the logs to include in the summary:
-```bash
-gh run view <RUN_ID> --repo oadp-rebasebot/oadp-rebase --log 2>/dev/null | \
-  grep -E '(I created a new rebase PR|I updated existing rebase PR|PR .* already contains the rebase)' | \
-  head -20
-```
-The three patterns indicate: a new PR was opened, an existing PR was force-pushed, or the PR was already up-to-date. If none match, the run failed before reaching the PR stage.
-
 Also download the result artifact if available:
 ```bash
 gh run download <RUN_ID> --repo oadp-rebasebot/oadp-rebase --pattern 'result-*' --dir /tmp/rebase-results 2>/dev/null
@@ -331,7 +323,6 @@ Format the analysis as:
 **Run:** [#<run_number>](<run_url>)
 **Category:** <category name>
 **Failed at:** <phase (dry-run strict / triage / dry-run warn / verify / real run)>
-**PR:** [<pr-url>](<pr-url>) (new | updated | already up-to-date) — or "No PR opened" if the run failed before reaching the PR stage
 
 ### What happened
 
