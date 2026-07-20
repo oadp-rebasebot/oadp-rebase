@@ -255,7 +255,7 @@ Based on the failure category, propose specific changes. Always reference exact 
 
 **If conflicts are in source code files** (.go, .yaml, etc.):
 - The downstream carry commit needs to be manually rebased. Show which commit and files need attention.
-- Suggest using `/oadp-rebase:manual-rebase <target>`
+- Suggest using `/oadp-rebase:rebase <target>`
 - If the conflict is because upstream incorporated the downstream change, suggest dropping the carry commit by renaming it from `<carry>` to `<drop>` in the downstream repo.
 </fix_for>
 
@@ -341,7 +341,7 @@ Format the analysis as:
 1. <Apply the fix>
 2. <Run `make test` to validate>
 3. <Commit and push>
-4. Re-run the rebase with `/oadp-rebase:rebase <target> --branch <branch>`, or `/oadp-rebase:manual-rebase` for cherry-pick conflicts requiring human judgment
+4. Re-run the rebase with `/oadp-rebase:rebase <target> --branch <branch>`
 ```
 
 If multiple targets failed in the same run, analyze each one separately.
