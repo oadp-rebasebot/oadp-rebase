@@ -10,6 +10,7 @@ import (
 // Each repo is checked concurrently; checks within a repo run sequentially
 // (to avoid blasting the API with too many goroutines).
 func RunAllChecks(specs []RepoSpec, checks []Check, client *GitHubClient) []RepoStatus {
+	initSpecBranchMap(specs)
 	results := make([]RepoStatus, len(specs))
 	var wg sync.WaitGroup
 
