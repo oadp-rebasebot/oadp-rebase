@@ -294,7 +294,7 @@ func (c *GitHubClient) CompareStatus(org, repo, base, head string) (string, erro
 // OpenRebasePR searches for an open PR authored by oadp-rebasebot in the
 // given repo targeting the specified base branch. Returns nil if none found.
 func (c *GitHubClient) OpenRebasePR(org, repo, base string) (*OpenPRInfo, error) {
-	apiPath := fmt.Sprintf("/repos/%s/%s/pulls?state=open&base=%s&per_page=10", org, repo, base)
+	apiPath := fmt.Sprintf("/repos/%s/%s/pulls?state=open&base=%s&per_page=100", org, repo, base)
 
 	body, code, err := c.get(apiPath)
 	if err != nil {
