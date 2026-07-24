@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react'
 import type { RepoData, CvePR } from '../types'
-import { classifyStatus, deriveLabel, deriveOrg } from '../dag-data'
+import { classifyStatus, deriveLabel, deriveOrg, isPlugin } from '../dag-data'
 import { getDepIds, getDependents } from '../layout'
 import { colors, statusColors, orgColors } from '../styles/theme'
 import { DetailPanel } from './DetailPanel'
@@ -27,10 +27,12 @@ export function DAGCanvas({ repos, cvePRs }: DAGCanvasProps) {
 
   const columns = useMemo(() => {
     const waves = [...new Set(repos.map(r => r.wave))].sort((a, b) => a - b)
-    return waves.map(w => ({
-      wave: w,
-      repos: repos.filter(r => r.wave === w).sort((a, b) => a.repo.localeCompare(b.repo)),
-    }))
+    return waves.map(w => {
+      const waveRepos = repos.filter(r => r.wave === w)
+      const plugins = waveRepos.filter(r => isPlugin(r.repo)).sort((a, b) => a.repo.localeCompare(b.repo))
+      const others = waveRepos.filter(r => !isPlugin(r.repo)).sort((a, b) => a.repo.localeCompare(b.repo))
+      return { wave: w, plugins, others }
+    })
   }, [repos])
 
   const highlighted = useMemo(() => {
@@ -152,7 +154,7 @@ export function DAGCanvas({ repos, cvePRs }: DAGCanvasProps) {
             }}>
               Wave {col.wave}
             </div>
-            {col.repos.map(repo => (
+            {col.others.map(repo => (
               <RepoCard
                 key={repo.repo}
                 ref={el => setCardRef(repo.repo, el)}
@@ -164,6 +166,35 @@ export function DAGCanvas({ repos, cvePRs }: DAGCanvasProps) {
                 onHover={handleHover}
               />
             ))}
+            {col.plugins.length > 0 && (
+              <>
+                <div style={{
+                  fontSize: 10, fontWeight: 600, color: colors.cyan,
+                  textTransform: 'uppercase', letterSpacing: '0.06em',
+                  padding: '4px 2px 2px',
+                  borderTop: `1px solid ${colors.border}`,
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}>
+                  <span style={{
+                    display: 'inline-block', width: 6, height: 6,
+                    borderRadius: '50%', background: colors.cyan, opacity: 0.6,
+                  }} />
+                  Plugins
+                </div>
+                {col.plugins.map(repo => (
+                  <RepoCard
+                    key={repo.repo}
+                    ref={el => setCardRef(repo.repo, el)}
+                    repo={repo}
+                    repoSet={repoSet}
+                    cvePRs={cvePRs}
+                    dimmed={hoveredRepo !== null && !highlighted.has(repo.repo)}
+                    onClick={() => setSelectedRepo(repo)}
+                    onHover={handleHover}
+                  />
+                ))}
+              </>
+            )}
           </div>
         ))}
       </div>
@@ -189,6 +220,7 @@ const RepoCard = forwardRef<HTMLDivElement, {
   const sc = statusColors[status]
   const label = deriveLabel(repo.repo)
   const org = deriveOrg(repo.repo)
+  const plugin = isPlugin(repo.repo)
   const checks = repo.checks ?? {}
 
   const prCheck = checks.open_pr
@@ -224,16 +256,28 @@ const RepoCard = forwardRef<HTMLDivElement, {
     >
 
       <div style={{ padding: '8px 10px 7px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 5 }}>
           <span style={{ fontWeight: 600, fontSize: 13, color: colors.text }}>{label}</span>
-          <span style={{
-            fontSize: 9, fontWeight: 600, padding: '1px 6px', borderRadius: 10,
-            background: `${orgColors[org] ?? colors.muted}20`,
-            color: orgColors[org] ?? colors.muted,
-            textTransform: 'uppercase',
-          }}>
-            {org}
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 3 }}>
+            <span style={{
+              fontSize: 9, fontWeight: 600, padding: '1px 6px', borderRadius: 10,
+              background: `${orgColors[org] ?? colors.muted}20`,
+              color: orgColors[org] ?? colors.muted,
+              textTransform: 'uppercase',
+            }}>
+              {org}
+            </span>
+            {plugin && (
+              <span style={{
+                fontSize: 9, fontWeight: 600, padding: '1px 6px', borderRadius: 10,
+                background: `${colors.cyan}20`,
+                color: colors.cyan,
+                textTransform: 'uppercase',
+              }}>
+                plugin
+              </span>
+            )}
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginBottom: 5 }}>

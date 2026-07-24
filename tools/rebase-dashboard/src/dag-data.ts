@@ -17,6 +17,10 @@ export function deriveOrg(repoFullName: string): string {
   return repoFullName.split('/')[0] ?? ''
 }
 
+export function isPlugin(repoFullName: string): boolean {
+  return deriveLabel(repoFullName).includes('plugin')
+}
+
 interface CytoscapeNode {
   data: Record<string, unknown>
   classes?: string
