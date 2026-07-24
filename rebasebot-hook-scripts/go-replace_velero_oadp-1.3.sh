@@ -45,15 +45,17 @@ else
     echo "$REPLACE_LINE" >> "$GO_MOD_FILE"
 fi
 
-# --- Step 3: handle velero/pkg/apis submodule if present ---
+# --- Step 3: handle velero/pkg/apis sub-module ---
+# Downstream velero uses pkg/apis as a separate Go sub-module with a local
+# replace (=> ./pkg/apis). Consumers that replace the main velero module also
+# need a replace for pkg/apis, otherwise go mod tidy fails trying to resolve
+# the v0.0.0 pseudo-version at the upstream repo. Add it unconditionally —
+# Go ignores replaces for modules not in the dependency graph.
 APIS_UPSTREAM="${UPSTREAM_MODULE}/pkg/apis"
 APIS_DOWNSTREAM="${DOWNSTREAM_MODULE}/pkg/apis"
-if grep -qE "^\s+$APIS_UPSTREAM " "$GO_MOD_FILE" || \
-   grep -qE "require.*$APIS_UPSTREAM " "$GO_MOD_FILE"; then
-    APIS_REPLACE_LINE="replace $APIS_UPSTREAM => $APIS_DOWNSTREAM $DOWNSTREAM_BRANCH"
-    if grep -q "^replace $APIS_UPSTREAM " "$GO_MOD_FILE"; then
-        sed -i "s|^replace $APIS_UPSTREAM .*|$APIS_REPLACE_LINE|" "$GO_MOD_FILE"
-    else
-        echo "$APIS_REPLACE_LINE" >> "$GO_MOD_FILE"
-    fi
+APIS_REPLACE_LINE="replace $APIS_UPSTREAM => $APIS_DOWNSTREAM $DOWNSTREAM_BRANCH"
+if grep -q "^replace $APIS_UPSTREAM " "$GO_MOD_FILE"; then
+    sed -i "s|^replace $APIS_UPSTREAM .*|$APIS_REPLACE_LINE|" "$GO_MOD_FILE"
+else
+    echo "$APIS_REPLACE_LINE" >> "$GO_MOD_FILE"
 fi
