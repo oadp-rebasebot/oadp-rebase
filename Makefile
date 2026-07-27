@@ -18,7 +18,7 @@ verify-generate: generate
 	@echo "Generated files are up to date."
 
 syntax-check:
-	@echo "=== Syntax check ==="
+	@echo "=== Syntax check — bash -n on all shell scripts ==="
 	@fail=0; \
 	for f in versions/*.env rebase-configs/*.env.sh rebasebot-hook-scripts/*.sh tools/*.sh tools/**/*.sh run-oadp-rebase.sh; do \
 		[ -f "$$f" ] || continue; \
@@ -27,7 +27,7 @@ syntax-check:
 	[ $$fail -eq 0 ] && echo "All files OK" || exit 1
 
 config-load:
-	@echo "=== Config loading test ==="
+	@echo "=== Config load — source every config for every branch via run-oadp-rebase.sh -t ==="
 	@fail_file=/tmp/oadp-config-load-$$$$; rm -f "$$fail_file"; \
 	repo_data=$$(yq -r '.repos[] | [.repo, .config_prefix, (.main_only // false), (.dev_branch // "_NONE_"), (.min_branch // "_NONE_"), (.max_branch // "_NONE_")] | join("\t")' repos.yaml); \
 	for branch in oadp-1.3 oadp-1.4 oadp-1.5 oadp-1.6 oadp-dev; do \
@@ -57,7 +57,7 @@ config-load:
 	echo "All configs OK"
 
 verify-hooks:
-	@echo "=== Hook reference check ==="
+	@echo "=== Hook references — every hook filename in configs exists in rebasebot-hook-scripts/ ==="
 	@fail=0; \
 	for config in rebase-configs/*.env.sh; do \
 		for hook in $$(grep -o '/[a-zA-Z0-9_.-]*\.sh' "$$config" 2>/dev/null | sed 's|^/||'); do \
@@ -71,7 +71,7 @@ verify-hooks:
 	[ $$fail -eq 0 ] && echo "Hook references OK" || { echo "ERROR: Missing hook scripts detected"; exit 1; }
 
 verify-kopia-alignment:
-	@echo "=== Kopia alignment check ==="
+	@echo "=== Kopia alignment — KOPIA_UPSTREAM_TAG matches what Velero's go.mod expects ==="
 	@fail=0; \
 	for f in versions/oadp-1.*.env; do \
 		unset OADP_BRANCH VELERO_UPSTREAM_TAG KOPIA_UPSTREAM_TAG 2>/dev/null; \
@@ -88,7 +88,7 @@ verify-kopia-alignment:
 	[ $$fail -eq 0 ] && echo "Kopia alignment OK" || exit 1
 
 verify-repos-yaml:
-	@echo "=== repos.yaml validation ==="
+	@echo "=== repos.yaml — valid YAML and every config_prefix has matching config files ==="
 	@yq eval 'true' repos.yaml > /dev/null || { echo "FAIL: repos.yaml is not valid YAML"; exit 1; }
 	@fail=0; \
 	for prefix in $$(yq -r '.repos[].config_prefix' repos.yaml); do \
@@ -99,7 +99,7 @@ verify-repos-yaml:
 	echo "repos.yaml validation OK"
 
 verify-resolve-config:
-	@echo "=== resolve-config.sh test ==="
+	@echo "=== resolve-config — every target resolves to the correct config name ==="
 	@fail_file=/tmp/oadp-resolve-config-$$$$; rm -f "$$fail_file"; \
 	repo_data=$$(yq -r '.repos[] | [.repo, .config_prefix, (.main_only // false), (.dev_branch // "_NONE_"), (.min_branch // "_NONE_"), (.max_branch // "_NONE_")] | join("\t")' repos.yaml); \
 	for branch in oadp-1.3 oadp-1.4 oadp-1.5 oadp-1.6 oadp-dev; do \
