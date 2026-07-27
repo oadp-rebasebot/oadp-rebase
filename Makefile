@@ -57,16 +57,17 @@ config-load:
 
 verify-hooks:
 	@echo "=== Hook reference check ==="
-	@missing=0; \
+	@fail=0; \
 	for config in rebase-configs/*.env.sh; do \
-		grep -o '/[a-zA-Z0-9_.-]*\.sh' "$$config" 2>/dev/null | sed 's|^/||' | while IFS= read -r hook; do \
+		for hook in $$(grep -o '/[a-zA-Z0-9_.-]*\.sh' "$$config" 2>/dev/null | sed 's|^/||'); do \
 			[ -z "$$hook" ] && continue; \
 			if [ ! -f "rebasebot-hook-scripts/$$hook" ]; then \
 				echo "MISSING: $$hook (in $$(basename $$config))"; \
+				fail=1; \
 			fi; \
 		done; \
 	done; \
-	echo "Hook references OK"
+	[ $$fail -eq 0 ] && echo "Hook references OK" || { echo "ERROR: Missing hook scripts detected"; exit 1; }
 
 verify-kopia-alignment:
 	@echo "=== Kopia alignment check ==="
