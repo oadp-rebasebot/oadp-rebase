@@ -1,4 +1,4 @@
-.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-repos-yaml
+.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-repos-yaml go-test auto-rebase-test shellcheck
 
 generate:
 	@bash tools/generate-go-replace-velero.sh
@@ -18,7 +18,7 @@ verify-generate: generate
 	@echo "Generated files are up to date."
 
 syntax-check:
-	@echo "=== Syntax check ==="
+	@echo "=== Syntax check — bash -n on all shell scripts ==="
 	@fail=0; \
 	for f in versions/*.env rebase-configs/*.env.sh rebasebot-hook-scripts/*.sh tools/*.sh tools/**/*.sh run-oadp-rebase.sh; do \
 		[ -f "$$f" ] || continue; \
@@ -27,8 +27,8 @@ syntax-check:
 	[ $$fail -eq 0 ] && echo "All files OK" || exit 1
 
 config-load:
-	@echo "=== Config loading test ==="
-	@fail=0; \
+	@echo "=== Config load — source every config for every branch via run-oadp-rebase.sh -t ==="
+	@fail_file=/tmp/oadp-config-load-$$$$; rm -f "$$fail_file"; \
 	repo_data=$$(yq -r '.repos[] | [.repo, .config_prefix, (.main_only // false), (.dev_branch // "_NONE_"), (.min_branch // "_NONE_"), (.max_branch // "_NONE_")] | join("\t")' repos.yaml); \
 	for branch in oadp-1.3 oadp-1.4 oadp-1.5 oadp-1.6 oadp-dev; do \
 		echo "$$repo_data" | while IFS='	' read -r repo prefix main_only dev_br min_br max_br; do \
@@ -46,30 +46,32 @@ config-load:
 			rc=$$?; \
 			if [ $$rc -ne 0 ]; then \
 				echo "  FAIL: $$target"; \
-				fail=1; \
+				touch "$$fail_file"; \
 			else \
 				upstream=$$(echo "$$output" | grep 'Upstream:' | sed 's/.*Upstream:[[:space:]]*//'); \
 				echo "  OK: $$target -> $$upstream"; \
 			fi; \
 		done; \
 	done; \
-	[ $$fail -eq 0 ] && echo "All configs OK" || exit 1
+	if [ -f "$$fail_file" ]; then rm -f "$$fail_file"; exit 1; fi; \
+	echo "All configs OK"
 
 verify-hooks:
-	@echo "=== Hook reference check ==="
-	@missing=0; \
+	@echo "=== Hook references — every hook filename in configs exists in rebasebot-hook-scripts/ ==="
+	@fail=0; \
 	for config in rebase-configs/*.env.sh; do \
-		grep -o '/[a-zA-Z0-9_.-]*\.sh' "$$config" 2>/dev/null | sed 's|^/||' | while IFS= read -r hook; do \
+		for hook in $$(grep -o '/[a-zA-Z0-9_.-]*\.sh' "$$config" 2>/dev/null | sed 's|^/||'); do \
 			[ -z "$$hook" ] && continue; \
 			if [ ! -f "rebasebot-hook-scripts/$$hook" ]; then \
 				echo "MISSING: $$hook (in $$(basename $$config))"; \
+				fail=1; \
 			fi; \
 		done; \
 	done; \
-	echo "Hook references OK"
+	[ $$fail -eq 0 ] && echo "Hook references OK" || { echo "ERROR: Missing hook scripts detected"; exit 1; }
 
 verify-kopia-alignment:
-	@echo "=== Kopia alignment check ==="
+	@echo "=== Kopia alignment — KOPIA_UPSTREAM_TAG matches what Velero's go.mod expects ==="
 	@fail=0; \
 	for f in versions/oadp-1.*.env; do \
 		unset OADP_BRANCH VELERO_UPSTREAM_TAG KOPIA_UPSTREAM_TAG 2>/dev/null; \
@@ -86,7 +88,7 @@ verify-kopia-alignment:
 	[ $$fail -eq 0 ] && echo "Kopia alignment OK" || exit 1
 
 verify-repos-yaml:
-	@echo "=== repos.yaml validation ==="
+	@echo "=== repos.yaml — valid YAML and every config_prefix has matching config files ==="
 	@yq eval 'true' repos.yaml > /dev/null || { echo "FAIL: repos.yaml is not valid YAML"; exit 1; }
 	@fail=0; \
 	for prefix in $$(yq -r '.repos[].config_prefix' repos.yaml); do \
@@ -97,8 +99,8 @@ verify-repos-yaml:
 	echo "repos.yaml validation OK"
 
 verify-resolve-config:
-	@echo "=== resolve-config.sh test ==="
-	@fail=0; \
+	@echo "=== resolve-config — every target resolves to the correct config name ==="
+	@fail_file=/tmp/oadp-resolve-config-$$$$; rm -f "$$fail_file"; \
 	repo_data=$$(yq -r '.repos[] | [.repo, .config_prefix, (.main_only // false), (.dev_branch // "_NONE_"), (.min_branch // "_NONE_"), (.max_branch // "_NONE_")] | join("\t")' repos.yaml); \
 	for branch in oadp-1.3 oadp-1.4 oadp-1.5 oadp-1.6 oadp-dev; do \
 		echo "$$repo_data" | while IFS='	' read -r repo prefix main_only dev_br min_br max_br; do \
@@ -113,13 +115,37 @@ verify-resolve-config:
 			[ -f "$$config_file" ] || continue; \
 			grep -q 'SOURCE_UPSTREAM_REPO' "$$config_file" || continue; \
 			target="$${repo}-$${effective_branch}"; \
-			output=$$(bash tools/auto-rebase/resolve-config.sh "$$target" 2>&1) || { echo "  FAIL: $$target"; fail=1; continue; }; \
+			output=$$(bash tools/auto-rebase/resolve-config.sh "$$target" 2>&1) || { echo "  FAIL: $$target"; touch "$$fail_file"; continue; }; \
 			config_name=$$(echo "$$output" | grep 'CONFIG_NAME=' | cut -d'"' -f2); \
 			echo "  OK: $$target -> $$config_name"; \
 		done; \
 	done; \
-	[ $$fail -eq 0 ] && echo "All resolve-config OK" || exit 1
+	if [ -f "$$fail_file" ]; then rm -f "$$fail_file"; exit 1; fi; \
+	echo "All resolve-config OK"
 
-test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks
+go-test:
+	@echo "=== Go tests — unit tests for all Go tools ==="
+	@fail=0; \
+	for mod in tools/rebase-status tools/semver-compare tools/prow-merge-bot-configs/tui; do \
+		echo "  Testing $$mod..."; \
+		(cd "$$mod" && go test ./...) || { echo "  FAIL: $$mod"; fail=1; }; \
+	done; \
+	[ $$fail -eq 0 ] && echo "All Go tests passed" || exit 1
+
+auto-rebase-test:
+	@echo "=== Auto-rebase tests — decision, triage, and notification logic ==="
+	@bash tools/auto-rebase/test.sh
+
+shellcheck:
+	@echo "=== ShellCheck — lint all shell scripts ==="
+	@command -v shellcheck >/dev/null 2>&1 || { echo "Error: shellcheck is not installed"; exit 1; }
+	@fail=0; \
+	for f in run-oadp-rebase.sh tools/*.sh tools/**/*.sh rebasebot-hook-scripts/*.sh; do \
+		[ -f "$$f" ] || continue; \
+		shellcheck -S warning "$$f" || fail=1; \
+	done; \
+	[ $$fail -eq 0 ] && echo "All files passed ShellCheck" || exit 1
+
+test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks go-test auto-rebase-test
 	@echo ""
 	@echo "All checks passed."

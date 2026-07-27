@@ -43,6 +43,20 @@ make generate          # Regenerate hooks + docs from versions SSOT
   -s ~/.rebasebot/secrets velero-oadp-1.6          # Dry-run with rebasebot
 ```
 
+## Claude Slash Commands
+
+These slash commands automate rebase workflows:
+
+- `/oadp-rebase:rebase` — Run a full rebase for a repo or wave (validate, execute, verify, CI)
+- `/oadp-rebase:status` — Check rebase status across all repos for a branch
+- `/oadp-rebase:update-config` — Update a config to target a new upstream version
+- `/oadp-rebase:verify-commits` — Verify carry commits survived a rebase
+- `/oadp-rebase:manual-rebase` — Handle repos needing manual intervention
+- `/oadp-rebase:update-dependency` — Update go.mod replace directives for dependent repos
+- `/oadp-rebase:update-wiki` — Generate status markdown and push to the wiki
+
+For deeper architecture details, see `AGENTS.md`.
+
 ## Rules
 
 - Always run `make test` before committing changes to configs, hooks, or versions files

@@ -5,6 +5,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 VERSIONS_DIR="$REPO_ROOT/versions"
 OUTPUT_FILE="$REPO_ROOT/docs/version-matrix.md"
+REPOS_YAML="$REPO_ROOT/repos.yaml"
+
+command -v yq >/dev/null 2>&1 || { echo "Error: yq is required (https://github.com/mikefarah/yq)" >&2; exit 1; }
 
 versions=()
 for f in "$VERSIONS_DIR"/oadp-1.*.env; do
@@ -17,14 +20,58 @@ if [ ${#versions[@]} -eq 0 ]; then
     exit 1
 fi
 
+# Collect release branch names from versions files
+release_branches=()
+for f in "${versions[@]}"; do
+    unset OADP_BRANCH
+    . "$f"
+    release_branches+=("$OADP_BRANCH")
+done
+
+# Branch comparison functions (same logic as run-oadp-rebase.sh)
+_ver_num() { echo "$1" | sed -n 's/oadp-1\.\([0-9]*\)/\1/p'; }
+
+_branch_ge() {
+    case "$1" in oadp-dev|main) return 0 ;; esac
+    local cur min
+    cur=$(_ver_num "$1"); min=$(_ver_num "$2")
+    [ -z "$cur" ] && return 0; [ -z "$min" ] && return 0
+    [ "$cur" -ge "$min" ]
+}
+
+_branch_le() {
+    case "$1" in oadp-dev|main) return 0 ;; esac
+    local cur max
+    cur=$(_ver_num "$1"); max=$(_ver_num "$2")
+    [ -z "$cur" ] && return 0; [ -z "$max" ] && return 0
+    [ "$cur" -le "$max" ]
+}
+
+_repo_active() {
+    local branch="$1" main_only="$2" min_b="$3" max_b="$4"
+    if [ "$main_only" = "true" ] && [ "$branch" != "oadp-dev" ] && [ "$branch" != "main" ]; then
+        return 1
+    fi
+    [ "$min_b" != "_NONE_" ] && { _branch_ge "$branch" "$min_b" || return 1; }
+    [ "$max_b" != "_NONE_" ] && { _branch_le "$branch" "$max_b" || return 1; }
+    return 0
+}
+
+# Read all repo data once from repos.yaml.
+# Use "_NONE_" as sentinel for empty fields (POSIX read collapses consecutive tabs).
+repo_data=$(yq -r '.repos[] | [.org, .repo, .wave, (.main_only // false), (.min_branch // "_NONE_"), (.max_branch // "_NONE_")] | @tsv' "$REPOS_YAML")
+wave_nums=$(yq -r '.waves | keys | .[]' "$REPOS_YAML" | sort -n)
+
 tmp_output="$(mktemp)"
 trap 'rm -f "$tmp_output"' EXIT
 
 {
 cat <<'HEADER'
-<!-- Auto-generated from versions/*.env — do not edit manually. Run tools/generate-version-matrix.sh -->
+<!-- Auto-generated from versions/*.env and repos.yaml — do not edit manually. Run tools/generate-version-matrix.sh -->
 
 # OADP Rebase Version Matrix
+
+> **Auto-generated** from `versions/*.env` and `repos.yaml`. Do not edit manually — run `make generate` instead.
 
 This document maps OADP versions to their upstream dependencies, tracks which repositories have downstream branches per version, and defines wave composition for the rebase process.
 
@@ -61,90 +108,80 @@ for f in "${versions[@]}"; do
     echo "| $VELERO_UPSTREAM_TAG | \`$VELERO_TAG_SHA\` |"
 done
 
-cat <<'MID2'
+# --- Branch Coverage Matrix (derived from repos.yaml) ---
 
-## Branch Coverage Matrix
+echo ""
+echo "## Branch Coverage Matrix"
+echo ""
+echo "Which repositories have downstream branches per OADP version:"
+echo ""
 
-Which repositories have downstream branches per OADP version:
+# Header row
+printf "| Repository |"
+for b in "${release_branches[@]}"; do printf " %s |" "${b#oadp-}"; done
+printf " dev |\n"
 
-| Repository | 1.3 | 1.4 | 1.5 | 1.6 | dev |
-|------------|-----|-----|-----|-----|-----|
-| openshift/velero | Y | Y | Y | Y | Y |
-| openshift/restic | Y | Y | Y | Y | Y |
-| migtools/kopia | Y | Y | Y | Y | Y |
-| openshift/oadp-operator | Y | Y | Y | Y | Y |
-| openshift/velero-plugin-for-aws | Y | Y | Y | Y | Y |
-| openshift/velero-plugin-for-gcp | Y | Y | Y | Y | Y |
-| openshift/velero-plugin-for-microsoft-azure | Y | Y | Y | Y | Y |
-| openshift/openshift-velero-plugin | Y | Y | Y | Y | Y |
-| openshift/oadp-must-gather | Y | Y | Y | Y | Y |
-| migtools/kubevirt-velero-plugin | Y | Y | Y | Y | Y |
-| openshift/velero-plugin-for-csi | Y | - | - | - | Y |
-| openshift/velero-plugin-for-legacy-aws | - | Y | Y | Y | Y |
-| migtools/oadp-non-admin | - | Y | Y | Y | Y |
-| migtools/oadp-cli | - | Y | Y | Y | Y |
-| openshift/hypershift-oadp-plugin | - | - | Y | Y | Y |
-| migtools/filebrowser | - | - | - | Y | Y |
-| migtools/oadp-vmdp | - | - | - | Y | Y |
-| migtools/oadp-vm-file-restore | - | - | - | Y | Y |
-| migtools/kubevirt-datamover-controller | - | - | - | Y | Y |
-| migtools/kubevirt-datamover-plugin | - | - | - | Y | Y |
-| migtools/udistribution | - | - | - | - | main |
+# Separator row
+printf '%s' "|------------|"
+for _ in "${release_branches[@]}"; do printf '%s' "-----|"; done
+printf '%s' "-----|"
+echo ""
 
-## Wave Composition
+# One row per repo
+while IFS=$'\t' read -r org repo wave main_only min_b max_b; do
+    [ -z "$org" ] && continue
+    printf "| %s/%s |" "$org" "$repo"
+    for b in "${release_branches[@]}"; do
+        if _repo_active "$b" "$main_only" "$min_b" "$max_b"; then
+            printf " Y |"
+        else
+            printf " - |"
+        fi
+    done
+    if [ "$main_only" = "true" ]; then
+        printf " main |"
+    else
+        printf " Y |"
+    fi
+    echo ""
+done <<< "$repo_data"
 
-Each wave groups repositories that can be rebased in parallel. Waves must be executed sequentially since later waves depend on earlier ones.
+# --- Wave Composition (derived from repos.yaml) ---
 
-### OADP 1.3
+echo ""
+echo "## Wave Composition"
+echo ""
+echo "Each wave groups repositories that can be rebased in parallel. Waves must be executed sequentially since later waves depend on earlier ones."
 
-| Wave | Repositories |
-|------|-------------|
-| 1 | kopia, restic |
-| 2 | velero |
-| 3 | kubevirt-velero-plugin, velero-plugin-for-csi, oadp-operator, velero-plugin-for-aws, velero-plugin-for-gcp, velero-plugin-for-microsoft-azure |
-| 4 | openshift-velero-plugin |
-| 5 | oadp-must-gather |
+all_branches=("${release_branches[@]}" "oadp-dev")
 
-### OADP 1.4
+for branch in "${all_branches[@]}"; do
+    if [ "$branch" = "oadp-dev" ]; then
+        echo ""
+        echo "### oadp-dev"
+    else
+        echo ""
+        echo "### OADP ${branch#oadp-}"
+    fi
+    echo ""
+    echo "| Wave | Repositories |"
+    echo "|------|-------------|"
 
-| Wave | Repositories |
-|------|-------------|
-| 1 | kopia, restic |
-| 2 | velero |
-| 3 | kubevirt-velero-plugin, oadp-operator, velero-plugin-for-aws, velero-plugin-for-legacy-aws, velero-plugin-for-gcp, velero-plugin-for-microsoft-azure |
-| 4 | oadp-non-admin, openshift-velero-plugin |
-| 5 | oadp-must-gather, oadp-cli |
-
-### OADP 1.5
-
-| Wave | Repositories |
-|------|-------------|
-| 1 | kopia, restic |
-| 2 | velero |
-| 3 | kubevirt-velero-plugin, oadp-operator, velero-plugin-for-aws, velero-plugin-for-legacy-aws, velero-plugin-for-microsoft-azure, velero-plugin-for-gcp, hypershift-oadp-plugin |
-| 4 | oadp-non-admin, openshift-velero-plugin |
-| 5 | oadp-must-gather, oadp-cli |
-
-### OADP 1.6
-
-| Wave | Repositories |
-|------|-------------|
-| 1 | kopia, restic, filebrowser, oadp-vmdp |
-| 2 | velero |
-| 3 | kubevirt-velero-plugin, oadp-operator, velero-plugin-for-aws, velero-plugin-for-legacy-aws, velero-plugin-for-microsoft-azure, velero-plugin-for-gcp, hypershift-oadp-plugin |
-| 4 | oadp-non-admin, openshift-velero-plugin, kubevirt-datamover-controller, oadp-vm-file-restore |
-| 5 | oadp-must-gather, oadp-cli, kubevirt-datamover-plugin |
-
-### oadp-dev
-
-| Wave | Repositories |
-|------|-------------|
-| 1 | udistribution, kopia, restic, filebrowser, oadp-vmdp |
-| 2 | velero |
-| 3 | kubevirt-velero-plugin, velero-plugin-for-csi, oadp-operator, velero-plugin-for-aws, velero-plugin-for-legacy-aws, velero-plugin-for-microsoft-azure, velero-plugin-for-gcp, hypershift-oadp-plugin |
-| 4 | oadp-non-admin, openshift-velero-plugin, kubevirt-datamover-controller, oadp-vm-file-restore |
-| 5 | oadp-must-gather, oadp-cli, kubevirt-datamover-plugin |
-MID2
+    for wave in $wave_nums; do
+        repos_in_wave=""
+        while IFS=$'\t' read -r _org repo w main_only min_b max_b; do
+            [ -z "$_org" ] && continue
+            [ "$w" != "$wave" ] && continue
+            _repo_active "$branch" "$main_only" "$min_b" "$max_b" || continue
+            if [ -z "$repos_in_wave" ]; then
+                repos_in_wave="$repo"
+            else
+                repos_in_wave="$repos_in_wave, $repo"
+            fi
+        done <<< "$repo_data"
+        [ -n "$repos_in_wave" ] && echo "| $wave | $repos_in_wave |"
+    done
+done
 
 } > "$tmp_output"
 
