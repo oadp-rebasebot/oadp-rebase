@@ -28,7 +28,7 @@ syntax-check:
 
 config-load:
 	@echo "=== Config loading test ==="
-	@fail=0; \
+	@fail_file=/tmp/oadp-config-load-$$$$; rm -f "$$fail_file"; \
 	repo_data=$$(yq -r '.repos[] | [.repo, .config_prefix, (.main_only // false), (.dev_branch // "_NONE_"), (.min_branch // "_NONE_"), (.max_branch // "_NONE_")] | join("\t")' repos.yaml); \
 	for branch in oadp-1.3 oadp-1.4 oadp-1.5 oadp-1.6 oadp-dev; do \
 		echo "$$repo_data" | while IFS='	' read -r repo prefix main_only dev_br min_br max_br; do \
@@ -46,14 +46,15 @@ config-load:
 			rc=$$?; \
 			if [ $$rc -ne 0 ]; then \
 				echo "  FAIL: $$target"; \
-				fail=1; \
+				touch "$$fail_file"; \
 			else \
 				upstream=$$(echo "$$output" | grep 'Upstream:' | sed 's/.*Upstream:[[:space:]]*//'); \
 				echo "  OK: $$target -> $$upstream"; \
 			fi; \
 		done; \
 	done; \
-	[ $$fail -eq 0 ] && echo "All configs OK" || exit 1
+	if [ -f "$$fail_file" ]; then rm -f "$$fail_file"; exit 1; fi; \
+	echo "All configs OK"
 
 verify-hooks:
 	@echo "=== Hook reference check ==="
@@ -99,7 +100,7 @@ verify-repos-yaml:
 
 verify-resolve-config:
 	@echo "=== resolve-config.sh test ==="
-	@fail=0; \
+	@fail_file=/tmp/oadp-resolve-config-$$$$; rm -f "$$fail_file"; \
 	repo_data=$$(yq -r '.repos[] | [.repo, .config_prefix, (.main_only // false), (.dev_branch // "_NONE_"), (.min_branch // "_NONE_"), (.max_branch // "_NONE_")] | join("\t")' repos.yaml); \
 	for branch in oadp-1.3 oadp-1.4 oadp-1.5 oadp-1.6 oadp-dev; do \
 		echo "$$repo_data" | while IFS='	' read -r repo prefix main_only dev_br min_br max_br; do \
@@ -114,12 +115,13 @@ verify-resolve-config:
 			[ -f "$$config_file" ] || continue; \
 			grep -q 'SOURCE_UPSTREAM_REPO' "$$config_file" || continue; \
 			target="$${repo}-$${effective_branch}"; \
-			output=$$(bash tools/auto-rebase/resolve-config.sh "$$target" 2>&1) || { echo "  FAIL: $$target"; fail=1; continue; }; \
+			output=$$(bash tools/auto-rebase/resolve-config.sh "$$target" 2>&1) || { echo "  FAIL: $$target"; touch "$$fail_file"; continue; }; \
 			config_name=$$(echo "$$output" | grep 'CONFIG_NAME=' | cut -d'"' -f2); \
 			echo "  OK: $$target -> $$config_name"; \
 		done; \
 	done; \
-	[ $$fail -eq 0 ] && echo "All resolve-config OK" || exit 1
+	if [ -f "$$fail_file" ]; then rm -f "$$fail_file"; exit 1; fi; \
+	echo "All resolve-config OK"
 
 test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks
 	@echo ""
