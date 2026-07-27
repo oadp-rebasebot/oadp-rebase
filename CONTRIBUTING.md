@@ -53,22 +53,21 @@ When a new upstream release comes out (e.g., Velero v1.18.3):
 
 1. Create `versions/oadp-1.7.env` with all upstream tag variables
 2. Create config files in `rebase-configs/` for each repo that has the new branch
-3. Run `make generate` — creates version-specific hooks for the new branch and updates the version matrix
-4. Run `make test`
+3. Copy and adapt version-specific hook scripts in `rebasebot-hook-scripts/` — most hooks differ only by the branch name on one line, so copy from the previous version and update the branch
+4. Run `make generate` — creates generated hooks (`go-replace_velero_*`, `verify-tag-sha_*`) and updates the version matrix
+5. Run `make test`
 
-### Add a new hook script
+### Add or modify a hook script
 
-If the hook follows an existing pattern (go-replace, submodule, go-use-tag, copy-crds), add it to the appropriate generator in `tools/generate-*.sh` rather than creating a hand-maintained file.
+Most hook scripts are hand-maintained files in `rebasebot-hook-scripts/`. A few are generated from the SSOT — see the "do not edit manually" header in `go-replace_velero_*.sh` and `verify-tag-sha_*.sh`.
 
-For a genuinely new hook type:
+For hand-maintained hooks:
 
-1. Create the script in `rebasebot-hook-scripts/`
+1. Create or edit the script directly in `rebasebot-hook-scripts/`
 2. Reference it from the relevant config files in `rebase-configs/`
-3. Run `make test` — `verify-hooks` confirms the referenced file exists
+3. Run `make test` — `verify-hooks` confirms every referenced file exists
 
-### Modify a generated hook
-
-Never edit generated files directly. Instead:
+For generated hooks (`go-replace_velero_*`, `verify-tag-sha_*`):
 
 1. Modify the generator script in `tools/generate-*.sh`
 2. Run `make generate`
