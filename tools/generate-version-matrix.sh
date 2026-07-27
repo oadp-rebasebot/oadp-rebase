@@ -71,6 +71,8 @@ cat <<'HEADER'
 
 # OADP Rebase Version Matrix
 
+> **Auto-generated** from `versions/*.env` and `repos.yaml`. Do not edit manually — run `make generate` instead.
+
 This document maps OADP versions to their upstream dependencies, tracks which repositories have downstream branches per version, and defines wave composition for the rebase process.
 
 ## Upstream Version Mapping
