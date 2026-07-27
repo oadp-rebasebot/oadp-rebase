@@ -55,7 +55,7 @@ These slash commands automate rebase workflows:
 - `/oadp-rebase:update-dependency` — Update go.mod replace directives for dependent repos
 - `/oadp-rebase:update-wiki` — Generate status markdown and push to the wiki
 
-For deeper architecture details, see `AGENTS.md`.
+For deeper architecture details, see `AGENTS.md`. For prerequisites and step-by-step workflows, see `CONTRIBUTING.md`.
 
 ## Rules
 
