@@ -46,16 +46,18 @@ When a new upstream release comes out (e.g., Velero v1.18.3):
 
 1. Add the repo entry to `repos.yaml` with org, repo name, wave, config_prefix, and optionally `min_branch`, `max_branch`, `dev_branch`, `main_only`, or `images`
 2. Create config files in `rebase-configs/` for each branch the repo supports, named `<config_prefix>_<branch>.env.sh`
-3. Run `make generate` — updates `docs/version-matrix.md` and may generate new hooks
-4. Run `make test`
+3. Create or adapt any hook scripts the repo needs in `rebasebot-hook-scripts/` and reference them from the config files
+4. Run `make generate` — updates `docs/version-matrix.md` and generates version-specific hooks
+5. Run `make test`
 
 ### Add a new OADP version (e.g., oadp-1.7)
 
 1. Create `versions/oadp-1.7.env` with all upstream tag variables
-2. Create config files in `rebase-configs/` for each repo that has the new branch
-3. Copy and adapt version-specific hook scripts in `rebasebot-hook-scripts/` — most hooks differ only by the branch name on one line, so copy from the previous version and update the branch
-4. Run `make generate` — creates generated hooks (`go-replace_velero_*`, `verify-tag-sha_*`) and updates the version matrix
-5. Run `make test`
+2. Update `min_branch`/`max_branch` in `repos.yaml` if any repos are being added or removed for this version
+3. Create config files in `rebase-configs/` for each repo that has the new branch
+4. Copy and adapt version-specific hook scripts in `rebasebot-hook-scripts/` — most hooks differ only by the branch name on one line, so copy from the previous version and update the branch
+5. Run `make generate` — creates generated hooks (`go-replace_velero_*`, `verify-tag-sha_*`) and updates the version matrix
+6. Run `make test`
 
 ### Add or modify a hook script
 

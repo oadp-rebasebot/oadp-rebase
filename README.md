@@ -8,6 +8,8 @@
 This repository manages the rebases and updates of Velero and OADP-related components, ensuring that dependencies remain in sync and compatible.  
 It includes scripts (hooks) used by the rebasebot during the rebase process, as well as mappings between upstream and downstream tags.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for prerequisites and development workflows. For the authoritative branch coverage and wave composition per OADP version, see the generated [version matrix](docs/version-matrix.md).
+
 # OADP Rebase Pages
 
 Quick navigation to the pages published to GitHub Pages for the
@@ -37,6 +39,8 @@ The following scripts and workflows produce data or content consumed by the page
 # Velero & OADP Dependency Rebase Process and Graph
 
 This document outlines a structured plan for rebasing and updating Velero and its OADP dependencies. The process is organized into **🌊 waves**, providing a clear, predictable, and safe sequence for applying updates across multiple repositories.
+
+> **Note:** The wave graph below shows the superset of all repos across all OADP versions. For the exact per-version wave composition (which repos are in which wave for each branch), see the generated [version matrix](docs/version-matrix.md).
 
 ---
 
@@ -93,7 +97,8 @@ The third wave rebases and updates Velero plugins and updates the OADP operator:
  ├─🔵─ [`openshift/velero-plugin-for-aws`](https://github.com/openshift/velero-plugin-for-aws)  
  ├─🔵─ [`openshift/velero-plugin-for-gcp`](https://github.com/openshift/velero-plugin-for-gcp)  
  ├─🔵─ [`openshift/velero-plugin-for-legacy-aws`](https://github.com/openshift/velero-plugin-for-legacy-aws)  
- └─🔵─ [`openshift/velero-plugin-for-microsoft-azure`](https://github.com/openshift/velero-plugin-for-microsoft-azure)  
+ ├─🔵─ [`openshift/velero-plugin-for-microsoft-azure`](https://github.com/openshift/velero-plugin-for-microsoft-azure)  
+ └─🟠─ [`openshift/hypershift-oadp-plugin`](https://github.com/openshift/hypershift-oadp-plugin)  
 
 > **Note:** [`velero-plugin-for-csi`](https://github.com/openshift/velero-plugin-for-csi) requires both Velero and Kopia as dependencies.
 
