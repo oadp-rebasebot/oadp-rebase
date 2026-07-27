@@ -1,0 +1,2 @@
+# Sourcing config files by variable is a core pattern in this project.
+disable=SC1090

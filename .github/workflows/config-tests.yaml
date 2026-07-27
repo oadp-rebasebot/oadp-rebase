@@ -12,6 +12,7 @@ on:
       - 'tools/**'
       - 'docs/**'
       - 'Makefile'
+      - '.shellcheckrc'
       - '.github/workflows/config-tests.yaml'
   push:
     branches: [oadp-dev]
@@ -24,6 +25,7 @@ on:
       - 'tools/**'
       - 'docs/**'
       - 'Makefile'
+      - '.shellcheckrc'
       - '.github/workflows/config-tests.yaml'
 
 permissions:
@@ -39,8 +41,22 @@ jobs:
       - name: Install yq
         uses: mikefarah/yq@v4.46.1
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
       - name: Run all checks
         run: make test
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Lint shell scripts
+        run: make shellcheck
 
   kopia-alignment:
     name: Kopia version alignment

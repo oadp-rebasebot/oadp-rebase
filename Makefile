@@ -1,4 +1,4 @@
-.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-repos-yaml
+.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-repos-yaml go-test auto-rebase-test shellcheck
 
 generate:
 	@bash tools/generate-go-replace-velero.sh
@@ -123,6 +123,29 @@ verify-resolve-config:
 	if [ -f "$$fail_file" ]; then rm -f "$$fail_file"; exit 1; fi; \
 	echo "All resolve-config OK"
 
-test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks
+go-test:
+	@echo "=== Go tests — unit tests for all Go tools ==="
+	@fail=0; \
+	for mod in tools/rebase-status tools/semver-compare tools/prow-merge-bot-configs/tui; do \
+		echo "  Testing $$mod..."; \
+		(cd "$$mod" && go test ./...) || { echo "  FAIL: $$mod"; fail=1; }; \
+	done; \
+	[ $$fail -eq 0 ] && echo "All Go tests passed" || exit 1
+
+auto-rebase-test:
+	@echo "=== Auto-rebase tests — decision, triage, and notification logic ==="
+	@bash tools/auto-rebase/test.sh
+
+shellcheck:
+	@echo "=== ShellCheck — lint all shell scripts ==="
+	@command -v shellcheck >/dev/null 2>&1 || { echo "Error: shellcheck is not installed"; exit 1; }
+	@fail=0; \
+	for f in run-oadp-rebase.sh tools/*.sh tools/**/*.sh rebasebot-hook-scripts/*.sh; do \
+		[ -f "$$f" ] || continue; \
+		shellcheck -S warning "$$f" || fail=1; \
+	done; \
+	[ $$fail -eq 0 ] && echo "All files passed ShellCheck" || exit 1
+
+test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks go-test auto-rebase-test
 	@echo ""
 	@echo "All checks passed."
