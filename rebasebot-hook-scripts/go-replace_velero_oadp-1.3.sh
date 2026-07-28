@@ -46,16 +46,18 @@ else
 fi
 
 # --- Step 3: handle velero/pkg/apis sub-module ---
-# Downstream velero uses pkg/apis as a separate Go sub-module with a local
-# replace (=> ./pkg/apis). Consumers that replace the main velero module also
-# need a replace for pkg/apis, otherwise go mod tidy fails trying to resolve
-# the v0.0.0 pseudo-version at the upstream repo. Add it unconditionally —
-# Go ignores replaces for modules not in the dependency graph.
-APIS_UPSTREAM="${UPSTREAM_MODULE}/pkg/apis"
-APIS_DOWNSTREAM="${DOWNSTREAM_MODULE}/pkg/apis"
-APIS_REPLACE_LINE="replace $APIS_UPSTREAM => $APIS_DOWNSTREAM $DOWNSTREAM_BRANCH"
-if grep -q "^replace $APIS_UPSTREAM " "$GO_MOD_FILE"; then
-    sed -i "s|^replace $APIS_UPSTREAM .*|$APIS_REPLACE_LINE|" "$GO_MOD_FILE"
-else
-    echo "$APIS_REPLACE_LINE" >> "$GO_MOD_FILE"
+# Upstream velero split pkg/apis into its own Go sub-module (June 2026, after
+# v1.16.0). The sub-module only exists on main — not in any released tag yet.
+# Only add the replace if the consumer's go.mod already references pkg/apis;
+# adding it unconditionally breaks release branches where the sub-module's
+# go.mod does not exist.
+if grep -qE "(vmware-tanzu|velero-io)/velero/pkg/apis" "$GO_MOD_FILE"; then
+    APIS_UPSTREAM="${UPSTREAM_MODULE}/pkg/apis"
+    APIS_DOWNSTREAM="${DOWNSTREAM_MODULE}/pkg/apis"
+    APIS_REPLACE_LINE="replace $APIS_UPSTREAM => $APIS_DOWNSTREAM $DOWNSTREAM_BRANCH"
+    if grep -q "^replace $APIS_UPSTREAM " "$GO_MOD_FILE"; then
+        sed -i "s|^replace $APIS_UPSTREAM .*|$APIS_REPLACE_LINE|" "$GO_MOD_FILE"
+    else
+        echo "$APIS_REPLACE_LINE" >> "$GO_MOD_FILE"
+    fi
 fi
