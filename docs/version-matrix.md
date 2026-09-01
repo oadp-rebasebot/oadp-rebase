@@ -15,7 +15,7 @@ Each OADP release rebases against a specific set of upstream tags:
 | 1.3 | v1.12.4 | v0.13.0-velero.1 | v1.8.2 | v1.8.2 | v1.8.2 | v0.6.3 | v0.6.2 | n/a |
 | 1.4 | v1.14.0 | v0.17.0-velero.1 | v1.10.1 | v1.10.1 | v1.10.1 | n/a | v0.7.1 | n/a |
 | 1.5 | v1.16.2 | v0.19.0-velero.1 | v1.12.2 | v1.12.2 | v1.12.2 | n/a | v0.8.0 | n/a |
-| 1.6 | v1.18.2-rc.2 | v0.22.3-velero-patch | v1.14.1 | v1.14.1 | v1.14.1 | n/a | v0.9.0 | v2.63.17 |
+| 1.6 | v1.18.3-rc.1 | v0.22.3-velero-patch | v1.14.1 | v1.14.1 | v1.14.1 | n/a | v0.9.0 | v2.63.17 |
 
 The CSI plugin was merged into Velero core after v1.12, so OADP 1.4+ no longer has a separate CSI plugin repository.
 
@@ -28,7 +28,7 @@ Used by `verify-tag-sha` pre-rebase hooks to detect silent tag recreation (suppl
 | v1.12.4 | `7d8417b2c58792422ed6dd4b4c0cf3848b0beb56` |
 | v1.14.0 | `2fc6300f2239f250b40b0488c35feae59520f2d3` |
 | v1.16.2 | `a60808256d36a77a42e1ebc160ee8117477a83fa` |
-| v1.18.2-rc.2 | `c253c7fe37d78c9b7e55c68544f7c5b2608712d8` |
+| v1.18.3-rc.1 | `6e8f61c35f5cecd388f395c0dcd51456270a621a` |
 
 ## Branch Coverage Matrix
 
