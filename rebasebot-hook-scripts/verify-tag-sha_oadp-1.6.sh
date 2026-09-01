@@ -9,7 +9,7 @@ set -o pipefail
 # Generated from versions/oadp-1.6.env — do not edit manually.
 # Run: make generate
 
-EXPECTED_SHA="c253c7fe37d78c9b7e55c68544f7c5b2608712d8"
+EXPECTED_SHA="6e8f61c35f5cecd388f395c0dcd51456270a621a"
 UPSTREAM_REPO="https://github.com/velero-io/velero"
 TAG="$REBASEBOT_SOURCE"
 

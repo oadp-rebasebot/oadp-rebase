@@ -23,7 +23,7 @@ fi
 # replace still has a valid pseudo-version.
 
 # Update the require version to match the upstream tag from the SSOT.
-go mod edit -require="${UPSTREAM_MODULE}@v1.18.2-rc.2"
+go mod edit -require="${UPSTREAM_MODULE}@v1.18.3-rc.1"
 
 # Exclude kcp monorepo broken pseudo-version.
 go mod edit -exclude=github.com/kcp-dev/kcp/sdk@v0.0.0-00010101000000-000000000000
