@@ -102,7 +102,20 @@ Run `make generate` to regenerate. Run `make verify-generate` to check they're u
 
 ### Update an upstream tag
 
-Edit `versions/oadp-1.X.env`, run `make generate && make test`, commit.
+1. **Verify the tag exists** and get its SHA before editing anything:
+   ```bash
+   gh api repos/{org}/{repo}/git/refs/tags/{tag} --jq '{sha: .object.sha}'
+   ```
+2. Edit `versions/oadp-1.X.env` — update both `VELERO_UPSTREAM_TAG` and `VELERO_TAG_SHA`.
+3. Run `make generate && make test`, then commit all changes together (versions file + generated files).
+
+**Kopia and velero tags are independent.** Velero's go.mod references `project-velero/kopia` via a pseudo-version (`v0.0.0-YYYYMMDD-<sha>`), not a named tag. Before assuming `KOPIA_UPSTREAM_TAG` needs updating, verify: the pseudo-version SHA in the new velero tag's go.mod should correspond to the same commit as the current `KOPIA_UPSTREAM_TAG`. They'll match in content even though one is a pseudo-version and the other is a named tag.
+
+**Running the rebase before the versions bump PR is merged.** The rebase configs read `VELERO_UPSTREAM_TAG` at runtime from the versions file, so you can run from a local feature branch using `--local-hooks` without waiting for the PR to merge:
+```bash
+./run-oadp-rebase.sh --local-hooks --working-dir ~/workdir \
+  -s ~/.rebasebot/secrets --branch oadp-1.6 velero
+```
 
 ### Add configs for a new OADP version
 
@@ -119,6 +132,19 @@ Edit `versions/oadp-1.X.env`, run `make generate && make test`, commit.
 ./run-oadp-rebase.sh --dry-run --local-hooks \
   --working-dir ~/workdir -s ~/.rebasebot/secrets \
   velero-oadp-1.6                                   # full dry-run with rebasebot
+```
+
+### Fix podman VM clock drift (macOS)
+
+On macOS, the podman VM clock can drift by tens of minutes or more. A drifted clock causes `401 Bad credentials` from rebasebot's GitHub App JWT auth — the JWT `iat` claim falls outside GitHub's tolerance window. Check and resync before running rebases:
+
+```bash
+HOST_TIME=$(date -u '+%s')
+VM_TIME=$(podman machine ssh date -u '+%s')
+DRIFT=$((HOST_TIME - VM_TIME))
+echo "Drift: ${DRIFT}s"
+# If drift > 30s:
+podman machine ssh "sudo date -s '$(date -u '+%Y-%m-%dT%H:%M:%SZ')'"
 ```
 
 ### Run the full validation suite
