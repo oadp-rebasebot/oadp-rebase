@@ -52,6 +52,9 @@ fi
 # from when the sub-module was manually carried on the openshift/velero
 # release branch, so that go mod tidy does not try to resolve a non-existent
 # sub-module go.mod.
-go mod edit -droprequire="${UPSTREAM_MODULE}/pkg/apis" 2>/dev/null || true
+# Use sed (not go mod edit -droprequire) — droprequire requires @version and
+# fails silently without it.
+sed -i '/^\s*github\.com\/vmware-tanzu\/velero\/pkg\/apis /d' "$GO_MOD_FILE"
+sed -i '/^\s*github\.com\/velero-io\/velero\/pkg\/apis /d' "$GO_MOD_FILE"
 sed -i '/^replace github\.com\/vmware-tanzu\/velero\/pkg\/apis /d' "$GO_MOD_FILE"
 sed -i '/^replace github\.com\/velero-io\/velero\/pkg\/apis /d' "$GO_MOD_FILE"
