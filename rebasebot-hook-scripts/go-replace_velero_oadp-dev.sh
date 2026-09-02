@@ -43,6 +43,7 @@ else
     echo "$REPLACE_LINE" >> "$GO_MOD_FILE"
 fi
 
+
 # --- Step 3: handle velero/pkg/apis sub-module ---
 # Upstream velero split pkg/apis into its own Go sub-module (June 2026, after
 # v1.16.0). The sub-module only exists on main — not in any released tag yet.
