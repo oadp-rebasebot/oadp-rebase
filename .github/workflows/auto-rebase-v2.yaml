@@ -23,6 +23,10 @@ on:
         description: 'oadp-dev'
         type: boolean
         default: false
+      waves:
+        description: 'Comma-separated waves to rebase (for example: 1,2). Empty rebases all waves.'
+        type: string
+        default: ''
       dry_run:
         description: 'Dry run only (no PRs created)'
         type: boolean
@@ -64,6 +68,7 @@ jobs:
           INPUT_OADP_1_5: ${{ inputs.oadp_1_5 }}
           INPUT_OADP_1_6: ${{ inputs.oadp_1_6 }}
           INPUT_OADP_DEV: ${{ inputs.oadp_dev }}
+          INPUT_WAVES: ${{ inputs.waves }}
         run: |
           BRANCHES=""
           [ "$INPUT_OADP_1_3" = "true" ] && BRANCHES="$BRANCHES oadp-1.3"
@@ -89,7 +94,7 @@ jobs:
               --hide-dependency-details \
               "$branch" > "$json_file" || true
 
-            targets=$(bash tools/auto-rebase/rebase-decision.sh --reason < "$json_file")
+            targets=$(bash tools/auto-rebase/rebase-decision.sh --reason --waves "$INPUT_WAVES" < "$json_file")
             count=$(echo "$targets" | grep -c . || echo 0)
             echo "Branch $branch: $count target(s)"
 
