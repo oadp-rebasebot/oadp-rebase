@@ -1,4 +1,4 @@
-.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-repos-yaml go-test auto-rebase-test shellcheck
+.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-repos-yaml go-test auto-rebase-test cve-scan-test shellcheck
 
 generate:
 	@bash tools/generate-go-replace-velero.sh
@@ -136,6 +136,10 @@ auto-rebase-test:
 	@echo "=== Auto-rebase tests — decision, triage, and notification logic ==="
 	@bash tools/auto-rebase/test.sh
 
+cve-scan-test:
+	@echo "=== CVE scan tests — remediation selection logic ==="
+	@bash tools/cve-scan/test-remediate.sh
+
 shellcheck:
 	@echo "=== ShellCheck — lint all shell scripts ==="
 	@command -v shellcheck >/dev/null 2>&1 || { echo "Error: shellcheck is not installed"; exit 1; }
@@ -146,6 +150,6 @@ shellcheck:
 	done; \
 	[ $$fail -eq 0 ] && echo "All files passed ShellCheck" || exit 1
 
-test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks go-test auto-rebase-test
+test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks go-test auto-rebase-test cve-scan-test
 	@echo ""
 	@echo "All checks passed."
