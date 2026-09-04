@@ -143,6 +143,11 @@ assert_not_contains "mixed: NoRebase excluded" "$out" "hypershift-oadp-plugin"
 first_line=$(echo "$out" | head -1)
 assert_output "mixed: wave1 appears first" "kopia-oadp-dev" "$first_line"
 
+out=$(bash "$DECISION" --waves 3,4 < "$FIXTURES/decision/mixed.json")
+assert_contains "wave filter: includes wave3 target" "$out" "oadp-operator-oadp-dev"
+assert_contains "wave filter: includes wave4 target" "$out" "oadp-non-admin-oadp-dev"
+assert_not_contains "wave filter: excludes wave1 target" "$out" "kopia-oadp-dev"
+
 # ============================================================
 printf "\n=== rebase-notify.sh tests ===\n\n"
 # ============================================================

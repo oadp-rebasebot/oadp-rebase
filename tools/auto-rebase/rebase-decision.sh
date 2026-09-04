@@ -4,7 +4,7 @@
 # that are eligible for a rebasebot run.
 #
 # Usage:
-#   rebase-status --json --hide-dependency-details oadp-dev | rebase-decision.sh [--reason]
+#   rebase-status --json --hide-dependency-details oadp-dev | rebase-decision.sh [--reason] [--waves 1,2]
 #
 # Decision logic per repo:
 #   1. Skip if skip == true
@@ -18,27 +18,43 @@
 set -eu
 
 SHOW_REASON=false
+WAVES=""
 
-for arg in "$@"; do
-    case "$arg" in
-        --reason) SHOW_REASON=true ;;
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --reason) SHOW_REASON=true; shift ;;
+        --waves)
+            [ $# -ge 2 ] || { echo "--waves requires a value" >&2; exit 1; }
+            WAVES="$2"
+            shift 2
+            ;;
         -h|--help)
             cat <<'USAGE'
 Reads rebase-status --json from stdin and outputs repo-branch targets
 that are eligible for a rebasebot run.
 
 Usage:
-  rebase-status --json --hide-dependency-details oadp-dev | rebase-decision.sh [--reason]
+  rebase-status --json --hide-dependency-details oadp-dev | rebase-decision.sh [--reason] [--waves 1,2]
 
 Options:
   --reason    Append tab-separated reason (wave1-always | deps-changed)
+  --waves     Comma-separated waves to include; empty includes all waves
   -h, --help  Show this help
 USAGE
             exit 0
             ;;
-        *) echo "Unknown option: $arg" >&2; exit 1 ;;
+        *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac
 done
+
+if [ -n "$WAVES" ]; then
+    case "$WAVES" in
+        *[!0-9,]*|,*|*,|*,,*)
+            echo "Invalid waves value: ${WAVES}. Use comma-separated wave numbers, for example: 1,2" >&2
+            exit 1
+            ;;
+    esac
+fi
 
 if [ "$SHOW_REASON" = "true" ]; then
     OUTPUT_EXPR='(.target + "\t" + .reason)'
@@ -58,6 +74,8 @@ echo "$input" | jq -r "
     [ .[] |
       select(.skip != true) |
       select(.checks.config.status == \"ok\") |
+      (.wave | tostring) as \$wave |
+      select(\$waves == \"\" or ((\",\" + \$waves + \",\") | contains(\",\" + \$wave + \",\"))) |
       select(
         (.wave == 1) or
         (.wave >= 2 and .checks.dep_sync.status == \"fail\")
@@ -68,4 +86,4 @@ echo "$input" | jq -r "
         reason: (if .wave == 1 then \"wave1-always\" else \"deps-changed\" end)
       }
     ] | sort_by(.wave) | .[] | ${OUTPUT_EXPR}
-"
+" --arg waves "$WAVES"
