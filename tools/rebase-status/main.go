@@ -124,7 +124,7 @@ func main() {
 			if vErr != nil {
 				fmt.Fprintf(os.Stderr, "warning: %s: versions: %v\n", branch, vErr)
 			}
-			veleroTagAlign = CheckVeleroTagAlignment(statuses, versionsVars, client)
+			veleroTagAlign = CheckVeleroTagAlignment(statuses, versionsVars, client, branch)
 
 			cvePRs := fetchCVEPRs(client, specs)
 
@@ -186,7 +186,7 @@ func main() {
 	if vErr != nil {
 		fmt.Fprintf(os.Stderr, "warning: versions: %v\n", vErr)
 	}
-	veleroTagAlign = CheckVeleroTagAlignment(results, versionsVars, client)
+	veleroTagAlign = CheckVeleroTagAlignment(results, versionsVars, client, branch)
 
 	// Fetch CVE PRs
 	cvePRs := fetchCVEPRs(client, specs)

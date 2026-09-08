@@ -1200,9 +1200,14 @@ func renderMarkdownVeleroTag(w io.Writer, vta *VeleroTagAlignment) {
 		fmt.Fprintf(w, "%d/%d repos at or after `%s` (`%s`)\n\n",
 			aligned, len(vta.Repos), vta.VeleroTag, short(vta.VeleroTagSHA))
 	}
+	if vta.LatestError == "" {
+		fmt.Fprintf(w, "Latest `openshift/velero` commit: `%s`\n\n", short(vta.LatestCommitSHA))
+	} else {
+		fmt.Fprintf(w, "Could not resolve latest `openshift/velero` commit: %s\n\n", vta.LatestError)
+	}
 
-	fmt.Fprintln(w, "| Repo | Pinned Commit | Status |")
-	fmt.Fprintln(w, "| --- | --- | :---: |")
+	fmt.Fprintln(w, "| Repo | Pinned Commit | Tag | Latest |")
+	fmt.Fprintln(w, "| --- | --- | :---: | :---: |")
 	for _, r := range vta.Repos {
 		repoLink := fmt.Sprintf("[%s/%s](https://github.com/%s/%s)", r.Org, r.Repo, r.Org, r.Repo)
 		commitLink := fmt.Sprintf("[`%s`](https://github.com/openshift/velero/commit/%s)", r.PinnedHash, r.PinnedHash)
@@ -1212,7 +1217,13 @@ func renderMarkdownVeleroTag(w io.Writer, vta *VeleroTagAlignment) {
 		} else if !r.Aligned {
 			status = ":x:"
 		}
-		fmt.Fprintf(w, "| %s | %s | %s |\n", repoLink, commitLink, status)
+		latest := ":white_check_mark:"
+		if vta.LatestError != "" {
+			latest = ":warning: err"
+		} else if !r.AtLatest {
+			latest = ":x:"
+		}
+		fmt.Fprintf(w, "| %s | %s | %s | %s |\n", repoLink, commitLink, status, latest)
 	}
 	fmt.Fprintln(w)
 }
@@ -1335,4 +1346,3 @@ func statusName(s Status) string {
 		return "unknown"
 	}
 }
-
