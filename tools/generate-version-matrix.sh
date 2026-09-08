@@ -77,17 +77,17 @@ This document maps OADP versions to their upstream dependencies, tracks which re
 
 ## Upstream Version Mapping
 
-Each OADP release rebases against a specific set of upstream tags:
+Each OADP release rebases against a specific set of upstream refs (tags or branches):
 
 | OADP | Velero | Kopia | AWS Plugin | GCP Plugin | Azure Plugin | CSI Plugin | KubeVirt Plugin | Filebrowser |
 |------|--------|-------|------------|------------|--------------|------------|-----------------|-------------|
 HEADER
 
 for f in "${versions[@]}"; do
-    unset OADP_BRANCH VELERO_UPSTREAM_TAG KOPIA_UPSTREAM_TAG AWS_PLUGIN_TAG GCP_PLUGIN_TAG AZURE_PLUGIN_TAG CSI_PLUGIN_TAG KUBEVIRT_PLUGIN_TAG FILEBROWSER_TAG VELERO_TAG_SHA
+    unset OADP_BRANCH VELERO_UPSTREAM_TAG KOPIA_UPSTREAM_TAG AWS_PLUGIN_TAG GCP_PLUGIN_TAG AZURE_PLUGIN_TAG CSI_PLUGIN_TAG KUBEVIRT_PLUGIN_REF FILEBROWSER_TAG VELERO_TAG_SHA
     . "$f"
     ver="${OADP_BRANCH#oadp-}"
-    echo "| $ver | $VELERO_UPSTREAM_TAG | $KOPIA_UPSTREAM_TAG | $AWS_PLUGIN_TAG | $GCP_PLUGIN_TAG | $AZURE_PLUGIN_TAG | ${CSI_PLUGIN_TAG:-n/a} | $KUBEVIRT_PLUGIN_TAG | ${FILEBROWSER_TAG:-n/a} |"
+    echo "| $ver | $VELERO_UPSTREAM_TAG | $KOPIA_UPSTREAM_TAG | $AWS_PLUGIN_TAG | $GCP_PLUGIN_TAG | $AZURE_PLUGIN_TAG | ${CSI_PLUGIN_TAG:-n/a} | $KUBEVIRT_PLUGIN_REF | ${FILEBROWSER_TAG:-n/a} |"
 done
 
 cat <<'MID1'

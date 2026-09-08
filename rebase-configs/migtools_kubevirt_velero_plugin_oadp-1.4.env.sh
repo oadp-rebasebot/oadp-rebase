@@ -1,13 +1,13 @@
 # ===============================================================
 # KubeVirt Velero Plugin rebase configuration for OADP 1.4
-# Upstream tag sourced from versions/oadp-1.4.env
+# Upstream ref sourced from versions/oadp-1.4.env
 # ===============================================================
 
 UPSTREAM_PLUGIN_REPO="kubevirt/kubevirt-velero-plugin"
-UPSTREAM_PLUGIN_TAG="${KUBEVIRT_PLUGIN_TAG:?Missing KUBEVIRT_PLUGIN_TAG from versions env}"
+UPSTREAM_PLUGIN_REF="${KUBEVIRT_PLUGIN_REF:?Missing KUBEVIRT_PLUGIN_REF from versions env}"
 DESTINATION_DOWNSTREAM_BRANCH="oadp-1.4"
 
-SOURCE_UPSTREAM_REPO="https://github.com/${UPSTREAM_PLUGIN_REPO}:${UPSTREAM_PLUGIN_TAG}"
+SOURCE_UPSTREAM_REPO="https://github.com/${UPSTREAM_PLUGIN_REPO}:${UPSTREAM_PLUGIN_REF}"
 DESTINATION_DOWNSTREAM_REPO="migtools/kubevirt-velero-plugin:$DESTINATION_DOWNSTREAM_BRANCH"
 REBASE_REPO="oadp-rebasebot/kubevirt-velero-plugin:rebase-bot-$DESTINATION_DOWNSTREAM_BRANCH"
 
