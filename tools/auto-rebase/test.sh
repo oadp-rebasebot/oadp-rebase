@@ -116,6 +116,10 @@ assert_output "wave2 with dep_sync=fail is eligible" "velero-oadp-dev" "$out"
 out=$(bash "$DECISION" --reason < "$FIXTURES/decision/wave2-deps-fail.json")
 assert_contains "wave2 reason is deps-changed" "$out" "deps-changed"
 
+out=$(printf '%s\n' '[{"repo":"migtools/kubevirt-velero-plugin","branch":"oadp-1.5","wave":3,"skip":false,"checks":{"config":{"status":"ok"},"upstream_sync":{"status":"fail"},"dep_sync":{"status":"ok"}}}]' | bash "$DECISION" --reason)
+assert_contains "wave3 upstream drift is eligible" "$out" "kubevirt-velero-plugin-oadp-1.5"
+assert_contains "wave3 upstream drift reason" "$out" "upstream-changed"
+
 out=$(bash "$DECISION" < "$FIXTURES/decision/wave2-deps-ok.json")
 assert_empty "wave2 with dep_sync=ok is skipped" "$out"
 
