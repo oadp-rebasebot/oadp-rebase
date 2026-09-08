@@ -206,7 +206,7 @@ load_config() {
     [ -n "${SKIP_REPO:-}" ] && unset SKIP_REPO
     unset OADP_BRANCH VELERO_UPSTREAM_TAG VELERO_TAG_SHA \
       KOPIA_UPSTREAM_TAG AWS_PLUGIN_TAG GCP_PLUGIN_TAG AZURE_PLUGIN_TAG \
-      CSI_PLUGIN_TAG KUBEVIRT_PLUGIN_TAG 2>/dev/null || true
+      CSI_PLUGIN_TAG KUBEVIRT_PLUGIN_REF 2>/dev/null || true
 
     # Load version-specific variables from the SSOT before sourcing the config
     oadp_version=$(echo "$config" | grep -oE 'oadp-(1\.[0-9]+|dev)' | tail -1)
@@ -613,4 +613,3 @@ else
         fi
     fi
 fi
-

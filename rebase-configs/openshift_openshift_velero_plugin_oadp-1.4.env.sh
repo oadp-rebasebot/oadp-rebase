@@ -14,6 +14,7 @@ EXTRA_REBASEBOT_ARGS="--always-run-hooks"
 HOOK_SCRIPTS_LOCATION="git:https://github.com/oadp-rebasebot/oadp-rebase/oadp-dev:rebasebot-hook-scripts"
 HOOK_SCRIPTS="--post-rebase-hook \
   ${HOOK_SCRIPTS_LOCATION}/go-replace_velero_oadp-1.4.sh \
+  ${HOOK_SCRIPTS_LOCATION}/go-use-tag_oadp-operator_oadp-1.4.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-mod-tidy-and-commit.sh \
   ${HOOK_SCRIPTS_LOCATION}/normalize-dockerfiles-and-commit.sh \
   "

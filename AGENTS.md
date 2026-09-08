@@ -38,7 +38,7 @@ KOPIA_UPSTREAM_TAG="v0.22.3-velero-patch"
 AWS_PLUGIN_TAG="v1.14.1"
 GCP_PLUGIN_TAG="v1.14.1"
 AZURE_PLUGIN_TAG="v1.14.1"
-KUBEVIRT_PLUGIN_TAG="v0.9.0"
+KUBEVIRT_PLUGIN_REF="release-v0.9"
 ```
 
 Configs reference these via `${VELERO_UPSTREAM_TAG:?...}` — the `:?` guard fails fast if the variable is missing.
