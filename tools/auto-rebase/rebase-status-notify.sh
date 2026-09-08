@@ -107,22 +107,22 @@ echo "$input" | jq --arg wiki_url "$WIKI_URL" \
         }
     ]) as $prs |
 
-    # Deps out of sync without a PR (pending work)
-    [.[] | select(.checks.dep_sync.status == "fail" and .checks.open_pr.status != "ok") |
+    # Upstream or dependencies out of sync without a PR (pending work)
+    [.[] | select((.checks.upstream_sync.status == "fail" or .checks.dep_sync.status == "fail") and .checks.open_pr.status != "ok") |
         {
             repo: .repo,
             wave: .wave,
-            dep_summary: .checks.dep_sync.summary
+            rebase_reason: (if .checks.upstream_sync.status == "fail" then "upstream changed" else "dependencies changed" end)
         }
-    ] as $deps_pending |
+    ] as $rebase_pending |
 
     # Skip branch if nothing actionable
-    select(($prs | length) > 0 or ($deps_pending | length) > 0) |
+    select(($prs | length) > 0 or ($rebase_pending | length) > 0) |
 
     {
         branch: $branch,
         prs: $prs,
-        deps_pending: $deps_pending
+        rebase_pending: $rebase_pending
     }
 ] as $sections |
 
@@ -149,14 +149,14 @@ else
                 ) | join("\n"))
             else "" end) +
 
-            (if (.deps_pending | length) > 0 then
+            (if (.rebase_pending | length) > 0 then
                 (if (.prs | length) > 0 then "\n" else "" end) +
-                ":warning: *" + (.deps_pending | length | tostring) +
-                " dep" + (if (.deps_pending | length) > 1 then "s" else "" end) +
-                " out of sync* (no PR)\n" +
-                (.deps_pending | sort_by(.wave) | map(
+                ":warning: *" + (.rebase_pending | length | tostring) +
+                " rebase target" + (if (.rebase_pending | length) > 1 then "s" else "" end) +
+                " pending* (no PR)\n" +
+                (.rebase_pending | sort_by(.wave) | map(
                     ":small_orange_diamond: `" + (.repo | split("/") | .[1]) +
-                    "` " + .dep_summary + " synced (W" + (.wave | tostring) + ")"
+                    "` " + .rebase_reason + " (W" + (.wave | tostring) + ")"
                 ) | join("\n"))
             else "" end)
         ) | {type: "section", text: {type: "mrkdwn", text: .}}
