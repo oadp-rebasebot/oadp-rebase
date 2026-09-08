@@ -223,14 +223,16 @@ type BranchResult struct {
 	Tally          *PRTallyResult
 }
 
-// VeleroTagAlignment holds the branch-level velero tag alignment status.
+// VeleroTagAlignment holds the branch-level velero dependency status.
 // Computed after all checks run by comparing each repo's pinned velero
-// commit against VELERO_TAG_SHA from the versions SSOT.
+// commit against VELERO_TAG_SHA and the downstream branch HEAD.
 type VeleroTagAlignment struct {
-	VeleroTag    string
-	VeleroTagSHA string
-	AllAligned   bool
-	Repos        []VeleroTagRepo
+	VeleroTag       string
+	VeleroTagSHA    string
+	LatestCommitSHA string
+	LatestError     string
+	AllAligned      bool
+	Repos           []VeleroTagRepo
 }
 
 // VeleroTagRepo describes one repo's velero dependency alignment.
@@ -240,6 +242,7 @@ type VeleroTagRepo struct {
 	PinnedHash   string
 	Aligned      bool
 	CompareError string
+	AtLatest     bool
 }
 
 // Check is a registered check that can run against a repo.
