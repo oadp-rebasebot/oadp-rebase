@@ -14,6 +14,7 @@ func CheckVeleroTagAlignment(
 	statuses []RepoStatus,
 	versionsVars map[string]string,
 	client *GitHubClient,
+	branch string,
 ) *VeleroTagAlignment {
 	if versionsVars == nil {
 		return nil
@@ -53,6 +54,17 @@ func CheckVeleroTagAlignment(
 		return nil
 	}
 
+	latestCommitSHA, latestErr := client.HeadCommitSHA("openshift", "velero", branch)
+	latestError := ""
+	if latestErr != nil || latestCommitSHA == "" {
+		if latestErr != nil {
+			latestError = latestErr.Error()
+		} else {
+			latestError = fmt.Sprintf("branch %q not found", branch)
+		}
+		fmt.Fprintf(os.Stderr, "warning: latest openshift/velero commit: %s\n", latestError)
+	}
+
 	repos := make([]VeleroTagRepo, len(veleroDeps))
 	var wg sync.WaitGroup
 
@@ -65,6 +77,7 @@ func CheckVeleroTagAlignment(
 				Org:        parts[0],
 				Repo:       parts[1],
 				PinnedHash: d.pinnedHash,
+				AtLatest:   latestError == "" && strings.HasPrefix(latestCommitSHA, d.pinnedHash),
 			}
 
 			status, err := client.CompareStatus("openshift", "velero", tagSHA, d.pinnedHash)
@@ -95,9 +108,11 @@ func CheckVeleroTagAlignment(
 	}
 
 	return &VeleroTagAlignment{
-		VeleroTag:    upstreamTag,
-		VeleroTagSHA: tagSHA,
-		Repos:        repos,
-		AllAligned:   allAligned,
+		VeleroTag:       upstreamTag,
+		VeleroTagSHA:    tagSHA,
+		LatestCommitSHA: latestCommitSHA,
+		LatestError:     latestError,
+		Repos:           repos,
+		AllAligned:      allAligned,
 	}
 }

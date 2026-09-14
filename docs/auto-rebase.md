@@ -42,7 +42,7 @@ KOPIA_UPSTREAM_TAG="v0.22.3-velero-patch"
 AWS_PLUGIN_TAG="v1.14.1"
 GCP_PLUGIN_TAG="v1.14.1"
 AZURE_PLUGIN_TAG="v1.14.1"
-KUBEVIRT_PLUGIN_TAG="v0.9.0"
+KUBEVIRT_PLUGIN_REF="release-v0.9"
 ```
 
 Rebase configs reference these variables (e.g., `UPSTREAM_VELERO_BRANCH="${VELERO_UPSTREAM_TAG:?...}"`), and `load_config()` in `run-oadp-rebase.sh` sources the versions file before each config.

@@ -10,10 +10,11 @@
 #   1. Skip if skip == true
 #   2. Skip if checks.config.status != "ok" (no config or NoRebase)
 #   3. Wave 1: always eligible (no internal deps)
-#   4. Wave 2+: eligible when checks.dep_sync.status == "fail" (deps moved ahead)
+#   4. Wave 2+: eligible when their configured upstream or an internal
+#      dependency has commits not yet in the downstream branch.
 #
 # Output: one target per line, sorted by wave, e.g. "velero-oadp-dev"
-#   --reason: append tab-separated reason (wave1-always | deps-changed)
+#   --reason: append tab-separated reason (wave1-always | upstream-changed | deps-changed)
 
 set -eu
 
@@ -37,7 +38,7 @@ Usage:
   rebase-status --json --hide-dependency-details oadp-dev | rebase-decision.sh [--reason] [--waves 1,2]
 
 Options:
-  --reason    Append tab-separated reason (wave1-always | deps-changed)
+  --reason    Append tab-separated reason (wave1-always | upstream-changed | deps-changed)
   --waves     Comma-separated waves to include; empty includes all waves
   -h, --help  Show this help
 USAGE
@@ -78,12 +79,18 @@ echo "$input" | jq -r "
       select(\$waves == \"\" or ((\",\" + \$waves + \",\") | contains(\",\" + \$wave + \",\"))) |
       select(
         (.wave == 1) or
-        (.wave >= 2 and .checks.dep_sync.status == \"fail\")
+        (.wave >= 2 and (
+          .checks.upstream_sync.status == \"fail\" or
+          .checks.dep_sync.status == \"fail\"
+        ))
       ) |
       {
         target: ((.repo | split(\"/\") | .[1]) + \"-\" + .branch),
         wave: .wave,
-        reason: (if .wave == 1 then \"wave1-always\" else \"deps-changed\" end)
+        reason: (if .wave == 1 then \"wave1-always\"
+                 elif .checks.upstream_sync.status == \"fail\" then \"upstream-changed\"
+                 else \"deps-changed\"
+                 end)
       }
     ] | sort_by(.wave) | .[] | ${OUTPUT_EXPR}
 " --arg waves "$WAVES"

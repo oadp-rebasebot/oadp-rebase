@@ -15,6 +15,7 @@ var DefaultChecks = []Check{
 	{ID: "rebasebot", Header: "Rebase", Run: checkRebasebotBranch},
 	{ID: "go_version", Header: "Go", Run: checkGoVersion},
 	{ID: "ci_config", Header: "Prow Cfg", Run: checkCIConfig},
+	{ID: "upstream_sync", Header: "Upstream", Run: checkUpstreamSync},
 	{ID: "dep_sync", Header: "Deps", Run: checkDepSync},
 	{ID: "gomod_drift", Header: "Drift", Run: checkGoModDrift},
 	{ID: "konflux", Header: "Konflux", Run: checkKonflux},
@@ -126,6 +127,36 @@ func checkConfig(client *GitHubClient, spec *RepoSpec) *CheckResult {
 		StatusFail, "",
 		fmt.Sprintf("no rebase config for %s/%s on branch %s", spec.Org, spec.Repo, spec.Branch),
 	}
+}
+
+// checkUpstreamSync checks whether the downstream branch contains the
+// configured upstream ref. A diverged branch has downstream carry commits but
+// still needs a rebase to incorporate newer upstream commits.
+func checkUpstreamSync(client *GitHubClient, spec *RepoSpec) *CheckResult {
+	if spec.NoRebase {
+		return &CheckResult{StatusNA, "", "not managed by rebasebot"}
+	}
+	if spec.Upstream == "" {
+		return &CheckResult{StatusNA, "", "downstream-only repository"}
+	}
+
+	upstreamOrg, upstreamRepo, upstreamRef, err := parseRepoRef(spec.Upstream)
+	if err != nil || upstreamRef == "" {
+		return &CheckResult{StatusWarn, "err", fmt.Sprintf("invalid upstream ref %q", spec.Upstream)}
+	}
+
+	status, err := client.CompareStatus(upstreamOrg, upstreamRepo, upstreamRef, spec.Org+":"+spec.Branch)
+	if err != nil {
+		return &CheckResult{StatusWarn, "err", fmt.Sprintf("could not compare upstream %s: %v", spec.Upstream, err)}
+	}
+	if status == "behind" || status == "diverged" {
+		return &CheckResult{
+			StatusFail,
+			status,
+			fmt.Sprintf("upstream %s has commits not in %s/%s:%s", spec.Upstream, spec.Org, spec.Repo, spec.Branch),
+		}
+	}
+	return &CheckResult{StatusOK, "", "upstream ref is contained in downstream branch"}
 }
 
 // checkOpenPR searches for an open rebase PR from oadp-rebasebot on the

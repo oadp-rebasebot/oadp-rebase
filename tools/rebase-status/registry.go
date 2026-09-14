@@ -42,6 +42,7 @@ type DisplayGroup struct {
 var DisplayGroups = []DisplayGroup{
 	{ID: "open_pr", Header: "PR", CheckIDs: []string{"open_pr"}},
 	{ID: "rebase", Header: "Rebase", CheckIDs: []string{"config", "rebasebot"}},
+	{ID: "upstream_sync", Header: "Upstream", CheckIDs: []string{"upstream_sync"}},
 	{ID: "go_version", Header: "Go", CheckIDs: []string{"go_version"}},
 	{ID: "ci_config", Header: "CI", CheckIDs: []string{"ci_config"}},
 	{ID: "dep_sync", Header: "Deps", CheckIDs: []string{"dep_sync"}},

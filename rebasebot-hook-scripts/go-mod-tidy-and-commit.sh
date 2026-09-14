@@ -11,10 +11,11 @@ export GOPRIVATE='github.com/openshift/*,github.com/migtools/*'
 # This avoids failures when upstream repos are moved/deleted (e.g.
 # lyft/protoc-gen-validate) since the proxy still has cached copies.
 export GOPROXY='https://proxy.golang.org,direct'
-# Skip checksum-database lookups for modules with known sumdb mismatches
-# (e.g. envoyproxy republished tags with different content).
-# openshift/* and migtools/* are already covered by GOPRIVATE above.
-export GONOSUMDB='github.com/envoyproxy/*'
+# Skip checksum-database lookups for private forks and modules with known
+# sumdb mismatches. GOPRIVATE sets GONOPROXY and GONOSUMDB defaults, but
+# an explicit GONOSUMDB overrides (not merges with) the GOPRIVATE default,
+# so we must repeat the private patterns here.
+export GONOSUMDB='github.com/openshift/*,github.com/migtools/*,github.com/envoyproxy/*'
 
 # Use whatever Go binary is installed — do not auto-download a newer
 # toolchain and do not update the go or toolchain directives in go.mod.

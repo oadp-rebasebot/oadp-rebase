@@ -51,7 +51,14 @@ for json_file in $FILES; do
         (if type == "object" then .repos else . end) |
         [ .[] | select(.skip == true) | {repo: (.repo | split("/") | .[1]), reason: "skip=true"} ] +
         [ .[] | select(.skip != true) | select(.checks.config.status != "ok") | {repo: (.repo | split("/") | .[1]), reason: "no rebase config"} ] +
-        [ .[] | select(.skip != true) | select(.checks.config.status == "ok") | select(.wave >= 2) | select(.checks.dep_sync.status != "fail") | {repo: (.repo | split("/") | .[1]), reason: "deps in sync"} ]
+        [ .[] |
+          select(.skip != true) |
+          select(.checks.config.status == "ok") |
+          select(.wave >= 2) |
+          select(.checks.upstream_sync.status != "fail") |
+          select(.checks.dep_sync.status != "fail") |
+          {repo: (.repo | split("/") | .[1]), reason: "upstream and deps in sync"}
+        ]
         | sort_by(.repo) | .[] | "| \(.repo) | \(.reason) |"
     ' < "$json_file")
 
