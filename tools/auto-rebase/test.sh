@@ -336,7 +336,7 @@ assert_json_field "expected_conflicts: repo without allowlist → unsafe" "$ec_e
 
 # Verify repos.yaml has expected_conflicts for oadp-vmdp (SSOT check)
 ec_count=$(yq -r '.repos[] | select(.repo == "oadp-vmdp") | .expected_conflicts | length' "$SCRIPT_DIR/../../repos.yaml")
-assert_output "repos.yaml: oadp-vmdp has 2 expected_conflicts" "2" "$ec_count"
+assert_output "repos.yaml: oadp-vmdp has 3 expected_conflicts" "3" "$ec_count"
 
 # ============================================================
 printf "\n=== must-gather submodule hook tests ===\n\n"
