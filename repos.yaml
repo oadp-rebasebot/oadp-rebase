@@ -48,6 +48,7 @@ repos:
     expected_conflicts:
       - cli/app.go
       - repo/blob/sftp/sftp_storage_test.go
+      - OWNERS
     images:
       - namespace: konveyor
         repo: oadp-vmdp-binaries
