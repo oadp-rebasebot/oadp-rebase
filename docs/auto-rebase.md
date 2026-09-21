@@ -115,7 +115,7 @@ Click the badge or go to the [Actions tab](https://github.com/oadp-rebasebot/oad
 
 ### Step 2 — Analyze the failure
 
-Use the Claude Code skill to classify the failure and get a concrete fix proposal:
+Use the `/analyze-rebase-failure` skill from [`migtools/oadp-rebase-ai-helpers`](https://github.com/migtools/oadp-rebase-ai-helpers) to classify the failure and get a concrete fix proposal:
 
 ```
 /analyze-rebase-failure <job-url>
@@ -127,30 +127,46 @@ The skill fetches the CI logs and classifies the failure into one of these categ
 |----------|-----------|-----|
 | **Cherry-pick conflict** | `WARNING - Upstream content may have been dropped from '<FILE>'` + `ERROR - Manual intervention is needed` | See [Manual rebase](#manual-rebase) below |
 | **Hook script failure** | `Unable to run 'go vet'` / `Unable to run 'go mod tidy'` | Fix the failing code or hook; see [Manual rebase](#manual-rebase) if source conflicts caused broken code |
-| **OWNERS conflict** | `'OWNERS' is not covered by any configured hook` | Add `OWNERS` to `expected_conflicts` for the repo in `repos.yaml` |
+| **Expected divergence** | `'<FILE>' is not covered by any configured hook` — file intentionally differs downstream (OWNERS, CODEOWNERS, repo-specific config) | Add the file to `expected_conflicts` for the repo in `repos.yaml` |
 | **go.mod/go.sum only** | Triage says `safe=true` but retry still fails | Check wave ordering — the dependency may not be merged yet |
 | **Infrastructure** | Image pull errors, auth failures, network timeouts | Re-run the failed jobs from the Actions tab |
 | **Config or setup** | `Config file not found` / `Missing VAR from versions env` | Fix the config or versions file |
 
 ### Step 3 — Apply the fix
 
-#### OWNERS conflict
+#### Expected divergence (OWNERS, CODEOWNERS, repo-specific files)
+
+Some files are intentionally managed differently in the downstream fork and will never match the upstream — `OWNERS`, `CODEOWNERS`, `DOWNSTREAM_OWNERS`, repo-specific CI configs, etc. When rebasebot warns that one of these was dropped by a cherry-pick, the conflict is safe: the cherry-pick result is correct by definition.
 
 Add the file to the repo's `expected_conflicts` list in `repos.yaml`:
 
 ```yaml
-- org: migtools
-  repo: oadp-vmdp
+- org: openshift
+  repo: velero-plugin-for-aws
   expected_conflicts:
-    - cli/app.go
-    - OWNERS        # ← add this
+    - OWNERS           # downstream team manages its own contributor list
+    - CODEOWNERS       # downstream-only review routing
 ```
+
+The triage system (`tools/auto-rebase/conflict-triage.sh`) will then treat conflicts in these files as safe and retry with `--conflict-policy warn` automatically — no manual intervention needed on the next run.
 
 Run `make test`, commit, and open a PR against `oadp-dev`.
 
 #### Manual rebase
 
 Use this when source code files conflict and the auto-resolution produces broken code (e.g. `go vet` fails after triage retries with `--conflict-policy warn`).
+
+**Preferred: use the AI skill**
+
+The [`migtools/oadp-rebase-ai-helpers`](https://github.com/migtools/oadp-rebase-ai-helpers) plugin provides Claude Code skills that automate rebase workflows. Install it, then run:
+
+```
+/oadp-rebase:rebase <target>
+```
+
+The skill runs the full rebase pipeline locally, surfaces conflicts, and guides you through resolution. Use `--dry-run` to preview first. If the skill encounters a `go vet` failure it will stop at the working tree so you can inspect and fix the broken code before re-running.
+
+**Manual fallback (step-by-step):**
 
 **1. Temporarily allow warn policy in the config:**
 
