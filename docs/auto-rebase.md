@@ -104,3 +104,132 @@ make generate                          # regenerate from SSOT
 | `tools/rebase-status/` | Go tool for querying repo state |
 | `docs/version-matrix.md` | Generated upstream version mappings and wave composition |
 | `.github/workflows/config-tests.yaml` | CI: verify-generate, syntax-check, config-load |
+
+## Responding to CI Failures
+
+When the Auto Rebase badge turns red, follow this process to diagnose and fix the failure.
+
+### Step 1 — Identify the failed job
+
+Click the badge or go to the [Actions tab](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/auto-rebase-v2.yaml) and open the failed run. Each failing job is named `rebase (<branch>, <target>, <trigger>)`, e.g. `rebase (oadp-1.6, velero-plugin-for-aws-oadp-1.6, upstream-changed)`. Copy the job URL from the browser.
+
+### Step 2 — Analyze the failure
+
+Use the Claude Code skill to classify the failure and get a concrete fix proposal:
+
+```
+/analyze-rebase-failure <job-url>
+```
+
+The skill fetches the CI logs and classifies the failure into one of these categories:
+
+| Category | Signature | Fix |
+|----------|-----------|-----|
+| **Cherry-pick conflict** | `WARNING - Upstream content may have been dropped from '<FILE>'` + `ERROR - Manual intervention is needed` | See [Manual rebase](#manual-rebase) below |
+| **Hook script failure** | `Unable to run 'go vet'` / `Unable to run 'go mod tidy'` | Fix the failing code or hook; see [Manual rebase](#manual-rebase) if source conflicts caused broken code |
+| **OWNERS conflict** | `'OWNERS' is not covered by any configured hook` | Add `OWNERS` to `expected_conflicts` for the repo in `repos.yaml` |
+| **go.mod/go.sum only** | Triage says `safe=true` but retry still fails | Check wave ordering — the dependency may not be merged yet |
+| **Infrastructure** | Image pull errors, auth failures, network timeouts | Re-run the failed jobs from the Actions tab |
+| **Config or setup** | `Config file not found` / `Missing VAR from versions env` | Fix the config or versions file |
+
+### Step 3 — Apply the fix
+
+#### OWNERS conflict
+
+Add the file to the repo's `expected_conflicts` list in `repos.yaml`:
+
+```yaml
+- org: migtools
+  repo: oadp-vmdp
+  expected_conflicts:
+    - cli/app.go
+    - OWNERS        # ← add this
+```
+
+Run `make test`, commit, and open a PR against `oadp-dev`.
+
+#### Manual rebase
+
+Use this when source code files conflict and the auto-resolution produces broken code (e.g. `go vet` fails after triage retries with `--conflict-policy warn`).
+
+**1. Temporarily allow warn policy in the config:**
+
+Edit `rebase-configs/<config>.env.sh` for the failing target:
+
+```bash
+# Before:
+EXTRA_REBASEBOT_ARGS="--always-run-hooks"
+# After (temporary):
+EXTRA_REBASEBOT_ARGS="--always-run-hooks --conflict-policy warn"
+```
+
+**2. Run rebasebot locally:**
+
+```bash
+./run-oadp-rebase.sh --local-hooks \
+  --working-dir ~/.rebasebot/workdir \
+  -s ~/.rebasebot/secrets \
+  <target>
+```
+
+Rebasebot will cherry-pick all commits and run hooks. It will fail at `go vet` if there are source conflicts — but the working tree at `~/.rebasebot/workdir/<repo>/` is preserved in the state after the cherry-picks and before the failed hook.
+
+**3. Fix the broken code:**
+
+```bash
+cd ~/.rebasebot/workdir/<repo>
+go vet ./... 2>&1   # see what's wrong
+# Edit the conflicted source files to restore dropped content
+go vet ./... 2>&1   # verify clean
+```
+
+Common pattern: a carry commit was written against an older upstream. The newer upstream added fields or constants in the same area; the cherry-pick dropped them. Restore the upstream additions alongside the carry's own changes.
+
+**4. Commit the fix:**
+
+```bash
+git add <fixed-files>
+git commit -m "UPSTREAM: <carry>: Restore <description> dropped by rebase conflict resolution"
+```
+
+**5. Run missed hooks and update go modules:**
+
+```bash
+go mod tidy
+git add go.mod go.sum
+git commit -m "UPSTREAM: <drop>: Updating go modules"
+```
+
+If `normalize-dockerfiles-and-commit.sh` was the last hook and never ran, check whether any Dockerfiles need it:
+
+```bash
+grep -rE 'FROM\s+.*\bgolang:[0-9]+\.[0-9]+\.[0-9]+' --include='Dockerfile*' --include='Containerfile*' .
+```
+
+If there are matches, run the hook directly:
+
+```bash
+bash /path/to/oadp-rebase/rebasebot-hook-scripts/normalize-dockerfiles-and-commit.sh
+```
+
+**6. Push to the rebase branch and open a PR:**
+
+```bash
+git push rebase HEAD:rebase-bot-<branch> --force
+
+gh pr create \
+  --repo <org>/<repo> \
+  --base <branch> \
+  --head oadp-rebasebot:rebase-bot-<branch> \
+  --title "Rebase <repo> to <upstream-tag>" \
+  --body "Manual rebase. <describe what conflicts were resolved and why.>"
+```
+
+**7. Revert the config change:**
+
+```bash
+# In rebase-configs/<config>.env.sh, remove --conflict-policy warn:
+EXTRA_REBASEBOT_ARGS="--always-run-hooks"
+```
+
+Commit and push this revert separately so it does not appear in the rebase PR.
