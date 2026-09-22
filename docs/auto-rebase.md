@@ -104,3 +104,7 @@ make generate                          # regenerate from SSOT
 | `tools/rebase-status/` | Go tool for querying repo state |
 | `docs/version-matrix.md` | Generated upstream version mappings and wave composition |
 | `.github/workflows/config-tests.yaml` | CI: verify-generate, syntax-check, config-load |
+
+## Responding to CI Failures
+
+When the Auto Rebase badge turns red, see **[docs/auto-rebase-failures.md](auto-rebase-failures.md)** for the full failure runbook — how to identify the failed job, analyze the failure with `/analyze-rebase-failure`, and apply the appropriate fix per category.
