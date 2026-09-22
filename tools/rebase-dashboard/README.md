@@ -4,6 +4,8 @@ A React-based status dashboard for tracking OADP rebase progress across all down
 
 **Live:** https://oadp-rebasebot.github.io/oadp-rebase/rebase-dashboard/
 
+Open a specific release directly with the `branch` query parameter, for example: https://oadp-rebasebot.github.io/oadp-rebase/rebase-dashboard/?branch=oadp-1.5
+
 ## Stack
 
 | Layer | Technology | Why |

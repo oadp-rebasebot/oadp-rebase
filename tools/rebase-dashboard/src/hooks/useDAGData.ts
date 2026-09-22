@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { DAGMetadata, RepoData, CvePR } from '../types'
+import { branchFromSearch } from '../branch'
 
 interface DAGState {
   metadata: DAGMetadata | null
@@ -24,7 +25,11 @@ export function useDAGData() {
         const resp = await fetch('./dag-metadata.json')
         if (!resp.ok) throw new Error(resp.statusText)
         const meta: DAGMetadata = await resp.json()
-        setState(s => ({ ...s, metadata: meta, branch: meta.default_branch }))
+        setState(s => ({
+          ...s,
+          metadata: meta,
+          branch: branchFromSearch(window.location.search, meta.branches, meta.default_branch),
+        }))
       } catch {
         setState(s => ({ ...s, loading: false }))
       }
@@ -53,6 +58,9 @@ export function useDAGData() {
   }, [state.branch])
 
   const setBranch = useCallback((branch: string) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('branch', branch)
+    window.history.replaceState(null, '', url)
     setState(s => ({ ...s, branch }))
   }, [])
 
