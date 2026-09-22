@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react'
-import type { RepoData, CvePR } from '../types'
+import type { CveRepoSummary, RepoData, CvePR } from '../types'
 import { classifyStatus, deriveLabel, deriveOrg, isPlugin } from '../dag-data'
 import { getDepIds, getDependents } from '../layout'
 import { colors, statusColors, orgColors } from '../styles/theme'
@@ -247,7 +247,7 @@ const RepoCard = forwardRef<HTMLDivElement, {
         background: `linear-gradient(135deg, ${sc.bg}30, ${sc.bg}10)`,
         border: `1px solid ${sc.border}50`,
         borderRadius: 10,
-        overflow: 'hidden',
+        overflow: 'visible',
         cursor: 'pointer',
         opacity: dimmed ? 0.15 : 1,
         transition: 'opacity 0.15s ease',
@@ -318,11 +318,54 @@ const RepoCard = forwardRef<HTMLDivElement, {
           {repo.upstream ? `← ${repo.upstream.split(' @ ')[0]}` : 'hooks-only'}
         </div>
       </div>
+      {repo.cves && <CveCard cves={repo.cves} />}
     </div>
   )
 })
 
 RepoCard.displayName = 'RepoCard'
+
+function CveCard({ cves }: { cves: CveRepoSummary }) {
+  const [showFindings, setShowFindings] = useState(false)
+
+  return (
+    <div
+      onMouseEnter={() => setShowFindings(true)}
+      onMouseLeave={() => setShowFindings(false)}
+      style={{
+        display: 'flex', gap: 8, padding: '6px 10px', position: 'relative',
+        background: `${colors.red}12`, borderTop: `1px solid ${colors.red}35`,
+        fontSize: 10, fontWeight: 600, cursor: 'help',
+      }}
+    >
+      <span style={{ color: colors.red }}>{cves.critical} critical</span>
+      <span style={{ color: colors.yellow }}>{cves.high} high</span>
+      <span style={{ color: colors.blue }}>{cves.fixable} fixable</span>
+      {showFindings && (
+        <div style={{
+          position: 'absolute', zIndex: 20, left: 0, bottom: 'calc(100% + 6px)', width: 300,
+          padding: 10, borderRadius: 8, background: colors.surface2, border: `1px solid ${colors.border}`,
+          boxShadow: '0 8px 24px rgba(0,0,0,.45)', color: colors.text, fontSize: 11, fontWeight: 400,
+          lineHeight: 1.35, pointerEvents: 'none',
+        }}>
+          {cves.findings.map(finding => (
+            <div key={`${finding.id}-${finding.package}`} style={{ marginTop: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <strong style={{ color: finding.severity === 'CRITICAL' ? colors.red : colors.yellow }}>{finding.id}</strong>
+                <span style={{ color: colors.muted }}>{finding.severity}</span>
+              </div>
+              <div>{finding.package}</div>
+              <div style={{ color: colors.muted }}>
+                {finding.installed_version}{' -> '}
+                {finding.fixed_version ? finding.fixed_version : <strong style={{ color: colors.yellow }}>no fix available</strong>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function Badge({ color, href, children }: { color: string; href?: string; children: React.ReactNode }) {
   const style: React.CSSProperties = {

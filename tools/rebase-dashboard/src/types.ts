@@ -34,6 +34,7 @@ export interface RepoData {
   dep_syncs?: DepSync[]
   gomod_drifts?: GoModDrift[]
   issues?: Issue[]
+  cves?: CveRepoSummary
 }
 
 export interface DAGMetadata {
@@ -49,6 +50,21 @@ export interface CvePR {
   title: string
   url: string
   created: string
+}
+
+export interface CveFinding {
+  id: string
+  severity: 'CRITICAL' | 'HIGH'
+  package: string
+  installed_version: string
+  fixed_version: string
+}
+
+export interface CveRepoSummary {
+  critical: number
+  high: number
+  fixable: number
+  findings: CveFinding[]
 }
 
 export interface BranchData {
