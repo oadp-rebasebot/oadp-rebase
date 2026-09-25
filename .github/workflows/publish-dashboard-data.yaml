@@ -61,17 +61,31 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p /tmp/dashboard-data
+          if git fetch origin "$DATA_BRANCH"; then
+            has_previous_data=true
+          else
+            has_previous_data=false
+          fi
           branches=""
 
           for branch in $BRANCHES; do
+            set +e
             raw_json=$(tools/rebase-status/rebase-status \
               --config-dir rebase-configs \
               --json \
-              "$branch" 2>/dev/null) || true
+              "$branch" 2>/dev/null)
+            status=$?
+            set -e
+            if ! echo "$raw_json" | jq -e 'type == "object" and (.repos | type == "array")' > /dev/null; then
+              echo "::error::rebase-status produced invalid JSON for ${branch} (exit ${status})"
+              exit 1
+            fi
 
             cve_scan='{}'
             if [ -f /tmp/cve-dashboard-data/cve-summary.json ]; then
               cve_scan=$(jq -c --arg branch "$branch" '.branches[$branch].repos // {}' /tmp/cve-dashboard-data/cve-summary.json)
+            elif [ "$has_previous_data" = true ] && git cat-file -e "origin/$DATA_BRANCH:dag-${branch}.json"; then
+              cve_scan=$(git show "origin/$DATA_BRANCH:dag-${branch}.json" | jq -c '[.repos[] | select(.cves != null) | {key: .repo, value: .cves}] | from_entries')
             fi
             echo "$raw_json" | jq --argjson cve_scan "$cve_scan" 'if type == "object" then {repos: [.repos[] | . + {cves: ($cve_scan[.repo] // null)}], cve_prs: (.cve_prs // [])} else {repos: [.[] | . + {cves: ($cve_scan[.repo] // null)}], cve_prs: []} end' \
               > "/tmp/dashboard-data/dag-${branch}.json" \
@@ -87,7 +101,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git fetch origin "$DATA_BRANCH" || true
           if git show-ref --verify --quiet "refs/remotes/origin/$DATA_BRANCH"; then
             git worktree add /tmp/dashboard-data-branch "origin/$DATA_BRANCH"
             cd /tmp/dashboard-data-branch

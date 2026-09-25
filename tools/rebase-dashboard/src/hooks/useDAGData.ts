@@ -21,28 +21,30 @@ export function useDAGData() {
     branch: '',
     loading: true,
   })
-  const metadataRef = useRef<DAGMetadata | null>(null)
+  const remoteMetadataRevisionRef = useRef<string | null>(null)
+  const remoteSnapshotRevisionRef = useRef<string | null>(null)
 
-  useEffect(() => {
-    metadataRef.current = state.metadata
-  }, [state.metadata])
+  async function fetchRemoteJSON<T>(file: string): Promise<T> {
+    const response = await fetch(dataURL(dashboardDataURL, file), { cache: 'no-store' })
+    if (!response.ok) throw new Error(response.statusText)
+    return response.json() as Promise<T>
+  }
 
-  async function fetchJSON<T>(file: string, bundledFile: string): Promise<T> {
+  async function fetchInitialJSON<T>(file: string, bundledFile: string): Promise<{ data: T; remote: boolean }> {
     try {
-      const response = await fetch(dataURL(dashboardDataURL, file), { cache: 'no-store' })
-      if (!response.ok) throw new Error(response.statusText)
-      return response.json() as Promise<T>
+      return { data: await fetchRemoteJSON<T>(file), remote: true }
     } catch {
       const response = await fetch(`./${bundledFile}`)
       if (!response.ok) throw new Error(response.statusText)
-      return response.json() as Promise<T>
+      return { data: await response.json() as T, remote: false }
     }
   }
 
   useEffect(() => {
     (async () => {
       try {
-        const meta = await fetchJSON<DAGMetadata>('metadata.json', 'dag-metadata.json')
+        const { data: meta, remote } = await fetchInitialJSON<DAGMetadata>('metadata.json', 'dag-metadata.json')
+        remoteMetadataRevisionRef.current = remote ? metadataRevision(meta) : null
         setState(s => ({
           ...s,
           metadata: meta,
@@ -57,12 +59,14 @@ export function useDAGData() {
   useEffect(() => {
     if (!state.branch) return
     let stale = false
+    remoteSnapshotRevisionRef.current = null
     setState(s => ({ ...s, loading: true }))
     ;(async () => {
       try {
-        const raw = await fetchJSON<unknown>(`dag-${state.branch}.json`, `dag-${state.branch}.json`)
+        const { data: raw, remote } = await fetchInitialJSON<unknown>(`dag-${state.branch}.json`, `dag-${state.branch}.json`)
         if (stale) return
         const { repos, cvePRs } = parseSnapshot(raw)
+        if (remote) remoteSnapshotRevisionRef.current = remoteMetadataRevisionRef.current
         setState(s => ({ ...s, repos, cvePRs, loading: false }))
       } catch {
         if (stale) return
@@ -78,12 +82,15 @@ export function useDAGData() {
 
     const refresh = async () => {
       try {
-        const metadata = await fetchJSON<DAGMetadata>('metadata.json', 'dag-metadata.json')
-        if (stale || metadataRevision(metadata) === metadataRevision(metadataRef.current ?? metadata)) return
+        const metadata = await fetchRemoteJSON<DAGMetadata>('metadata.json')
+        const revision = metadataRevision(metadata)
+        if (stale || remoteSnapshotRevisionRef.current === revision) return
 
-        const raw = await fetchJSON<unknown>(`dag-${state.branch}.json`, `dag-${state.branch}.json`)
+        const raw = await fetchRemoteJSON<unknown>(`dag-${state.branch}.json`)
         if (stale) return
         const { repos, cvePRs } = parseSnapshot(raw)
+        remoteMetadataRevisionRef.current = revision
+        remoteSnapshotRevisionRef.current = revision
         setState(s => ({ ...s, metadata, repos, cvePRs }))
       } catch {
         // Keep the last known-good snapshot when a refresh fails.
