@@ -2,3 +2,4 @@ node_modules/
 dist/
 public/dag-*.json
 public/dag-metadata.json
+tsconfig.tsbuildinfo

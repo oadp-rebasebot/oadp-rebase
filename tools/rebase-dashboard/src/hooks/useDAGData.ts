@@ -1,6 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
-import type { DAGMetadata, RepoData, CvePR } from '../types'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import type { CvePR, DAGMetadata, RepoData } from '../types'
 import { branchFromSearch } from '../branch'
+import { dashboardDataURL, dataURL, metadataRevision, parseSnapshot } from '../data-source'
+
+const refreshIntervalMS = 15_000
 
 interface DAGState {
   metadata: DAGMetadata | null
@@ -18,13 +21,28 @@ export function useDAGData() {
     branch: '',
     loading: true,
   })
+  const metadataRef = useRef<DAGMetadata | null>(null)
+
+  useEffect(() => {
+    metadataRef.current = state.metadata
+  }, [state.metadata])
+
+  async function fetchJSON<T>(file: string, bundledFile: string): Promise<T> {
+    try {
+      const response = await fetch(dataURL(dashboardDataURL, file), { cache: 'no-store' })
+      if (!response.ok) throw new Error(response.statusText)
+      return response.json() as Promise<T>
+    } catch {
+      const response = await fetch(`./${bundledFile}`)
+      if (!response.ok) throw new Error(response.statusText)
+      return response.json() as Promise<T>
+    }
+  }
 
   useEffect(() => {
     (async () => {
       try {
-        const resp = await fetch('./dag-metadata.json')
-        if (!resp.ok) throw new Error(resp.statusText)
-        const meta: DAGMetadata = await resp.json()
+        const meta = await fetchJSON<DAGMetadata>('metadata.json', 'dag-metadata.json')
         setState(s => ({
           ...s,
           metadata: meta,
@@ -42,12 +60,9 @@ export function useDAGData() {
     setState(s => ({ ...s, loading: true }))
     ;(async () => {
       try {
-        const resp = await fetch(`./dag-${state.branch}.json`)
-        if (!resp.ok) throw new Error(resp.statusText)
-        const raw = await resp.json()
+        const raw = await fetchJSON<unknown>(`dag-${state.branch}.json`, `dag-${state.branch}.json`)
         if (stale) return
-        const repos: RepoData[] = Array.isArray(raw) ? raw : (raw.repos ?? [])
-        const cvePRs: CvePR[] = Array.isArray(raw) ? [] : (raw.cve_prs ?? [])
+        const { repos, cvePRs } = parseSnapshot(raw)
         setState(s => ({ ...s, repos, cvePRs, loading: false }))
       } catch {
         if (stale) return
@@ -55,6 +70,31 @@ export function useDAGData() {
       }
     })()
     return () => { stale = true }
+  }, [state.branch])
+
+  useEffect(() => {
+    if (!state.branch) return
+    let stale = false
+
+    const refresh = async () => {
+      try {
+        const metadata = await fetchJSON<DAGMetadata>('metadata.json', 'dag-metadata.json')
+        if (stale || metadataRevision(metadata) === metadataRevision(metadataRef.current ?? metadata)) return
+
+        const raw = await fetchJSON<unknown>(`dag-${state.branch}.json`, `dag-${state.branch}.json`)
+        if (stale) return
+        const { repos, cvePRs } = parseSnapshot(raw)
+        setState(s => ({ ...s, metadata, repos, cvePRs }))
+      } catch {
+        // Keep the last known-good snapshot when a refresh fails.
+      }
+    }
+
+    const interval = window.setInterval(refresh, refreshIntervalMS)
+    return () => {
+      stale = true
+      window.clearInterval(interval)
+    }
   }, [state.branch])
 
   const setBranch = useCallback((branch: string) => {
