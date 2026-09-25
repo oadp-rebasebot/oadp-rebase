@@ -1,0 +1,125 @@
+name: Publish Rebase Dashboard Data
+
+on:
+  workflow_run:
+    workflows: ["Auto Rebase", "CVE Scan"]
+    types: [completed]
+  schedule:
+    - cron: '0 * * * 1-5'
+  workflow_dispatch:
+
+env:
+  BRANCHES: oadp-dev oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3
+  DATA_BRANCH: dashboard-data
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: dashboard-data
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: tools/rebase-status/go.sum
+
+      - name: Build rebase-status
+        run: make -C tools/rebase-status rebase-status
+
+      - name: Find latest scheduled CVE scan
+        id: cve-scan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          run_id=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/cve-scan.yaml/runs?event=schedule&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
+          echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
+          if [ -n "$run_id" ] && gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/artifacts" --jq '.artifacts[] | select(.name == "cve-dashboard-data") | .id' | grep -q .; then
+            echo "has_artifact=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_artifact=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download latest CVE scan summary
+        if: steps.cve-scan.outputs.has_artifact == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: cve-dashboard-data
+          path: /tmp/cve-dashboard-data
+          run-id: ${{ steps.cve-scan.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate dashboard data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p /tmp/dashboard-data
+          if git fetch origin "$DATA_BRANCH"; then
+            has_previous_data=true
+          else
+            has_previous_data=false
+          fi
+          branches=""
+
+          for branch in $BRANCHES; do
+            set +e
+            raw_json=$(tools/rebase-status/rebase-status \
+              --config-dir rebase-configs \
+              --json \
+              "$branch" 2>/dev/null)
+            status=$?
+            set -e
+            if ! echo "$raw_json" | jq -e 'type == "object" and (.repos | type == "array")' > /dev/null; then
+              echo "::error::rebase-status produced invalid JSON for ${branch} (exit ${status})"
+              exit 1
+            fi
+
+            cve_scan='{}'
+            if [ -f /tmp/cve-dashboard-data/cve-summary.json ]; then
+              cve_scan=$(jq -c --arg branch "$branch" '.branches[$branch].repos // {}' /tmp/cve-dashboard-data/cve-summary.json)
+            elif [ "$has_previous_data" = true ] && git cat-file -e "origin/$DATA_BRANCH:dag-${branch}.json"; then
+              cve_scan=$(git show "origin/$DATA_BRANCH:dag-${branch}.json" | jq -c '[.repos[] | select(.cves != null) | {key: .repo, value: .cves}] | from_entries')
+            fi
+            echo "$raw_json" | jq --argjson cve_scan "$cve_scan" 'if type == "object" then {repos: [.repos[] | . + {cves: ($cve_scan[.repo] // null)}], cve_prs: (.cve_prs // [])} else {repos: [.[] | . + {cves: ($cve_scan[.repo] // null)}], cve_prs: []} end' \
+              > "/tmp/dashboard-data/dag-${branch}.json" \
+              || printf '%s\n' '{"repos":[],"cve_prs":[]}' > "/tmp/dashboard-data/dag-${branch}.json"
+            branches="${branches:+$branches,}\"$branch\""
+          done
+
+          cat > /tmp/dashboard-data/metadata.json <<EOF
+          {"branches": [$branches], "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)", "revision": "${GITHUB_SHA}-${GITHUB_RUN_ID}", "default_branch": "oadp-dev"}
+          EOF
+
+      - name: Publish data branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git show-ref --verify --quiet "refs/remotes/origin/$DATA_BRANCH"; then
+            git worktree add /tmp/dashboard-data-branch "origin/$DATA_BRANCH"
+            cd /tmp/dashboard-data-branch
+            git switch --create "$DATA_BRANCH" --track "origin/$DATA_BRANCH"
+          else
+            git worktree add --detach /tmp/dashboard-data-branch
+            cd /tmp/dashboard-data-branch
+            git switch --orphan "$DATA_BRANCH"
+            git rm -rf .
+          fi
+
+          cp /tmp/dashboard-data/*.json .
+          git add metadata.json dag-*.json
+          if git diff --cached --quiet; then
+            echo "Dashboard data is unchanged"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update dashboard data"
+          git push origin "HEAD:$DATA_BRANCH"

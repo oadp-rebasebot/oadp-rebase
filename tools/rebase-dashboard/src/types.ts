@@ -41,6 +41,7 @@ export interface DAGMetadata {
   branches: string[]
   generated_at: string
   default_branch: string
+  revision?: string
 }
 
 export interface CvePR {

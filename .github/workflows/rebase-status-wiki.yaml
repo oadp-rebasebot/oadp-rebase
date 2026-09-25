@@ -4,8 +4,6 @@ on:
   workflow_run:
     workflows: ["Auto Rebase", "CVE Scan"]
     types: [completed]
-  schedule:
-    - cron: '0 * * * 1-5'
   workflow_dispatch:
     inputs:
       notify_branches:
