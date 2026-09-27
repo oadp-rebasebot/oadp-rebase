@@ -30,21 +30,11 @@ export function useDAGData() {
     return response.json() as Promise<T>
   }
 
-  async function fetchInitialJSON<T>(file: string, bundledFile: string): Promise<{ data: T; remote: boolean }> {
-    try {
-      return { data: await fetchRemoteJSON<T>(file), remote: true }
-    } catch {
-      const response = await fetch(`./${bundledFile}`)
-      if (!response.ok) throw new Error(response.statusText)
-      return { data: await response.json() as T, remote: false }
-    }
-  }
-
   useEffect(() => {
     (async () => {
       try {
-        const { data: meta, remote } = await fetchInitialJSON<DAGMetadata>('metadata.json', 'dag-metadata.json')
-        remoteMetadataRevisionRef.current = remote ? metadataRevision(meta) : null
+        const meta = await fetchRemoteJSON<DAGMetadata>('metadata.json')
+        remoteMetadataRevisionRef.current = metadataRevision(meta)
         setState(s => ({
           ...s,
           metadata: meta,
@@ -63,10 +53,10 @@ export function useDAGData() {
     setState(s => ({ ...s, loading: true }))
     ;(async () => {
       try {
-        const { data: raw, remote } = await fetchInitialJSON<unknown>(`dag-${state.branch}.json`, `dag-${state.branch}.json`)
+        const raw = await fetchRemoteJSON<unknown>(`dag-${state.branch}.json`)
         if (stale) return
         const { repos, cvePRs } = parseSnapshot(raw)
-        if (remote) remoteSnapshotRevisionRef.current = remoteMetadataRevisionRef.current
+        remoteSnapshotRevisionRef.current = remoteMetadataRevisionRef.current
         setState(s => ({ ...s, repos, cvePRs, loading: false }))
       } catch {
         if (stale) return

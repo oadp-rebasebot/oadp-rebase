@@ -2,8 +2,9 @@
 
 [![Auto Rebase](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/auto-rebase-v2.yaml/badge.svg?branch=oadp-dev)](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/auto-rebase-v2.yaml)
 [![Prow Audit Status](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/prow-audit-status.yaml/badge.svg?branch=oadp-dev)](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/prow-audit-status.yaml)
-[![Deploy Prow Audit Page](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/prow-audit-pages.yaml/badge.svg?branch=oadp-dev)](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/prow-audit-pages.yaml)
+[![Deploy Pages](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/prow-audit-pages.yaml/badge.svg?branch=oadp-dev)](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/prow-audit-pages.yaml)
 [![Rebase Status Wiki](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/rebase-status-wiki.yaml/badge.svg?branch=oadp-dev)](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/rebase-status-wiki.yaml)
+[![Publish Rebase Dashboard Data](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/publish-dashboard-data.yaml/badge.svg?branch=oadp-dev)](https://github.com/oadp-rebasebot/oadp-rebase/actions/workflows/publish-dashboard-data.yaml)
 
 This repository manages the rebases and updates of Velero and OADP-related components, ensuring that dependencies remain in sync and compatible.  
 It includes scripts (hooks) used by the rebasebot during the rebase process, as well as mappings between upstream and downstream tags.
@@ -31,9 +32,10 @@ and deployed to <https://oadp-rebasebot.github.io/oadp-rebase/>.
 The following scripts and workflows produce data or content consumed by the pages above:
 
 - [`tools/assemble-pages.sh`](https://github.com/oadp-rebasebot/oadp-rebase/blob/oadp-dev/tools/assemble-pages.sh) — assembles the full `_site` directory from the sources listed above.
-- [`.github/workflows/prow-audit-pages.yaml`](https://github.com/oadp-rebasebot/oadp-rebase/blob/oadp-dev/.github/workflows/prow-audit-pages.yaml) — builds the dashboard and deploys the assembled site to GitHub Pages.
+- [`.github/workflows/prow-audit-pages.yaml`](https://github.com/oadp-rebasebot/oadp-rebase/blob/oadp-dev/.github/workflows/prow-audit-pages.yaml) — builds and deploys the assembled site to GitHub Pages when page source files change.
 - [`.github/workflows/prow-audit-status.yaml`](https://github.com/oadp-rebasebot/oadp-rebase/blob/oadp-dev/.github/workflows/prow-audit-status.yaml) — generates the Prow audit status badge (`badge.json`).
-- [`.github/workflows/rebase-status-wiki.yaml`](https://github.com/oadp-rebasebot/oadp-rebase/blob/oadp-dev/.github/workflows/rebase-status-wiki.yaml) — generates the DAG data (`dag-data/*.json`) shared by the DAG and Dashboard pages.
+- [`.github/workflows/publish-dashboard-data.yaml`](https://github.com/oadp-rebasebot/oadp-rebase/blob/oadp-dev/.github/workflows/publish-dashboard-data.yaml) — publishes status snapshots to the `dashboard-data` branch after Auto Rebase/CVE Scan completion and hourly on weekdays. The dashboard and DAG fetch those snapshots directly.
+- [`.github/workflows/rebase-status-wiki.yaml`](https://github.com/oadp-rebasebot/oadp-rebase/blob/oadp-dev/.github/workflows/rebase-status-wiki.yaml) — updates the rebase-status wiki pages after Auto Rebase/CVE Scan completion.
 
 
 # Velero & OADP Dependency Rebase Process and Graph

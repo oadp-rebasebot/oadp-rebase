@@ -16,20 +16,14 @@ env:
   NOTIFY_BRANCHES: oadp-1.6
 
 permissions:
-  actions: read
   contents: write
-  pages: write
-  id-token: write
 
 jobs:
-  update-wiki-and-pages:
+  update-wiki:
     runs-on: ubuntu-latest
     concurrency:
-      group: pages
+      group: wiki
       cancel-in-progress: false
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v6
 
@@ -38,48 +32,16 @@ jobs:
           go-version: '1.22'
           cache-dependency-path: tools/rebase-status/go.sum
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: tools/rebase-dashboard/package-lock.json
-
       - name: Build rebase-status
         run: make -C tools/rebase-status rebase-status
 
-      - name: Find latest scheduled CVE scan
-        id: cve-scan
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          run_id=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/cve-scan.yaml/runs?event=schedule&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
-          echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
-          if [ -n "$run_id" ] && gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/artifacts" --jq '.artifacts[] | select(.name == "cve-dashboard-data") | .id' | grep -q .; then
-            echo "has_artifact=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_artifact=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Download latest CVE scan summary
-        if: steps.cve-scan.outputs.has_artifact == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: cve-dashboard-data
-          path: /tmp/cve-dashboard-data
-          run-id: ${{ steps.cve-scan.outputs.run_id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate status reports and DAG data
+      - name: Generate status reports
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p /tmp/dag-data
-          branches=""
-
           for branch in $BRANCHES; do
             echo "::group::rebase-status $branch"
 
-            # Markdown for wiki
             tools/rebase-status/rebase-status \
               --config-dir rebase-configs \
               --format markdown \
@@ -91,26 +53,8 @@ jobs:
               exit 1
             fi
 
-            # JSON for DAG/dashboard (runs fast — GitHub API responses are cached from the markdown run)
-            raw_json=$(tools/rebase-status/rebase-status \
-              --config-dir rebase-configs \
-              --json \
-              "$branch" 2>/dev/null) || \
-              echo "::notice::rebase-status exited non-zero for $branch (issues found)"
-            cve_scan='{}'
-            if [ -f /tmp/cve-dashboard-data/cve-summary.json ]; then
-              cve_scan=$(jq -c --arg branch "$branch" '.branches[$branch].repos // {}' /tmp/cve-dashboard-data/cve-summary.json)
-            fi
-            echo "$raw_json" | jq --argjson cve_scan "$cve_scan" 'if type == "object" then {repos: [.repos[] | . + {cves: ($cve_scan[.repo] // null)}], cve_prs: (.cve_prs // [])} else {repos: [.[] | . + {cves: ($cve_scan[.repo] // null)}], cve_prs: []} end' > "/tmp/dag-data/${branch}.json" || echo '{"repos":[],"cve_prs":[]}' > "/tmp/dag-data/${branch}.json"
-
             echo "::endgroup::"
-            branches="${branches:+$branches,}\"$branch\""
           done
-
-          default_branch=$(echo "$BRANCHES" | awk '{print $1}')
-          cat > /tmp/dag-data/metadata.json <<EOF
-          {"branches": [$branches], "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)", "default_branch": "$default_branch"}
-          EOF
 
       - name: Clone wiki repo
         env:
@@ -123,12 +67,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          read -r -a branches <<< "$BRANCHES"
           tools/rebase-status/rebase-status \
             --config-dir rebase-configs \
             --format home \
             --tally-file /tmp/wiki/pr-tallies.json \
             --rebase-log /tmp/wiki/Auto-Rebase-V2-Log.md \
-            $BRANCHES \
+            "${branches[@]}" \
             > /tmp/Home.md
 
       - name: Push to wiki
@@ -149,29 +94,11 @@ jobs:
             git push
           fi
 
-      - name: Build Rebase Dashboard
-        run: |
-          cd tools/rebase-dashboard
-          npm ci
-          npm run build
-
-      - name: Assemble pages
-        run: bash tools/assemble-pages.sh
-
-      - uses: actions/configure-pages@v6
-
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: _site
-
-      - id: deployment
-        uses: actions/deploy-pages@v5
-
   notify-slack:
     if: >-
       (github.event_name == 'workflow_run' && github.event.workflow_run.event == 'schedule') ||
       (github.event_name == 'workflow_dispatch' && inputs.notify_branches != '')
-    needs: update-wiki-and-pages
+    needs: update-wiki
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
