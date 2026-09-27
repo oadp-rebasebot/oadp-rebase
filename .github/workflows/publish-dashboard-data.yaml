@@ -106,9 +106,8 @@ jobs:
             cd /tmp/dashboard-data-branch
             git switch --create "$DATA_BRANCH" --track "origin/$DATA_BRANCH"
           else
-            git worktree add --detach /tmp/dashboard-data-branch
+            git worktree add -b "$DATA_BRANCH" /tmp/dashboard-data-branch
             cd /tmp/dashboard-data-branch
-            git switch --orphan "$DATA_BRANCH"
           fi
 
           cp /tmp/dashboard-data/*.json .
