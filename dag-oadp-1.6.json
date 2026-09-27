@@ -1,0 +1,1409 @@
+{
+  "repos": [
+    {
+      "repo": "migtools/kopia",
+      "branch": "oadp-1.6",
+      "wave": 1,
+      "skip": false,
+      "upstream": "project-velero/kopia @ v0.22.3-velero-patch",
+      "checks": {
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "na",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "productized": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        }
+      },
+      "cves": null
+    },
+    {
+      "repo": "openshift/restic",
+      "branch": "oadp-1.6",
+      "wave": 1,
+      "skip": true,
+      "upstream": "",
+      "checks": {
+        "go_version": {
+          "status": "skip",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "skip",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "skip",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "skip",
+          "summary": ""
+        },
+        "config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "skip",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "skip",
+          "summary": ""
+        },
+        "productized": {
+          "status": "skip",
+          "summary": ""
+        }
+      },
+      "cves": null
+    },
+    {
+      "repo": "migtools/filebrowser",
+      "branch": "oadp-1.6",
+      "wave": 1,
+      "skip": false,
+      "upstream": "filebrowser/filebrowser @ v2.63.23",
+      "checks": {
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        }
+      },
+      "cves": null
+    },
+    {
+      "repo": "migtools/oadp-vmdp",
+      "branch": "oadp-1.6",
+      "wave": 1,
+      "skip": false,
+      "upstream": "migtools/kopia @ oadp-1.6",
+      "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        }
+      },
+      "cves": null
+    },
+    {
+      "repo": "openshift/velero",
+      "branch": "oadp-1.6",
+      "wave": 2,
+      "skip": false,
+      "upstream": "velero-io/velero @ v1.18.3",
+      "checks": {
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "2/2"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/migtools/kopia",
+          "org": "migtools",
+          "repo": "kopia",
+          "have": "c880aae06643",
+          "head": "c880aae06643df934594bc0e8025b05193bbf225",
+          "in_sync": true
+        },
+        {
+          "module": "https://github.com/openshift/restic",
+          "org": "openshift",
+          "repo": "restic",
+          "have": "32bd46f3e62e",
+          "head": "32bd46f3e62e6fc2e421f18816b32b9458c4ec83",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    },
+    {
+      "repo": "migtools/kubevirt-velero-plugin",
+      "branch": "oadp-1.6",
+      "wave": 3,
+      "skip": false,
+      "upstream": "kubevirt/kubevirt-velero-plugin @ v0.9.1",
+      "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    },
+    {
+      "repo": "openshift/hypershift-oadp-plugin",
+      "branch": "oadp-1.6",
+      "wave": 3,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    },
+    {
+      "repo": "openshift/oadp-operator",
+      "branch": "oadp-1.6",
+      "wave": 3,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "2/2"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        },
+        {
+          "module": "github.com/migtools/kopia",
+          "org": "migtools",
+          "repo": "kopia",
+          "have": "c880aae06643",
+          "head": "c880aae06643df934594bc0e8025b05193bbf225",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    },
+    {
+      "repo": "openshift/velero-plugin-for-aws",
+      "branch": "oadp-1.6",
+      "wave": 3,
+      "skip": false,
+      "upstream": "velero-io/velero-plugin-for-aws @ v1.14.3",
+      "checks": {
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    },
+    {
+      "repo": "openshift/velero-plugin-for-legacy-aws",
+      "branch": "oadp-1.6",
+      "wave": 3,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    },
+    {
+      "repo": "openshift/velero-plugin-for-microsoft-azure",
+      "branch": "oadp-1.6",
+      "wave": 3,
+      "skip": false,
+      "upstream": "velero-io/velero-plugin-for-microsoft-azure @ v1.14.3",
+      "checks": {
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "1/1"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    },
+    {
+      "repo": "openshift/velero-plugin-for-gcp",
+      "branch": "oadp-1.6",
+      "wave": 3,
+      "skip": false,
+      "upstream": "velero-io/velero-plugin-for-gcp @ v1.14.3",
+      "checks": {
+        "dep_sync": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    },
+    {
+      "repo": "migtools/oadp-non-admin",
+      "branch": "oadp-1.6",
+      "wave": 4,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "2/2"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/oadp-operator",
+          "org": "openshift",
+          "repo": "oadp-operator",
+          "have": "c68880e533af",
+          "head": "c68880e533af8fe1c38c4cb0f62351ce660c3c61",
+          "in_sync": true
+        },
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    },
+    {
+      "repo": "openshift/openshift-velero-plugin",
+      "branch": "oadp-1.6",
+      "wave": 4,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "2/2"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/oadp-operator",
+          "org": "openshift",
+          "repo": "oadp-operator",
+          "have": "c68880e533af",
+          "head": "c68880e533af8fe1c38c4cb0f62351ce660c3c61",
+          "in_sync": true
+        },
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        }
+      ],
+      "cves": {
+        "critical": 0,
+        "high": 6,
+        "fixable": 4,
+        "findings": [
+          {
+            "id": "CVE-2026-41567",
+            "severity": "HIGH",
+            "package": "github.com/docker/docker",
+            "installed_version": "v27.1.1+incompatible",
+            "fixed_version": ""
+          },
+          {
+            "id": "CVE-2026-42306",
+            "severity": "HIGH",
+            "package": "github.com/docker/docker",
+            "installed_version": "v27.1.1+incompatible",
+            "fixed_version": ""
+          },
+          {
+            "id": "CVE-2025-52881",
+            "severity": "HIGH",
+            "package": "github.com/opencontainers/selinux",
+            "installed_version": "v1.11.0",
+            "fixed_version": "1.13.0"
+          },
+          {
+            "id": "CVE-2025-66506",
+            "severity": "HIGH",
+            "package": "github.com/sigstore/fulcio",
+            "installed_version": "v1.4.5",
+            "fixed_version": "1.8.3"
+          },
+          {
+            "id": "CVE-2026-49478",
+            "severity": "HIGH",
+            "package": "github.com/sigstore/fulcio",
+            "installed_version": "v1.4.5",
+            "fixed_version": "1.8.6"
+          },
+          {
+            "id": "CVE-2026-48702",
+            "severity": "HIGH",
+            "package": "github.com/sigstore/rekor",
+            "installed_version": "v1.3.6",
+            "fixed_version": "1.5.2"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "migtools/kubevirt-datamover-controller",
+      "branch": "oadp-1.6",
+      "wave": 4,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    },
+    {
+      "repo": "migtools/oadp-vm-file-restore",
+      "branch": "oadp-1.6",
+      "wave": 4,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.26"
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "3 cfgs"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "3/3"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    },
+    {
+      "repo": "openshift/oadp-must-gather",
+      "branch": "oadp-1.6",
+      "wave": 5,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.26"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "6/6"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/migtools/oadp-non-admin",
+          "org": "migtools",
+          "repo": "oadp-non-admin",
+          "have": "f240874f1209",
+          "head": "f240874f1209adde2c313e28318f7ab9b2ebeed4",
+          "in_sync": true
+        },
+        {
+          "module": "github.com/openshift/oadp-operator",
+          "org": "openshift",
+          "repo": "oadp-operator",
+          "have": "c68880e533af",
+          "head": "c68880e533af8fe1c38c4cb0f62351ce660c3c61",
+          "in_sync": true
+        },
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        },
+        {
+          "module": "https://github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        },
+        {
+          "module": "https://github.com/openshift/restic.git",
+          "org": "openshift",
+          "repo": "restic",
+          "have": "32bd46f3e62e",
+          "head": "32bd46f3e62e6fc2e421f18816b32b9458c4ec83",
+          "in_sync": true
+        },
+        {
+          "module": "https://github.com/migtools/kopia",
+          "org": "migtools",
+          "repo": "kopia",
+          "have": "c880aae06643",
+          "head": "c880aae06643df934594bc0e8025b05193bbf225",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    },
+    {
+      "repo": "migtools/oadp-cli",
+      "branch": "oadp-1.6",
+      "wave": 5,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "4/4"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.26"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/migtools/oadp-non-admin",
+          "org": "migtools",
+          "repo": "oadp-non-admin",
+          "have": "f240874f1209",
+          "head": "f240874f1209adde2c313e28318f7ab9b2ebeed4",
+          "in_sync": true
+        },
+        {
+          "module": "github.com/openshift/oadp-operator",
+          "org": "openshift",
+          "repo": "oadp-operator",
+          "have": "c68880e533af",
+          "head": "c68880e533af8fe1c38c4cb0f62351ce660c3c61",
+          "in_sync": true
+        },
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        },
+        {
+          "module": "github.com/migtools/kopia",
+          "org": "migtools",
+          "repo": "kopia",
+          "have": "c880aae06643",
+          "head": "c880aae06643df934594bc0e8025b05193bbf225",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    },
+    {
+      "repo": "migtools/kubevirt-datamover-plugin",
+      "branch": "oadp-1.6",
+      "wave": 5,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "2/2"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.26"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/migtools/kubevirt-datamover-controller",
+          "org": "migtools",
+          "repo": "kubevirt-datamover-controller",
+          "have": "3ee011fc902f",
+          "head": "3ee011fc902fd91020a3c8c2b2a2209501a2e618",
+          "in_sync": true
+        },
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "4365110ccbf8",
+          "head": "4365110ccbf8c922796cf86b5f20976f559d59a9",
+          "in_sync": true
+        }
+      ],
+      "cves": null
+    }
+  ],
+  "cve_prs": []
+}

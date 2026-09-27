@@ -1,0 +1,1514 @@
+{
+  "repos": [
+    {
+      "repo": "migtools/kopia",
+      "branch": "oadp-1.3",
+      "wave": 1,
+      "skip": false,
+      "upstream": "project-velero/kopia @ v0.13.0-velero.1",
+      "checks": {
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "na",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.8"
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        }
+      },
+      "cves": {
+        "critical": 0,
+        "high": 7,
+        "fixable": 7,
+        "findings": [
+          {
+            "id": "CVE-2026-56854",
+            "severity": "HIGH",
+            "package": "golang.org/x/crypto",
+            "installed_version": "v0.53.0",
+            "fixed_version": "0.55.0"
+          },
+          {
+            "id": "CVE-2026-56864",
+            "severity": "HIGH",
+            "package": "golang.org/x/mod",
+            "installed_version": "v0.36.0",
+            "fixed_version": "0.40.0"
+          },
+          {
+            "id": "CVE-2026-56865",
+            "severity": "HIGH",
+            "package": "golang.org/x/mod",
+            "installed_version": "v0.36.0",
+            "fixed_version": "0.40.0"
+          },
+          {
+            "id": "CVE-2026-56852",
+            "severity": "HIGH",
+            "package": "golang.org/x/text",
+            "installed_version": "v0.38.0",
+            "fixed_version": "0.39.0"
+          },
+          {
+            "id": "CVE-2026-84304",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.83.1"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          },
+          {
+            "id": "GHSA-hrxh-6v49-42gf",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.1"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "openshift/restic",
+      "branch": "oadp-1.3",
+      "wave": 1,
+      "skip": true,
+      "upstream": "",
+      "checks": {
+        "open_pr": {
+          "status": "skip",
+          "summary": ""
+        },
+        "config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "skip",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "skip",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "skip",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "skip",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "skip",
+          "summary": ""
+        },
+        "productized": {
+          "status": "skip",
+          "summary": ""
+        }
+      },
+      "cves": {
+        "critical": 0,
+        "high": 6,
+        "fixable": 6,
+        "findings": [
+          {
+            "id": "CVE-2026-56854",
+            "severity": "HIGH",
+            "package": "golang.org/x/crypto",
+            "installed_version": "v0.52.0",
+            "fixed_version": "0.55.0"
+          },
+          {
+            "id": "CVE-2026-46600",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.55.0",
+            "fixed_version": "0.56.0"
+          },
+          {
+            "id": "CVE-2026-56852",
+            "severity": "HIGH",
+            "package": "golang.org/x/text",
+            "installed_version": "v0.37.0",
+            "fixed_version": "0.39.0"
+          },
+          {
+            "id": "CVE-2026-84304",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.80.0",
+            "fixed_version": "1.83.1"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.80.0",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          },
+          {
+            "id": "GHSA-hrxh-6v49-42gf",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.80.0",
+            "fixed_version": "1.82.1"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "openshift/velero",
+      "branch": "oadp-1.3",
+      "wave": 2,
+      "skip": false,
+      "upstream": "velero-io/velero @ v1.12.4",
+      "checks": {
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "2 cfgs"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.8"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": "2/2"
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "28m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "2/2"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/migtools/kopia",
+          "org": "migtools",
+          "repo": "kopia",
+          "have": "83febd3dd228",
+          "head": "83febd3dd228f65432ddcced4327d43c11483811",
+          "in_sync": true
+        },
+        {
+          "module": "https://github.com/openshift/restic",
+          "org": "openshift",
+          "repo": "restic",
+          "have": "3eabd9d36fcd",
+          "head": "3eabd9d36fcd1c7585cb25637559e1f75c76c26c",
+          "in_sync": true
+        }
+      ],
+      "cves": {
+        "critical": 0,
+        "high": 7,
+        "fixable": 7,
+        "findings": [
+          {
+            "id": "CVE-2026-56854",
+            "severity": "HIGH",
+            "package": "golang.org/x/crypto",
+            "installed_version": "v0.53.0",
+            "fixed_version": "0.55.0"
+          },
+          {
+            "id": "CVE-2026-56864",
+            "severity": "HIGH",
+            "package": "golang.org/x/mod",
+            "installed_version": "v0.36.0",
+            "fixed_version": "0.40.0"
+          },
+          {
+            "id": "CVE-2026-56865",
+            "severity": "HIGH",
+            "package": "golang.org/x/mod",
+            "installed_version": "v0.36.0",
+            "fixed_version": "0.40.0"
+          },
+          {
+            "id": "CVE-2026-56852",
+            "severity": "HIGH",
+            "package": "golang.org/x/text",
+            "installed_version": "v0.38.0",
+            "fixed_version": "0.39.0"
+          },
+          {
+            "id": "CVE-2026-84304",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.83.1"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          },
+          {
+            "id": "GHSA-hrxh-6v49-42gf",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.1"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "migtools/kubevirt-velero-plugin",
+      "branch": "oadp-1.3",
+      "wave": 3,
+      "skip": false,
+      "upstream": "kubevirt/kubevirt-velero-plugin @ v0.6.2",
+      "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.8"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "1/2"
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.24"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "49b763b1d6f3",
+          "head": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "78335d53ffc3a6c8e1cc9bd75d95dbde393f1ec3",
+              "message": "Remove inactive users from OWNERS"
+            },
+            {
+              "sha": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+              "message": "Merge pull request #559 from redhat-chai-bot/remove-inactive-owners-oadp-1.3"
+            }
+          ]
+        },
+        {
+          "module": "github.com/migtools/kopia",
+          "org": "migtools",
+          "repo": "kopia",
+          "have": "83febd3dd228",
+          "head": "83febd3dd228f65432ddcced4327d43c11483811",
+          "in_sync": true
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
+        }
+      ],
+      "cves": {
+        "critical": 0,
+        "high": 4,
+        "fixable": 4,
+        "findings": [
+          {
+            "id": "CVE-2026-56852",
+            "severity": "HIGH",
+            "package": "golang.org/x/text",
+            "installed_version": "v0.38.0",
+            "fixed_version": "0.39.0"
+          },
+          {
+            "id": "CVE-2026-84304",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.83.1"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          },
+          {
+            "id": "GHSA-hrxh-6v49-42gf",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.1"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "openshift/velero-plugin-for-csi",
+      "branch": "oadp-1.3",
+      "wave": 3,
+      "skip": false,
+      "upstream": "vmware-tanzu/velero-plugin-for-csi @ v0.6.3",
+      "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.8"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "1/2"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.24"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "28m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "49b763b1d6f3",
+          "head": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "78335d53ffc3a6c8e1cc9bd75d95dbde393f1ec3",
+              "message": "Remove inactive users from OWNERS"
+            },
+            {
+              "sha": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+              "message": "Merge pull request #559 from redhat-chai-bot/remove-inactive-owners-oadp-1.3"
+            }
+          ]
+        },
+        {
+          "module": "github.com/migtools/kopia",
+          "org": "migtools",
+          "repo": "kopia",
+          "have": "83febd3dd228",
+          "head": "83febd3dd228f65432ddcced4327d43c11483811",
+          "in_sync": true
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
+        }
+      ],
+      "cves": {
+        "critical": 0,
+        "high": 4,
+        "fixable": 4,
+        "findings": [
+          {
+            "id": "CVE-2026-56852",
+            "severity": "HIGH",
+            "package": "golang.org/x/text",
+            "installed_version": "v0.38.0",
+            "fixed_version": "0.39.0"
+          },
+          {
+            "id": "CVE-2026-84304",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.83.1"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          },
+          {
+            "id": "GHSA-hrxh-6v49-42gf",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.1"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "openshift/oadp-operator",
+      "branch": "oadp-1.3",
+      "wave": 3,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "28m ago"
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.8"
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "1/2"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.26"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "49b763b1d6f3",
+          "head": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "78335d53ffc3a6c8e1cc9bd75d95dbde393f1ec3",
+              "message": "Remove inactive users from OWNERS"
+            },
+            {
+              "sha": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+              "message": "Merge pull request #559 from redhat-chai-bot/remove-inactive-owners-oadp-1.3"
+            }
+          ]
+        },
+        {
+          "module": "github.com/migtools/kopia",
+          "org": "migtools",
+          "repo": "kopia",
+          "have": "83febd3dd228",
+          "head": "83febd3dd228f65432ddcced4327d43c11483811",
+          "in_sync": true
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
+        }
+      ],
+      "cves": {
+        "critical": 0,
+        "high": 5,
+        "fixable": 5,
+        "findings": [
+          {
+            "id": "CVE-2026-56854",
+            "severity": "HIGH",
+            "package": "golang.org/x/crypto",
+            "installed_version": "v0.53.0",
+            "fixed_version": "0.55.0"
+          },
+          {
+            "id": "CVE-2026-56852",
+            "severity": "HIGH",
+            "package": "golang.org/x/text",
+            "installed_version": "v0.38.0",
+            "fixed_version": "0.39.0"
+          },
+          {
+            "id": "CVE-2026-84304",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.83.1"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          },
+          {
+            "id": "GHSA-hrxh-6v49-42gf",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.1"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "openshift/velero-plugin-for-aws",
+      "branch": "oadp-1.3",
+      "wave": 3,
+      "skip": false,
+      "upstream": "velero-io/velero-plugin-for-aws @ v1.8.2",
+      "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.8"
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.24"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "49b763b1d6f3",
+          "head": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "78335d53ffc3a6c8e1cc9bd75d95dbde393f1ec3",
+              "message": "Remove inactive users from OWNERS"
+            },
+            {
+              "sha": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+              "message": "Merge pull request #559 from redhat-chai-bot/remove-inactive-owners-oadp-1.3"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
+        }
+      ],
+      "cves": {
+        "critical": 0,
+        "high": 4,
+        "fixable": 4,
+        "findings": [
+          {
+            "id": "CVE-2026-56852",
+            "severity": "HIGH",
+            "package": "golang.org/x/text",
+            "installed_version": "v0.38.0",
+            "fixed_version": "0.39.0"
+          },
+          {
+            "id": "CVE-2026-84304",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.82.0",
+            "fixed_version": "1.83.1"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.82.0",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          },
+          {
+            "id": "GHSA-hrxh-6v49-42gf",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.82.0",
+            "fixed_version": "1.82.1"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "openshift/velero-plugin-for-microsoft-azure",
+      "branch": "oadp-1.3",
+      "wave": 3,
+      "skip": false,
+      "upstream": "velero-io/velero-plugin-for-microsoft-azure @ v1.8.2",
+      "checks": {
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "28m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.8"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "49b763b1d6f3",
+          "head": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "78335d53ffc3a6c8e1cc9bd75d95dbde393f1ec3",
+              "message": "Remove inactive users from OWNERS"
+            },
+            {
+              "sha": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+              "message": "Merge pull request #559 from redhat-chai-bot/remove-inactive-owners-oadp-1.3"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
+        }
+      ],
+      "cves": {
+        "critical": 0,
+        "high": 5,
+        "fixable": 5,
+        "findings": [
+          {
+            "id": "CVE-2026-56854",
+            "severity": "HIGH",
+            "package": "golang.org/x/crypto",
+            "installed_version": "v0.53.0",
+            "fixed_version": "0.55.0"
+          },
+          {
+            "id": "CVE-2026-56852",
+            "severity": "HIGH",
+            "package": "golang.org/x/text",
+            "installed_version": "v0.38.0",
+            "fixed_version": "0.39.0"
+          },
+          {
+            "id": "CVE-2026-84304",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.83.1"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          },
+          {
+            "id": "GHSA-hrxh-6v49-42gf",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.1"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "openshift/velero-plugin-for-gcp",
+      "branch": "oadp-1.3",
+      "wave": 3,
+      "skip": false,
+      "upstream": "velero-io/velero-plugin-for-gcp @ v1.8.2",
+      "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.8"
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "27m ago"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "49b763b1d6f3",
+          "head": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "78335d53ffc3a6c8e1cc9bd75d95dbde393f1ec3",
+              "message": "Remove inactive users from OWNERS"
+            },
+            {
+              "sha": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+              "message": "Merge pull request #559 from redhat-chai-bot/remove-inactive-owners-oadp-1.3"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
+        }
+      ],
+      "cves": {
+        "critical": 0,
+        "high": 5,
+        "fixable": 5,
+        "findings": [
+          {
+            "id": "CVE-2026-56854",
+            "severity": "HIGH",
+            "package": "golang.org/x/crypto",
+            "installed_version": "v0.53.0",
+            "fixed_version": "0.55.0"
+          },
+          {
+            "id": "CVE-2026-56852",
+            "severity": "HIGH",
+            "package": "golang.org/x/text",
+            "installed_version": "v0.38.0",
+            "fixed_version": "0.39.0"
+          },
+          {
+            "id": "CVE-2026-84304",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.83.1"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          },
+          {
+            "id": "GHSA-hrxh-6v49-42gf",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.1"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "openshift/openshift-velero-plugin",
+      "branch": "oadp-1.3",
+      "wave": 4,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.24"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.8"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "28m ago"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "49b763b1d6f3",
+          "head": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "78335d53ffc3a6c8e1cc9bd75d95dbde393f1ec3",
+              "message": "Remove inactive users from OWNERS"
+            },
+            {
+              "sha": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+              "message": "Merge pull request #559 from redhat-chai-bot/remove-inactive-owners-oadp-1.3"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
+        }
+      ],
+      "cves": {
+        "critical": 1,
+        "high": 12,
+        "fixable": 11,
+        "findings": [
+          {
+            "id": "CVE-2024-41110",
+            "severity": "CRITICAL",
+            "package": "github.com/docker/docker",
+            "installed_version": "v25.0.3+incompatible",
+            "fixed_version": "23.0.15, 26.1.5, 27.1.1, 25.0.6"
+          },
+          {
+            "id": "CVE-2026-41567",
+            "severity": "HIGH",
+            "package": "github.com/docker/docker",
+            "installed_version": "v25.0.3+incompatible",
+            "fixed_version": ""
+          },
+          {
+            "id": "CVE-2026-42306",
+            "severity": "HIGH",
+            "package": "github.com/docker/docker",
+            "installed_version": "v25.0.3+incompatible",
+            "fixed_version": ""
+          },
+          {
+            "id": "CVE-2026-34986",
+            "severity": "HIGH",
+            "package": "github.com/go-jose/go-jose/v3",
+            "installed_version": "v3.0.2",
+            "fixed_version": "3.0.5"
+          },
+          {
+            "id": "CVE-2025-52881",
+            "severity": "HIGH",
+            "package": "github.com/opencontainers/selinux",
+            "installed_version": "v1.11.0",
+            "fixed_version": "1.13.0"
+          },
+          {
+            "id": "CVE-2025-66506",
+            "severity": "HIGH",
+            "package": "github.com/sigstore/fulcio",
+            "installed_version": "v1.4.3",
+            "fixed_version": "1.8.3"
+          },
+          {
+            "id": "CVE-2026-49478",
+            "severity": "HIGH",
+            "package": "github.com/sigstore/fulcio",
+            "installed_version": "v1.4.3",
+            "fixed_version": "1.8.6"
+          },
+          {
+            "id": "CVE-2026-48702",
+            "severity": "HIGH",
+            "package": "github.com/sigstore/rekor",
+            "installed_version": "v1.2.2",
+            "fixed_version": "1.5.2"
+          },
+          {
+            "id": "CVE-2026-56854",
+            "severity": "HIGH",
+            "package": "golang.org/x/crypto",
+            "installed_version": "v0.53.0",
+            "fixed_version": "0.55.0"
+          },
+          {
+            "id": "CVE-2026-56852",
+            "severity": "HIGH",
+            "package": "golang.org/x/text",
+            "installed_version": "v0.38.0",
+            "fixed_version": "0.39.0"
+          },
+          {
+            "id": "CVE-2026-84304",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.83.1"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          },
+          {
+            "id": "GHSA-hrxh-6v49-42gf",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.1"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "openshift/oadp-must-gather",
+      "branch": "oadp-1.3",
+      "wave": 5,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.24"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.8"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "3/6"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "28m ago"
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/oadp-operator",
+          "org": "openshift",
+          "repo": "oadp-operator",
+          "have": "5000c2e2a196",
+          "head": "b62bbe2656a4681961a31d4e16c7863ee354cd59",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "e1f6ef19d9fa261aa49bad570c9e3cfde17fe424",
+              "message": "update go.mod"
+            },
+            {
+              "sha": "c5756737f1e0fca55fa660da877375d0969cebb5",
+              "message": "Merge pull request #2303 from weshayutin/oadp-13-modupdate"
+            },
+            {
+              "sha": "0ac8a8f33d8b06f81b5353a4c4cc08900d6e82b6",
+              "message": "add readiness probes and service accounts to CLI download server"
+            },
+            {
+              "sha": "117cffed8dd962e3433727ae5298de8ca742e069",
+              "message": "Merge pull request #2310 from NicholasYancey/backport-probes-sa-1.3"
+            },
+            {
+              "sha": "76c871f0990517e6246ab9ea98c53c660e98eddc",
+              "message": "Add startup probe to CLI download server"
+            },
+            {
+              "sha": "669f0dfd962ce61a14784706cb4e1d36fedff0bd",
+              "message": "Merge pull request #2317 from NicholasYancey/add-startup-probe-1.3"
+            },
+            {
+              "sha": "b81af64fcd38b8ddf0814c004cfa6c700ef048af",
+              "message": "reconciling the ServiceAccount"
+            },
+            {
+              "sha": "d911a14ec15c17e78c7c4fda1000b3fca49681de",
+              "message": "Merge pull request #2323 from NicholasYancey/backport-service-account-reconcile-1.3"
+            },
+            {
+              "sha": "7694c45160c2104c2f60df044cb68e76fa772fb2",
+              "message": "Added backfill to startup probe"
+            },
+            {
+              "sha": "14c44e5e84aadb33b26dc21987cb2e9fa3435bf3",
+              "message": "Merge pull request #2326 from NicholasYancey/fix-startup-probe-backfill-1.3"
+            },
+            {
+              "sha": "0643f418fbe48cd873fa8de5cb7368ac8f04a420",
+              "message": "Remove inactive users from OWNERS"
+            },
+            {
+              "sha": "b62bbe2656a4681961a31d4e16c7863ee354cd59",
+              "message": "Merge pull request #2339 from redhat-chai-bot/remove-inactive-owners-oadp-1.3"
+            }
+          ]
+        },
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "49b763b1d6f3",
+          "head": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "78335d53ffc3a6c8e1cc9bd75d95dbde393f1ec3",
+              "message": "Remove inactive users from OWNERS"
+            },
+            {
+              "sha": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+              "message": "Merge pull request #559 from redhat-chai-bot/remove-inactive-owners-oadp-1.3"
+            }
+          ]
+        },
+        {
+          "module": "github.com/migtools/kopia",
+          "org": "migtools",
+          "repo": "kopia",
+          "have": "83febd3dd228",
+          "head": "83febd3dd228f65432ddcced4327d43c11483811",
+          "in_sync": true
+        },
+        {
+          "module": "https://github.com/migtools/kopia",
+          "org": "migtools",
+          "repo": "kopia",
+          "have": "83febd3dd228",
+          "head": "83febd3dd228f65432ddcced4327d43c11483811",
+          "in_sync": true
+        },
+        {
+          "module": "https://github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "49b763b1d6f3",
+          "head": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "78335d53ffc3a6c8e1cc9bd75d95dbde393f1ec3",
+              "message": "Remove inactive users from OWNERS"
+            },
+            {
+              "sha": "87f7d601247495ba91e9c610a7d3465b4712b75f",
+              "message": "Merge pull request #559 from redhat-chai-bot/remove-inactive-owners-oadp-1.3"
+            }
+          ]
+        },
+        {
+          "module": "https://github.com/openshift/restic",
+          "org": "openshift",
+          "repo": "restic",
+          "have": "3eabd9d36fcd",
+          "head": "3eabd9d36fcd1c7585cb25637559e1f75c76c26c",
+          "in_sync": true
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "3 internal dep(s) out of sync"
+        }
+      ],
+      "cves": {
+        "critical": 0,
+        "high": 5,
+        "fixable": 5,
+        "findings": [
+          {
+            "id": "CVE-2026-56854",
+            "severity": "HIGH",
+            "package": "golang.org/x/crypto",
+            "installed_version": "v0.53.0",
+            "fixed_version": "0.55.0"
+          },
+          {
+            "id": "CVE-2026-56852",
+            "severity": "HIGH",
+            "package": "golang.org/x/text",
+            "installed_version": "v0.38.0",
+            "fixed_version": "0.39.0"
+          },
+          {
+            "id": "CVE-2026-84304",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.83.1"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          },
+          {
+            "id": "GHSA-hrxh-6v49-42gf",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.81.1",
+            "fixed_version": "1.82.1"
+          }
+        ]
+      }
+    }
+  ],
+  "cve_prs": []
+}
