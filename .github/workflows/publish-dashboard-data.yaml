@@ -109,7 +109,6 @@ jobs:
             git worktree add --detach /tmp/dashboard-data-branch
             cd /tmp/dashboard-data-branch
             git switch --orphan "$DATA_BRANCH"
-            git rm -rf .
           fi
 
           cp /tmp/dashboard-data/*.json .
