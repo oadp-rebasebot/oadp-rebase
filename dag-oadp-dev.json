@@ -7,6 +7,38 @@
       "skip": false,
       "upstream": "project-velero/kopia @ $UPSTREAM_KOPIA_TAG_BRANCH_FOR_VELERO",
       "checks": {
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.8"
+        },
+        "upstream_sync": {
+          "status": "warn",
+          "summary": "err"
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
         "konflux": {
           "status": "na",
           "summary": ""
@@ -15,44 +47,12 @@
           "status": "na",
           "summary": ""
         },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.8"
-        },
-        "ci_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
         "productized": {
           "status": "na",
           "summary": ""
         },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "warn",
-          "summary": "err"
-        },
-        "dep_sync": {
-          "status": "ok",
+        "open_pr": {
+          "status": "na",
           "summary": ""
         }
       },
@@ -71,11 +71,35 @@
       "skip": true,
       "upstream": "",
       "checks": {
-        "productized": {
+        "konflux": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_image": {
           "status": "skip",
           "summary": ""
         },
         "open_pr": {
+          "status": "skip",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "skip",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "skip",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "productized": {
           "status": "skip",
           "summary": ""
         },
@@ -87,35 +111,11 @@
           "status": "skip",
           "summary": ""
         },
-        "ci_config": {
+        "dep_sync": {
           "status": "skip",
           "summary": ""
         },
         "gomod_drift": {
-          "status": "skip",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "skip",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "skip",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "skip",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "skip",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "skip",
-          "summary": ""
-        },
-        "dep_sync": {
           "status": "skip",
           "summary": ""
         }
@@ -133,25 +133,13 @@
           "status": "ok",
           "summary": ""
         },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
-        },
-        "dep_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "na",
-          "summary": ""
-        },
         "upstream_image": {
           "status": "ok",
-          "summary": "20m ago"
+          "summary": "14m ago"
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
         },
         "productized": {
           "status": "na",
@@ -161,6 +149,14 @@
           "status": "na",
           "summary": ""
         },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
         "ci_config": {
           "status": "ok",
           "summary": ""
@@ -169,21 +165,20 @@
           "status": "fail",
           "summary": "diverged"
         },
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        },
         "gomod_drift": {
           "status": "fail",
           "summary": "4"
         },
-        "art_config": {
+        "konflux": {
           "status": "na",
           "summary": ""
         }
       },
       "gomod_drifts": [
-        {
-          "module": "github.com/asticode/go-astisub",
-          "downstream": "v0.41.0",
-          "upstream": "v0.42.0"
-        },
         {
           "module": "golang.org/x/image",
           "downstream": "v0.43.0",
@@ -198,6 +193,11 @@
           "module": "golang.org/x/text",
           "downstream": "v0.38.0",
           "upstream": "v0.40.0"
+        },
+        {
+          "module": "github.com/asticode/go-astisub",
+          "downstream": "v0.41.0",
+          "upstream": "v0.42.0"
         }
       ],
       "issues": [
@@ -219,23 +219,15 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
         "open_pr": {
           "status": "ok",
           "summary": "#186"
         },
-        "rebasebot": {
+        "config": {
           "status": "ok",
           "summary": ""
         },
-        "upstream_sync": {
+        "ci_config": {
           "status": "na",
           "summary": ""
         },
@@ -251,7 +243,11 @@
           "status": "na",
           "summary": ""
         },
-        "config": {
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
@@ -259,12 +255,16 @@
           "status": "ok",
           "summary": "1.25.0"
         },
-        "ci_config": {
+        "upstream_sync": {
           "status": "na",
           "summary": ""
         },
         "dep_sync": {
           "status": "ok",
+          "summary": ""
+        },
+        "productized": {
+          "status": "na",
           "summary": ""
         }
       },
@@ -281,12 +281,8 @@
           "status": "na",
           "summary": ""
         },
-        "productized": {
+        "open_pr": {
           "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
           "summary": ""
         },
         "rebasebot": {
@@ -296,6 +292,14 @@
         "go_version": {
           "status": "ok",
           "summary": "1.25.8"
+        },
+        "productized": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
         },
         "ci_config": {
           "status": "ok",
@@ -313,17 +317,13 @@
           "status": "ok",
           "summary": ""
         },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "20m ago"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
         }
       },
       "cves": null
@@ -335,25 +335,13 @@
       "skip": false,
       "upstream": "velero-io/velero @ main",
       "checks": {
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
+        },
         "art_config": {
           "status": "na",
           "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "20m ago"
         },
         "productized": {
           "status": "na",
@@ -371,17 +359,29 @@
           "status": "ok",
           "summary": ""
         },
-        "upstream_sync": {
-          "status": "fail",
-          "summary": "diverged"
-        },
         "dep_sync": {
           "status": "fail",
           "summary": "1/2"
         },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "fail",
+          "summary": "diverged"
+        },
         "gomod_drift": {
           "status": "fail",
           "summary": "9"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
         }
       },
       "dep_syncs": [
@@ -422,32 +422,12 @@
       ],
       "gomod_drifts": [
         {
-          "module": "k8s.io/api",
-          "downstream": "v0.36.0",
-          "upstream": "v0.36.1"
-        },
-        {
-          "module": "google.golang.org/protobuf",
-          "downstream": "v1.36.12-0.20260120151049-f2248ac996af",
-          "upstream": "v1.36.12"
-        },
-        {
           "module": "k8s.io/client-go",
           "downstream": "v0.36.0",
           "upstream": "v0.36.1"
         },
         {
-          "module": "github.com/kubernetes-csi/external-snapshotter/client/v8",
-          "downstream": "v8.4.0",
-          "upstream": "v8.6.0"
-        },
-        {
-          "module": "golang.org/x/mod",
-          "downstream": "v0.36.0",
-          "upstream": "v0.40.0"
-        },
-        {
-          "module": "k8s.io/apimachinery",
+          "module": "k8s.io/api",
           "downstream": "v0.36.0",
           "upstream": "v0.36.1"
         },
@@ -457,9 +437,29 @@
           "upstream": "v0.41.0"
         },
         {
+          "module": "golang.org/x/mod",
+          "downstream": "v0.36.0",
+          "upstream": "v0.40.0"
+        },
+        {
+          "module": "github.com/kubernetes-csi/external-snapshotter/client/v8",
+          "downstream": "v8.4.0",
+          "upstream": "v8.6.0"
+        },
+        {
           "module": "google.golang.org/grpc",
           "downstream": "v1.82.1",
           "upstream": "v1.83.2"
+        },
+        {
+          "module": "google.golang.org/protobuf",
+          "downstream": "v1.36.12-0.20260120151049-f2248ac996af",
+          "upstream": "v1.36.12"
+        },
+        {
+          "module": "k8s.io/apimachinery",
+          "downstream": "v0.36.0",
+          "upstream": "v0.36.1"
         },
         {
           "module": "golang.org/x/sys",
@@ -494,29 +494,13 @@
           "status": "na",
           "summary": ""
         },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
         "config": {
           "status": "ok",
           "summary": ""
         },
-        "rebasebot": {
+        "ci_config": {
           "status": "ok",
           "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
         },
         "upstream_sync": {
           "status": "fail",
@@ -526,15 +510,31 @@
           "status": "ok",
           "summary": ""
         },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
         "konflux": {
           "status": "na",
           "summary": ""
         },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "20m ago"
-        },
         "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
           "status": "na",
           "summary": ""
         }
@@ -1570,6 +1570,10 @@
       "skip": false,
       "upstream": "",
       "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
         "config": {
           "status": "ok",
           "summary": ""
@@ -1578,19 +1582,23 @@
           "status": "na",
           "summary": ""
         },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
         },
-        "upstream_image": {
+        "gomod_drift": {
           "status": "na",
           "summary": ""
         },
-        "art_config": {
-          "status": "na",
-          "summary": ""
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
         },
-        "open_pr": {
+        "productized": {
           "status": "na",
           "summary": ""
         },
@@ -1602,19 +1610,11 @@
           "status": "ok",
           "summary": "1.26.0"
         },
-        "upstream_sync": {
+        "upstream_image": {
           "status": "na",
           "summary": ""
         },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "productized": {
+        "art_config": {
           "status": "na",
           "summary": ""
         }
@@ -2650,15 +2650,11 @@
           "status": "skip",
           "summary": ""
         },
-        "config": {
+        "ci_config": {
           "status": "skip",
           "summary": ""
         },
-        "rebasebot": {
-          "status": "skip",
-          "summary": ""
-        },
-        "go_version": {
+        "upstream_sync": {
           "status": "skip",
           "summary": ""
         },
@@ -2674,11 +2670,15 @@
           "status": "skip",
           "summary": ""
         },
-        "ci_config": {
+        "config": {
           "status": "skip",
           "summary": ""
         },
-        "upstream_sync": {
+        "rebasebot": {
+          "status": "skip",
+          "summary": ""
+        },
+        "go_version": {
           "status": "skip",
           "summary": ""
         },
@@ -2708,25 +2708,21 @@
           "status": "ok",
           "summary": ""
         },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/2"
         },
-        "gomod_drift": {
+        "art_config": {
           "status": "na",
           "summary": ""
         },
-        "productized": {
-          "status": "na",
+        "config": {
+          "status": "ok",
           "summary": ""
         },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
         },
         "ci_config": {
           "status": "ok",
@@ -2736,20 +2732,24 @@
           "status": "na",
           "summary": ""
         },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
         "konflux": {
           "status": "na",
           "summary": ""
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "20m ago"
+          "summary": "14m ago"
         },
-        "art_config": {
+        "productized": {
           "status": "na",
           "summary": ""
         },
-        "config": {
-          "status": "ok",
+        "open_pr": {
+          "status": "na",
           "summary": ""
         }
       },
@@ -3606,35 +3606,7 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-aws @ main",
       "checks": {
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
         "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "20m ago"
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "ci_config": {
           "status": "ok",
           "summary": ""
         },
@@ -3646,13 +3618,41 @@
           "status": "fail",
           "summary": "0/1"
         },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "productized": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
         "gomod_drift": {
           "status": "ok",
           "summary": ""
         },
-        "konflux": {
+        "upstream_image": {
           "status": "ok",
-          "summary": "rhel_9_golang_1.25"
+          "summary": "14m ago"
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
         }
       },
       "dep_syncs": [
@@ -4686,17 +4686,17 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "config": {
+        "go_version": {
           "status": "ok",
+          "summary": "1.25.0"
+        },
+        "upstream_sync": {
+          "status": "na",
           "summary": ""
         },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
         },
         "gomod_drift": {
           "status": "na",
@@ -4705,6 +4705,14 @@
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
         },
         "art_config": {
           "status": "na",
@@ -4718,21 +4726,13 @@
           "status": "ok",
           "summary": "#68"
         },
-        "go_version": {
+        "config": {
           "status": "ok",
-          "summary": "1.25.0"
-        },
-        "upstream_sync": {
-          "status": "na",
           "summary": ""
         },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
-        "upstream_image": {
+        "rebasebot": {
           "status": "ok",
-          "summary": "20m ago"
+          "summary": ""
         }
       },
       "dep_syncs": [
@@ -5766,26 +5766,6 @@
           "status": "ok",
           "summary": ""
         },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "fail",
-          "summary": "diverged"
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
         "rebasebot": {
           "status": "ok",
           "summary": ""
@@ -5794,19 +5774,39 @@
           "status": "ok",
           "summary": "1.26.0"
         },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "fail",
+          "summary": "diverged"
         },
         "gomod_drift": {
           "status": "ok",
           "summary": ""
         },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
         "upstream_image": {
           "status": "ok",
-          "summary": "20m ago"
+          "summary": "14m ago"
         },
-        "open_pr": {
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
           "status": "na",
           "summary": ""
         }
@@ -6842,45 +6842,25 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-gcp @ main",
       "checks": {
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "fail",
-          "summary": "diverged"
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
         "upstream_image": {
           "status": "ok",
-          "summary": "20m ago"
+          "summary": "14m ago"
         },
         "productized": {
           "status": "na",
           "summary": ""
         },
-        "open_pr": {
+        "config": {
           "status": "ok",
-          "summary": "#163"
+          "summary": ""
         },
         "go_version": {
           "status": "ok",
           "summary": "1.26.0"
         },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
         },
         "konflux": {
           "status": "ok",
@@ -6888,6 +6868,26 @@
         },
         "art_config": {
           "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "ok",
+          "summary": "#163"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "fail",
+          "summary": "diverged"
+        },
+        "gomod_drift": {
+          "status": "ok",
           "summary": ""
         }
       },
@@ -7922,22 +7922,6 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/2"
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "20m ago"
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
         "config": {
           "status": "ok",
           "summary": ""
@@ -7958,15 +7942,31 @@
           "status": "na",
           "summary": ""
         },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
-        "productized": {
+        "art_config": {
           "status": "na",
           "summary": ""
         },
         "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/2"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
+        },
+        "productized": {
           "status": "na",
           "summary": ""
         }
@@ -7977,7 +7977,7 @@
           "org": "openshift",
           "repo": "oadp-operator",
           "have": "110aad0fbb45",
-          "head": "5024f1022c51a299dd05f9d8a9c3e1fa0f52358e",
+          "head": "93591068cb6ea79afca411b2f9b03effd91519ee",
           "in_sync": false,
           "commits": [
             {
@@ -8569,6 +8569,22 @@
               "message": "Merge pull request #2416 from SharoonAustin06/issue-2403"
             },
             {
+              "sha": "bba350655120d9e78539b6b538d10da403226c71",
+              "message": "handle CACertRef in DPT"
+            },
+            {
+              "sha": "0b556ce6ffade3d23326cd83322e4e28c0802852",
+              "message": "Update internal/controller/dataprotectiontest_controller_test.go"
+            },
+            {
+              "sha": "5855d4344ca783c70ff5c5491bbf16ef4afc8539",
+              "message": "Update internal/controller/dataprotectiontest_controller.go"
+            },
+            {
+              "sha": "071190da466f67a5983921eb0a53795f33810286",
+              "message": "load ca cert pool can error, so return after non-errorable operations"
+            },
+            {
               "sha": "7609fe9b75a5c62b71bb4beb4c1643e1e13074ce",
               "message": "Merge pull request #2234 from kaovilai/OADP-7541-fix-nodeagent-matchexpressions-ordering"
             },
@@ -8697,12 +8713,64 @@
               "message": "Merge pull request #2469 from shubham-pampattiwar/test/pin-migtools-minio-image"
             },
             {
+              "sha": "af3c940c20a3225c82f6a94fd118844b18631839",
+              "message": "only send ca data through parameters, update error message"
+            },
+            {
+              "sha": "3c08e01b7098e184799dde1bcf08c3db11077d32",
+              "message": "Merge branch 'oadp-dev' of github.com:openshift/oadp-operator into cacertref_dpt"
+            },
+            {
+              "sha": "70acf8ba0d14742f9bba136421bd8ad6f0ff9ab9",
+              "message": "remove inline test, add end-to-end DPT with cacert test"
+            },
+            {
+              "sha": "12fe273a97cfe9be9ba10cad4e8b89f11b3d8e3e",
+              "message": "fix duplicate corev1 import"
+            },
+            {
+              "sha": "d8ac6ec3d0bd85ef4b6ac95b1f823eb08e0a398d",
+              "message": "bring in functions verifyBSLWithCACertBackup for BSL setup, exclude Backup operations"
+            },
+            {
+              "sha": "87e5b6dc51d5e36cab437d23468e7ccb48a33f01",
+              "message": "existing suite does not set BackupLocation name field resulting in -1 appended, existing backup tests uses default BSL as short-cut"
+            },
+            {
+              "sha": "f3b8798643f74d2a3804e3d0b04173a246354221",
+              "message": "fix: remove unused bsl parameter from TLS config builders (golangci-lint unparam)"
+            },
+            {
+              "sha": "0a205af9b297379980660b40871e68c5a55b9c29",
+              "message": "fix: correct CACertRef spelling in buildTLSConfig comment"
+            },
+            {
               "sha": "2d11b88559dde573bbc5933c12fe5d44df230a21",
               "message": "fix(e2e): retry checksum when sha256sum returns empty output"
             },
             {
+              "sha": "3fb59dee73cd16d9a231f3d3bd802cda4207961c",
+              "message": "Merge pull request #1 from kaovilai/unparam-fix-2443"
+            },
+            {
+              "sha": "6c501fae8fd1a50410010386ebf80992b878a9e1",
+              "message": "fix: address shubham's review feedback on DPT CACertRef handling"
+            },
+            {
+              "sha": "4cb820cf1add563f99f0be96f2164d172c8975a5",
+              "message": "Merge pull request #2 from kaovilai/shubham-feedback-2443"
+            },
+            {
+              "sha": "ae6a0728be98a7dfe74bf8f52d62127a06729598",
+              "message": "use test context"
+            },
+            {
               "sha": "5024f1022c51a299dd05f9d8a9c3e1fa0f52358e",
               "message": "Merge pull request #2475 from redhat-chai-bot/fix/checksum-empty-output-retry"
+            },
+            {
+              "sha": "93591068cb6ea79afca411b2f9b03effd91519ee",
+              "message": "Merge pull request #2443 from msfrucht/cacertref_dpt"
             }
           ]
         },
@@ -9736,23 +9804,7 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "20m ago"
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
+        "open_pr": {
           "status": "na",
           "summary": ""
         },
@@ -9764,15 +9816,23 @@
           "status": "ok",
           "summary": ""
         },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
         },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
         },
-        "open_pr": {
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
+        },
+        "art_config": {
           "status": "na",
           "summary": ""
         },
@@ -9782,6 +9842,14 @@
         },
         "rebasebot": {
           "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
+          "status": "na",
           "summary": ""
         }
       },
@@ -10812,11 +10880,11 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "config": {
-          "status": "ok",
+        "open_pr": {
+          "status": "na",
           "summary": ""
         },
-        "rebasebot": {
+        "config": {
           "status": "ok",
           "summary": ""
         },
@@ -10824,20 +10892,28 @@
           "status": "ok",
           "summary": "1.26.0"
         },
-        "ci_config": {
-          "status": "ok",
+        "upstream_sync": {
+          "status": "na",
           "summary": ""
         },
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
         },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "20m ago"
-        },
-        "upstream_sync": {
+        "art_config": {
           "status": "na",
+          "summary": ""
+        },
+        "productized": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
           "summary": ""
         },
         "gomod_drift": {
@@ -10848,17 +10924,9 @@
           "status": "ok",
           "summary": "rhel_9_golang_1.26"
         },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
         }
       },
       "dep_syncs": [
@@ -11900,15 +11968,7 @@
           "status": "na",
           "summary": ""
         },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
         "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
@@ -11916,8 +11976,8 @@
           "status": "ok",
           "summary": "1.26.0"
         },
-        "upstream_sync": {
-          "status": "na",
+        "ci_config": {
+          "status": "ok",
           "summary": ""
         },
         "gomod_drift": {
@@ -11926,14 +11986,22 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "20m ago"
+          "summary": "14m ago"
         },
         "productized": {
           "status": "na",
           "summary": ""
         },
-        "ci_config": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
           "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
           "summary": ""
         }
       },
@@ -12964,6 +13032,34 @@
       "skip": false,
       "upstream": "",
       "checks": {
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "warn",
+          "summary": "0/6"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
         "productized": {
           "status": "na",
           "summary": ""
@@ -12976,39 +13072,11 @@
           "status": "ok",
           "summary": ""
         },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "20m ago"
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
         "go_version": {
           "status": "ok",
           "summary": "1.25.0 (tc 1.25.8)"
         },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
         "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "warn",
-          "summary": "0/6"
-        },
-        "art_config": {
           "status": "na",
           "summary": ""
         }
@@ -13169,77 +13237,9 @@
           "org": "openshift",
           "repo": "oadp-operator",
           "have": "d68148204751",
-          "head": "5024f1022c51a299dd05f9d8a9c3e1fa0f52358e",
+          "head": "93591068cb6ea79afca411b2f9b03effd91519ee",
           "in_sync": false,
           "commits": [
-            {
-              "sha": "53599cb1b5297969cfd33baae2d0406596f6bc28",
-              "message": "fix(gcp): use errors.Is/As for GCS bucket not-found checks"
-            },
-            {
-              "sha": "98be8e3d7585446f6a125e58f9ae7f895abf1508",
-              "message": "OADP-7541: fix non-deterministic matchExpressions ordering causing node-agent restarts"
-            },
-            {
-              "sha": "987bfb26f75c57475cef8b3e6f151d588fd6cabd",
-              "message": "fix(test): update matchExpressions order in velero loadAffinity test"
-            },
-            {
-              "sha": "7c88cb671a0cc759168064adb0cbd6523f34e3f6",
-              "message": "fix(test): correct gci lint formatting in test files"
-            },
-            {
-              "sha": "516587c311ac516e46b109034caa92b72c2ab9fb",
-              "message": "fix: also sort MatchFields in SortNodeSelectorTerms"
-            },
-            {
-              "sha": "7c8f775f346704a8d53a6928dd53f597bd6d510c",
-              "message": "Merge pull request #2229 from openshift-cherrypick-robot/cherry-pick-2228-to-oadp-dev"
-            },
-            {
-              "sha": "e5dc8246a07802faacf72861108d2791f6b08e1a",
-              "message": "Kubevirt datamover e2e tests"
-            },
-            {
-              "sha": "bae5384269d32d22f18283798bd49c3af2c3c3c0",
-              "message": "Merge pull request #2238 from weshayutin/kubevirt-datamover-e2e-oadp-dev"
-            },
-            {
-              "sha": "48ceb61f3dbea9dcfac226d8d48c9a14b26115de",
-              "message": "Update e2e and kubevirt-dm design to use custom volume policy"
-            },
-            {
-              "sha": "fdc96c299c100bd5d29b6217da56875a0a9b2494",
-              "message": "fix(design): correct kubevirt datamover restore workflow"
-            },
-            {
-              "sha": "88617f23032a83d348648979e274aac5825145ba",
-              "message": "docs: add references to kubevirt datamover restore workflow"
-            },
-            {
-              "sha": "8615b382b6c6eb8c0de747b32753ada5abae16f3",
-              "message": "docs: clarify validation source and wording in restore workflow"
-            },
-            {
-              "sha": "de993603cdb5c9b67c14a8a60edd5d3272cbf1fd",
-              "message": "docs: clarify volume policy configuration for kubevirt datamover"
-            },
-            {
-              "sha": "ba7153413ac3f2a264cb4e8febfcbb7e198c9ebc",
-              "message": "docs: use custom action with datamover param per PR #2254"
-            },
-            {
-              "sha": "4d450a0e8313dfcddf1b7b5701074c7d48675ba6",
-              "message": "Merge pull request #2255 from kaovilai/fix/kubevirt-datamover-restore-workflow"
-            },
-            {
-              "sha": "5d5dac843e2b5ecd51b75ef5a5f51e66b4b25a34",
-              "message": "Merge pull request #2233 from PrasadJoshi12/cloudstorage-fix"
-            },
-            {
-              "sha": "119e79bd3c358ffdd03032b354cc90e64ccbfbc8",
-              "message": "Merge pull request #2254 from sseago/custom-volume-policy"
-            },
             {
               "sha": "0be1422175d377edf7022b5aa314c7c91459d034",
               "message": "remove fedora vm test as it's debugged"
@@ -14037,6 +14037,22 @@
               "message": "Merge pull request #2416 from SharoonAustin06/issue-2403"
             },
             {
+              "sha": "bba350655120d9e78539b6b538d10da403226c71",
+              "message": "handle CACertRef in DPT"
+            },
+            {
+              "sha": "0b556ce6ffade3d23326cd83322e4e28c0802852",
+              "message": "Update internal/controller/dataprotectiontest_controller_test.go"
+            },
+            {
+              "sha": "5855d4344ca783c70ff5c5491bbf16ef4afc8539",
+              "message": "Update internal/controller/dataprotectiontest_controller.go"
+            },
+            {
+              "sha": "071190da466f67a5983921eb0a53795f33810286",
+              "message": "load ca cert pool can error, so return after non-errorable operations"
+            },
+            {
               "sha": "7609fe9b75a5c62b71bb4beb4c1643e1e13074ce",
               "message": "Merge pull request #2234 from kaovilai/OADP-7541-fix-nodeagent-matchexpressions-ordering"
             },
@@ -14165,12 +14181,64 @@
               "message": "Merge pull request #2469 from shubham-pampattiwar/test/pin-migtools-minio-image"
             },
             {
+              "sha": "af3c940c20a3225c82f6a94fd118844b18631839",
+              "message": "only send ca data through parameters, update error message"
+            },
+            {
+              "sha": "3c08e01b7098e184799dde1bcf08c3db11077d32",
+              "message": "Merge branch 'oadp-dev' of github.com:openshift/oadp-operator into cacertref_dpt"
+            },
+            {
+              "sha": "70acf8ba0d14742f9bba136421bd8ad6f0ff9ab9",
+              "message": "remove inline test, add end-to-end DPT with cacert test"
+            },
+            {
+              "sha": "12fe273a97cfe9be9ba10cad4e8b89f11b3d8e3e",
+              "message": "fix duplicate corev1 import"
+            },
+            {
+              "sha": "d8ac6ec3d0bd85ef4b6ac95b1f823eb08e0a398d",
+              "message": "bring in functions verifyBSLWithCACertBackup for BSL setup, exclude Backup operations"
+            },
+            {
+              "sha": "87e5b6dc51d5e36cab437d23468e7ccb48a33f01",
+              "message": "existing suite does not set BackupLocation name field resulting in -1 appended, existing backup tests uses default BSL as short-cut"
+            },
+            {
+              "sha": "f3b8798643f74d2a3804e3d0b04173a246354221",
+              "message": "fix: remove unused bsl parameter from TLS config builders (golangci-lint unparam)"
+            },
+            {
+              "sha": "0a205af9b297379980660b40871e68c5a55b9c29",
+              "message": "fix: correct CACertRef spelling in buildTLSConfig comment"
+            },
+            {
               "sha": "2d11b88559dde573bbc5933c12fe5d44df230a21",
               "message": "fix(e2e): retry checksum when sha256sum returns empty output"
             },
             {
+              "sha": "3fb59dee73cd16d9a231f3d3bd802cda4207961c",
+              "message": "Merge pull request #1 from kaovilai/unparam-fix-2443"
+            },
+            {
+              "sha": "6c501fae8fd1a50410010386ebf80992b878a9e1",
+              "message": "fix: address shubham's review feedback on DPT CACertRef handling"
+            },
+            {
+              "sha": "4cb820cf1add563f99f0be96f2164d172c8975a5",
+              "message": "Merge pull request #2 from kaovilai/shubham-feedback-2443"
+            },
+            {
+              "sha": "ae6a0728be98a7dfe74bf8f52d62127a06729598",
+              "message": "use test context"
+            },
+            {
               "sha": "5024f1022c51a299dd05f9d8a9c3e1fa0f52358e",
               "message": "Merge pull request #2475 from redhat-chai-bot/fix/checksum-empty-output-retry"
+            },
+            {
+              "sha": "93591068cb6ea79afca411b2f9b03effd91519ee",
+              "message": "Merge pull request #2443 from msfrucht/cacertref_dpt"
             }
           ]
         },
@@ -16226,27 +16294,7 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/4"
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "20m ago"
-        },
-        "art_config": {
+        "productized": {
           "status": "na",
           "summary": ""
         },
@@ -16254,9 +16302,9 @@
           "status": "ok",
           "summary": "#234"
         },
-        "rebasebot": {
+        "go_version": {
           "status": "ok",
-          "summary": ""
+          "summary": "1.26.0"
         },
         "ci_config": {
           "status": "ok",
@@ -16270,9 +16318,29 @@
           "status": "na",
           "summary": ""
         },
-        "productized": {
+        "art_config": {
           "status": "na",
           "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/4"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
         }
       },
       "dep_syncs": [
@@ -16299,7 +16367,7 @@
           "org": "openshift",
           "repo": "oadp-operator",
           "have": "110aad0fbb45",
-          "head": "5024f1022c51a299dd05f9d8a9c3e1fa0f52358e",
+          "head": "93591068cb6ea79afca411b2f9b03effd91519ee",
           "in_sync": false,
           "commits": [
             {
@@ -16891,6 +16959,22 @@
               "message": "Merge pull request #2416 from SharoonAustin06/issue-2403"
             },
             {
+              "sha": "bba350655120d9e78539b6b538d10da403226c71",
+              "message": "handle CACertRef in DPT"
+            },
+            {
+              "sha": "0b556ce6ffade3d23326cd83322e4e28c0802852",
+              "message": "Update internal/controller/dataprotectiontest_controller_test.go"
+            },
+            {
+              "sha": "5855d4344ca783c70ff5c5491bbf16ef4afc8539",
+              "message": "Update internal/controller/dataprotectiontest_controller.go"
+            },
+            {
+              "sha": "071190da466f67a5983921eb0a53795f33810286",
+              "message": "load ca cert pool can error, so return after non-errorable operations"
+            },
+            {
               "sha": "7609fe9b75a5c62b71bb4beb4c1643e1e13074ce",
               "message": "Merge pull request #2234 from kaovilai/OADP-7541-fix-nodeagent-matchexpressions-ordering"
             },
@@ -17019,12 +17103,64 @@
               "message": "Merge pull request #2469 from shubham-pampattiwar/test/pin-migtools-minio-image"
             },
             {
+              "sha": "af3c940c20a3225c82f6a94fd118844b18631839",
+              "message": "only send ca data through parameters, update error message"
+            },
+            {
+              "sha": "3c08e01b7098e184799dde1bcf08c3db11077d32",
+              "message": "Merge branch 'oadp-dev' of github.com:openshift/oadp-operator into cacertref_dpt"
+            },
+            {
+              "sha": "70acf8ba0d14742f9bba136421bd8ad6f0ff9ab9",
+              "message": "remove inline test, add end-to-end DPT with cacert test"
+            },
+            {
+              "sha": "12fe273a97cfe9be9ba10cad4e8b89f11b3d8e3e",
+              "message": "fix duplicate corev1 import"
+            },
+            {
+              "sha": "d8ac6ec3d0bd85ef4b6ac95b1f823eb08e0a398d",
+              "message": "bring in functions verifyBSLWithCACertBackup for BSL setup, exclude Backup operations"
+            },
+            {
+              "sha": "87e5b6dc51d5e36cab437d23468e7ccb48a33f01",
+              "message": "existing suite does not set BackupLocation name field resulting in -1 appended, existing backup tests uses default BSL as short-cut"
+            },
+            {
+              "sha": "f3b8798643f74d2a3804e3d0b04173a246354221",
+              "message": "fix: remove unused bsl parameter from TLS config builders (golangci-lint unparam)"
+            },
+            {
+              "sha": "0a205af9b297379980660b40871e68c5a55b9c29",
+              "message": "fix: correct CACertRef spelling in buildTLSConfig comment"
+            },
+            {
               "sha": "2d11b88559dde573bbc5933c12fe5d44df230a21",
               "message": "fix(e2e): retry checksum when sha256sum returns empty output"
             },
             {
+              "sha": "3fb59dee73cd16d9a231f3d3bd802cda4207961c",
+              "message": "Merge pull request #1 from kaovilai/unparam-fix-2443"
+            },
+            {
+              "sha": "6c501fae8fd1a50410010386ebf80992b878a9e1",
+              "message": "fix: address shubham's review feedback on DPT CACertRef handling"
+            },
+            {
+              "sha": "4cb820cf1add563f99f0be96f2164d172c8975a5",
+              "message": "Merge pull request #2 from kaovilai/shubham-feedback-2443"
+            },
+            {
+              "sha": "ae6a0728be98a7dfe74bf8f52d62127a06729598",
+              "message": "use test context"
+            },
+            {
               "sha": "5024f1022c51a299dd05f9d8a9c3e1fa0f52358e",
               "message": "Merge pull request #2475 from redhat-chai-bot/fix/checksum-empty-output-retry"
+            },
+            {
+              "sha": "93591068cb6ea79afca411b2f9b03effd91519ee",
+              "message": "Merge pull request #2443 from msfrucht/cacertref_dpt"
             }
           ]
         },
@@ -18848,33 +18984,13 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "20m ago"
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
         "config": {
           "status": "ok",
           "summary": ""
         },
-        "rebasebot": {
+        "go_version": {
           "status": "ok",
-          "summary": ""
+          "summary": "1.26.0"
         },
         "ci_config": {
           "status": "ok",
@@ -18893,6 +19009,26 @@
           "summary": ""
         },
         "konflux": {
+          "status": "na",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
+        },
+        "productized": {
           "status": "na",
           "summary": ""
         }
