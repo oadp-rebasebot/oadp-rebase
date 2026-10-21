@@ -7,10 +7,6 @@
       "skip": false,
       "upstream": "project-velero/kopia @ v0.19.0-velero.1",
       "checks": {
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
         "upstream_sync": {
           "status": "ok",
           "summary": ""
@@ -19,29 +15,9 @@
           "status": "na",
           "summary": ""
         },
-        "upstream_image": {
-          "status": "na",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
         "productized": {
           "status": "na",
           "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
         },
         "ci_config": {
           "status": "na",
@@ -54,6 +30,30 @@
         "gomod_drift": {
           "status": "ok",
           "summary": ""
+        },
+        "upstream_image": {
+          "status": "na",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
         }
       },
       "cves": {
@@ -92,35 +92,7 @@
       "skip": true,
       "upstream": "",
       "checks": {
-        "open_pr": {
-          "status": "skip",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "skip",
-          "summary": ""
-        },
         "go_version": {
-          "status": "skip",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "skip",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "skip",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "skip",
-          "summary": ""
-        },
-        "productized": {
-          "status": "skip",
-          "summary": ""
-        },
-        "config": {
           "status": "skip",
           "summary": ""
         },
@@ -128,7 +100,7 @@
           "status": "skip",
           "summary": ""
         },
-        "gomod_drift": {
+        "dep_sync": {
           "status": "skip",
           "summary": ""
         },
@@ -137,6 +109,34 @@
           "summary": ""
         },
         "upstream_image": {
+          "status": "skip",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "skip",
+          "summary": ""
+        },
+        "config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "skip",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "skip",
+          "summary": ""
+        },
+        "productized": {
           "status": "skip",
           "summary": ""
         }
@@ -177,10 +177,6 @@
       "skip": false,
       "upstream": "velero-io/velero @ v1.16.2",
       "checks": {
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
         "rebasebot": {
           "status": "ok",
           "summary": ""
@@ -201,9 +197,25 @@
           "status": "ok",
           "summary": ""
         },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1m ago"
         },
         "art_config": {
           "status": "ok",
@@ -212,18 +224,6 @@
         "config": {
           "status": "ok",
           "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "15m ago"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -280,17 +280,9 @@
       "skip": false,
       "upstream": "kubevirt/kubevirt-velero-plugin @ release-v0.8",
       "checks": {
-        "gomod_drift": {
+        "konflux": {
           "status": "ok",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
+          "summary": "rhel_9_golang_1.24"
         },
         "open_pr": {
           "status": "na",
@@ -300,21 +292,33 @@
           "status": "ok",
           "summary": ""
         },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
         "upstream_sync": {
           "status": "fail",
           "summary": "diverged"
         },
-        "konflux": {
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "gomod_drift": {
           "status": "ok",
-          "summary": "rhel_9_golang_1.24"
+          "summary": ""
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "15m ago"
+          "summary": "1m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
         },
         "go_version": {
           "status": "ok",
@@ -323,10 +327,6 @@
         "ci_config": {
           "status": "ok",
           "summary": ""
-        },
-        "dep_sync": {
-          "status": "ok",
-          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -335,14 +335,40 @@
           "org": "openshift",
           "repo": "velero",
           "have": "3fd503971caa",
-          "head": "3fd503971caa7f879cc0ab1ba09c232e4bfc1393",
-          "in_sync": true
+          "head": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            }
+          ]
         }
       ],
       "issues": [
         {
           "severity": "error",
           "message": "upstream https://github.com/kubevirt/kubevirt-velero-plugin:release-v0.8 has commits not in migtools/kubevirt-velero-plugin:oadp-1.5"
+        },
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
         }
       ],
       "cves": {
@@ -381,41 +407,33 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0 (tc 1.25.8)"
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
         },
-        "ci_config": {
-          "status": "ok",
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "gomod_drift": {
+          "status": "na",
           "summary": ""
         },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.24"
         },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
         "upstream_image": {
           "status": "ok",
-          "summary": "15m ago"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
+          "summary": "1m ago"
         },
         "art_config": {
           "status": "ok",
@@ -425,9 +443,17 @@
           "status": "ok",
           "summary": "1/1"
         },
-        "config": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
           "status": "ok",
           "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0 (tc 1.25.8)"
         }
       },
       "dep_syncs": [
@@ -436,8 +462,36 @@
           "org": "openshift",
           "repo": "velero",
           "have": "3fd503971caa",
-          "head": "3fd503971caa7f879cc0ab1ba09c232e4bfc1393",
-          "in_sync": true
+          "head": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
         }
       ],
       "cves": {
@@ -469,26 +523,6 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
         "config": {
           "status": "ok",
           "summary": ""
@@ -501,17 +535,37 @@
           "status": "ok",
           "summary": ""
         },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "15m ago"
+          "summary": "1m ago"
         },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
         },
         "productized": {
           "status": "ok",
@@ -524,8 +578,36 @@
           "org": "openshift",
           "repo": "velero",
           "have": "3fd503971caa",
-          "head": "3fd503971caa7f879cc0ab1ba09c232e4bfc1393",
-          "in_sync": true
+          "head": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
         }
       ],
       "cves": {
@@ -564,11 +646,23 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-aws @ v1.12.2",
       "checks": {
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
         "open_pr": {
           "status": "na",
           "summary": ""
         },
-        "rebasebot": {
+        "config": {
           "status": "ok",
           "summary": ""
         },
@@ -576,23 +670,15 @@
           "status": "ok",
           "summary": ""
         },
-        "upstream_sync": {
+        "konflux": {
           "status": "ok",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "15m ago"
+          "summary": "rhel_9_golang_1.25"
         },
         "productized": {
           "status": "ok",
           "summary": "1/1"
         },
-        "config": {
+        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
@@ -600,17 +686,13 @@
           "status": "ok",
           "summary": "1.25.0"
         },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
         "dep_sync": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
+          "status": "fail",
+          "summary": "0/1"
         }
       },
       "dep_syncs": [
@@ -619,8 +701,36 @@
           "org": "openshift",
           "repo": "velero",
           "have": "3fd503971caa",
-          "head": "3fd503971caa7f879cc0ab1ba09c232e4bfc1393",
-          "in_sync": true
+          "head": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
         }
       ],
       "cves": {
@@ -659,17 +769,9 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
         },
         "config": {
           "status": "ok",
@@ -679,13 +781,25 @@
           "status": "ok",
           "summary": "1.25.0"
         },
-        "upstream_sync": {
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
           "status": "na",
           "summary": ""
         },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
         "upstream_image": {
           "status": "ok",
-          "summary": "15m ago"
+          "summary": "1m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         },
         "open_pr": {
           "status": "na",
@@ -695,17 +809,13 @@
           "status": "ok",
           "summary": ""
         },
-        "ci_config": {
-          "status": "ok",
+        "upstream_sync": {
+          "status": "na",
           "summary": ""
         },
         "dep_sync": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
+          "status": "fail",
+          "summary": "0/1"
         }
       },
       "dep_syncs": [
@@ -714,8 +824,36 @@
           "org": "openshift",
           "repo": "velero",
           "have": "3fd503971caa",
-          "head": "3fd503971caa7f879cc0ab1ba09c232e4bfc1393",
-          "in_sync": true
+          "head": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
         }
       ],
       "cves": {
@@ -754,22 +892,6 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-microsoft-azure @ v1.12.2",
       "checks": {
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
         "go_version": {
           "status": "ok",
           "summary": "1.25.0"
@@ -779,8 +901,32 @@
           "summary": ""
         },
         "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
           "status": "ok",
           "summary": "1/1"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
         },
         "gomod_drift": {
           "status": "ok",
@@ -788,18 +934,10 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "15m ago"
+          "summary": "1m ago"
         },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "ok",
+        "open_pr": {
+          "status": "na",
           "summary": ""
         }
       },
@@ -809,8 +947,36 @@
           "org": "openshift",
           "repo": "velero",
           "have": "3fd503971caa",
-          "head": "3fd503971caa7f879cc0ab1ba09c232e4bfc1393",
-          "in_sync": true
+          "head": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
         }
       ],
       "cves": {
@@ -849,30 +1015,6 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-gcp @ v1.12.2",
       "checks": {
-        "upstream_image": {
-          "status": "ok",
-          "summary": "15m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
         "config": {
           "status": "ok",
           "summary": ""
@@ -885,9 +1027,13 @@
           "status": "ok",
           "summary": "1.25.0"
         },
-        "upstream_sync": {
+        "ci_config": {
           "status": "ok",
           "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
         },
         "gomod_drift": {
           "status": "ok",
@@ -896,6 +1042,26 @@
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1m ago"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -904,8 +1070,36 @@
           "org": "openshift",
           "repo": "velero",
           "have": "3fd503971caa",
-          "head": "3fd503971caa7f879cc0ab1ba09c232e4bfc1393",
-          "in_sync": true
+          "head": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
         }
       ],
       "cves": {
@@ -944,13 +1138,37 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "dep_sync": {
-          "status": "fail",
-          "summary": "1/2"
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
         },
         "gomod_drift": {
           "status": "na",
           "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1m ago"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/2"
         },
         "konflux": {
           "status": "ok",
@@ -964,33 +1182,9 @@
           "status": "ok",
           "summary": "1/1"
         },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "15m ago"
-        },
         "open_pr": {
           "status": "na",
           "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
         }
       },
       "dep_syncs": [
@@ -1017,14 +1211,36 @@
           "org": "openshift",
           "repo": "velero",
           "have": "3fd503971caa",
-          "head": "3fd503971caa7f879cc0ab1ba09c232e4bfc1393",
-          "in_sync": true
+          "head": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            }
+          ]
         }
       ],
       "issues": [
         {
           "severity": "error",
-          "message": "1 internal dep(s) out of sync"
+          "message": "2 internal dep(s) out of sync"
         }
       ],
       "cves": {
@@ -1056,9 +1272,9 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "rebasebot": {
+        "go_version": {
           "status": "ok",
-          "summary": ""
+          "summary": "1.25.7"
         },
         "ci_config": {
           "status": "ok",
@@ -1067,26 +1283,6 @@
         "upstream_sync": {
           "status": "na",
           "summary": ""
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "1/2"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.7"
         },
         "gomod_drift": {
           "status": "na",
@@ -1098,11 +1294,31 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "15m ago"
+          "summary": "1m ago"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/2"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
         },
         "productized": {
           "status": "ok",
           "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
         }
       },
       "dep_syncs": [
@@ -1129,14 +1345,36 @@
           "org": "openshift",
           "repo": "velero",
           "have": "3fd503971caa",
-          "head": "3fd503971caa7f879cc0ab1ba09c232e4bfc1393",
-          "in_sync": true
+          "head": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            }
+          ]
         }
       ],
       "issues": [
         {
           "severity": "error",
-          "message": "1 internal dep(s) out of sync"
+          "message": "2 internal dep(s) out of sync"
         }
       ],
       "cves": {
@@ -1193,9 +1431,33 @@
           "status": "ok",
           "summary": "1/1"
         },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
         "go_version": {
           "status": "ok",
           "summary": "1.25.0"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
         },
         "ci_config": {
           "status": "ok",
@@ -1207,35 +1469,11 @@
         },
         "dep_sync": {
           "status": "fail",
-          "summary": "5/6"
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
+          "summary": "2/6"
         },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "15m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
         }
       },
       "dep_syncs": [
@@ -1244,8 +1482,22 @@
           "org": "migtools",
           "repo": "oadp-non-admin",
           "have": "21d8f9bf01a3",
-          "head": "21d8f9bf01a36af901e4e5052cea1424af213115",
-          "in_sync": true
+          "head": "25707a3a6be3a1b86f3818a539b3dd6c5127fc00",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "2ff45c33618ffb7bcdeecb898fa2dfc4b2027299",
+              "message": "ci: build golangci-lint with repo Go toolchain via make lint"
+            },
+            {
+              "sha": "ba1dcde80f39195df1193f9db5de2d71422b04fe",
+              "message": "Fix license header in nonadminbackupstoragelocation controller test"
+            },
+            {
+              "sha": "25707a3a6be3a1b86f3818a539b3dd6c5127fc00",
+              "message": "Merge pull request #396 from kaovilai/ci/fix-golangci-lint-oadp-1.5"
+            }
+          ]
         },
         {
           "module": "github.com/openshift/oadp-operator",
@@ -1270,8 +1522,30 @@
           "org": "openshift",
           "repo": "velero",
           "have": "3fd503971caa",
-          "head": "3fd503971caa7f879cc0ab1ba09c232e4bfc1393",
-          "in_sync": true
+          "head": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            }
+          ]
         },
         {
           "module": "https://github.com/openshift/restic.git",
@@ -1294,14 +1568,36 @@
           "org": "openshift",
           "repo": "velero",
           "have": "3fd503971caa",
-          "head": "3fd503971caa7f879cc0ab1ba09c232e4bfc1393",
-          "in_sync": true
+          "head": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            }
+          ]
         }
       ],
       "issues": [
         {
           "severity": "error",
-          "message": "1 internal dep(s) out of sync"
+          "message": "4 internal dep(s) out of sync"
         }
       ],
       "cves": {
@@ -1333,18 +1629,6 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "15m ago"
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
         "go_version": {
           "status": "ok",
           "summary": "1.25.0"
@@ -1359,19 +1643,15 @@
         },
         "dep_sync": {
           "status": "fail",
-          "summary": "3/4"
+          "summary": "1/4"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
         },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
         },
         "open_pr": {
           "status": "na",
@@ -1380,6 +1660,22 @@
         "config": {
           "status": "ok",
           "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -1388,8 +1684,22 @@
           "org": "migtools",
           "repo": "oadp-non-admin",
           "have": "21d8f9bf01a3",
-          "head": "21d8f9bf01a36af901e4e5052cea1424af213115",
-          "in_sync": true
+          "head": "25707a3a6be3a1b86f3818a539b3dd6c5127fc00",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "2ff45c33618ffb7bcdeecb898fa2dfc4b2027299",
+              "message": "ci: build golangci-lint with repo Go toolchain via make lint"
+            },
+            {
+              "sha": "ba1dcde80f39195df1193f9db5de2d71422b04fe",
+              "message": "Fix license header in nonadminbackupstoragelocation controller test"
+            },
+            {
+              "sha": "25707a3a6be3a1b86f3818a539b3dd6c5127fc00",
+              "message": "Merge pull request #396 from kaovilai/ci/fix-golangci-lint-oadp-1.5"
+            }
+          ]
         },
         {
           "module": "github.com/openshift/oadp-operator",
@@ -1414,8 +1724,30 @@
           "org": "openshift",
           "repo": "velero",
           "have": "3fd503971caa",
-          "head": "3fd503971caa7f879cc0ab1ba09c232e4bfc1393",
-          "in_sync": true
+          "head": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            }
+          ]
         },
         {
           "module": "github.com/migtools/kopia",
@@ -1429,7 +1761,7 @@
       "issues": [
         {
           "severity": "error",
-          "message": "1 internal dep(s) out of sync"
+          "message": "3 internal dep(s) out of sync"
         }
       ],
       "cves": {
