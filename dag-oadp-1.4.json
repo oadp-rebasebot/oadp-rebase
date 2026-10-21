@@ -7,35 +7,15 @@
       "skip": false,
       "upstream": "project-velero/kopia @ v0.17.0-velero.1",
       "checks": {
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "ok",
-          "summary": ""
-        },
         "dep_sync": {
           "status": "ok",
           "summary": ""
         },
-        "konflux": {
-          "status": "na",
+        "gomod_drift": {
+          "status": "ok",
           "summary": ""
         },
-        "upstream_image": {
-          "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
+        "productized": {
           "status": "na",
           "summary": ""
         },
@@ -47,16 +27,49 @@
           "status": "ok",
           "summary": "1.26.0"
         },
+        "konflux": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "na",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
         "ci_config": {
           "status": "na",
           "summary": ""
         },
-        "gomod_drift": {
+        "upstream_sync": {
           "status": "ok",
           "summary": ""
         }
       },
-      "cves": null
+      "cves": {
+        "critical": 0,
+        "high": 1,
+        "fixable": 1,
+        "findings": [
+          {
+            "id": "CVE-2026-63209",
+            "severity": "HIGH",
+            "package": "github.com/klauspost/compress",
+            "installed_version": "v1.17.8",
+            "fixed_version": "1.18.7"
+          }
+        ]
+      }
     },
     {
       "repo": "openshift/restic",
@@ -65,38 +78,6 @@
       "skip": true,
       "upstream": "",
       "checks": {
-        "art_config": {
-          "status": "skip",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "skip",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "skip",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "skip",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "skip",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "skip",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "skip",
-          "summary": ""
-        },
-        "productized": {
-          "status": "skip",
-          "summary": ""
-        },
         "config": {
           "status": "skip",
           "summary": ""
@@ -109,12 +90,57 @@
           "status": "skip",
           "summary": ""
         },
+        "dep_sync": {
+          "status": "skip",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "skip",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "skip",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "skip",
+          "summary": ""
+        },
         "upstream_image": {
+          "status": "skip",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "productized": {
+          "status": "skip",
+          "summary": ""
+        },
+        "open_pr": {
           "status": "skip",
           "summary": ""
         }
       },
-      "cves": null
+      "cves": {
+        "critical": 0,
+        "high": 1,
+        "fixable": 1,
+        "findings": [
+          {
+            "id": "CVE-2026-63209",
+            "severity": "HIGH",
+            "package": "github.com/klauspost/compress",
+            "installed_version": "v1.15.14",
+            "fixed_version": "1.18.7"
+          }
+        ]
+      }
     },
     {
       "repo": "openshift/velero",
@@ -123,10 +149,6 @@
       "skip": false,
       "upstream": "velero-io/velero @ v1.14.0",
       "checks": {
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
         "dep_sync": {
           "status": "ok",
           "summary": "2/2"
@@ -143,19 +165,7 @@
           "status": "na",
           "summary": ""
         },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
+        "config": {
           "status": "ok",
           "summary": ""
         },
@@ -165,11 +175,27 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "18m ago"
+          "summary": "36m ago"
         },
         "art_config": {
           "status": "ok",
           "summary": "2 cfgs"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
         }
       },
       "dep_syncs": [
@@ -190,7 +216,20 @@
           "in_sync": true
         }
       ],
-      "cves": null
+      "cves": {
+        "critical": 0,
+        "high": 1,
+        "fixable": 1,
+        "findings": [
+          {
+            "id": "CVE-2026-63209",
+            "severity": "HIGH",
+            "package": "github.com/klauspost/compress",
+            "installed_version": "v1.17.8",
+            "fixed_version": "1.18.7"
+          }
+        ]
+      }
     },
     {
       "repo": "migtools/kubevirt-velero-plugin",
@@ -199,9 +238,9 @@
       "skip": false,
       "upstream": "kubevirt/kubevirt-velero-plugin @ v0.7.1",
       "checks": {
-        "konflux": {
+        "art_config": {
           "status": "ok",
-          "summary": "rhel_9_golang_1.24"
+          "summary": "konflux.Dockerfile"
         },
         "productized": {
           "status": "ok",
@@ -210,6 +249,26 @@
         "config": {
           "status": "ok",
           "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.24"
+        },
+        "open_pr": {
+          "status": "ok",
+          "summary": "#99"
         },
         "ci_config": {
           "status": "ok",
@@ -225,27 +284,7 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "18m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "open_pr": {
-          "status": "ok",
-          "summary": "#99"
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
+          "summary": "36m ago"
         }
       },
       "dep_syncs": [
@@ -366,21 +405,9 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
+        "rebasebot": {
           "status": "ok",
           "summary": ""
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
         },
         "art_config": {
           "status": "ok",
@@ -389,10 +416,6 @@
         "productized": {
           "status": "ok",
           "summary": "1/1"
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
         },
         "go_version": {
           "status": "ok",
@@ -410,9 +433,25 @@
           "status": "ok",
           "summary": "2/2"
         },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
         "upstream_image": {
           "status": "ok",
-          "summary": "18m ago"
+          "summary": "36m ago"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
         }
       },
       "dep_syncs": [
@@ -435,64 +474,15 @@
       ],
       "cves": {
         "critical": 0,
-        "high": 8,
-        "fixable": 8,
+        "high": 1,
+        "fixable": 1,
         "findings": [
           {
-            "id": "CVE-2026-56854",
+            "id": "CVE-2026-63209",
             "severity": "HIGH",
-            "package": "golang.org/x/crypto",
-            "installed_version": "v0.52.0",
-            "fixed_version": "0.55.0"
-          },
-          {
-            "id": "CVE-2026-46600",
-            "severity": "HIGH",
-            "package": "golang.org/x/net",
-            "installed_version": "v0.55.0",
-            "fixed_version": "0.56.0"
-          },
-          {
-            "id": "CVE-2026-78669",
-            "severity": "HIGH",
-            "package": "golang.org/x/net",
-            "installed_version": "v0.55.0",
-            "fixed_version": "0.60.0"
-          },
-          {
-            "id": "CVE-2026-56851",
-            "severity": "HIGH",
-            "package": "golang.org/x/text",
-            "installed_version": "v0.37.0",
-            "fixed_version": "0.41.0"
-          },
-          {
-            "id": "CVE-2026-56852",
-            "severity": "HIGH",
-            "package": "golang.org/x/text",
-            "installed_version": "v0.37.0",
-            "fixed_version": "0.39.0"
-          },
-          {
-            "id": "CVE-2026-84304",
-            "severity": "HIGH",
-            "package": "google.golang.org/grpc",
-            "installed_version": "v1.80.0",
-            "fixed_version": "1.83.1"
-          },
-          {
-            "id": "CVE-2026-84445",
-            "severity": "HIGH",
-            "package": "google.golang.org/grpc",
-            "installed_version": "v1.80.0",
-            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
-          },
-          {
-            "id": "GHSA-hrxh-6v49-42gf",
-            "severity": "HIGH",
-            "package": "google.golang.org/grpc",
-            "installed_version": "v1.80.0",
-            "fixed_version": "1.82.1"
+            "package": "github.com/klauspost/compress",
+            "installed_version": "v1.17.8",
+            "fixed_version": "1.18.7"
           }
         ]
       }
@@ -516,13 +506,29 @@
           "status": "ok",
           "summary": "1.25.0"
         },
-        "upstream_sync": {
-          "status": "ok",
-          "summary": ""
-        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "36m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "ok",
+          "summary": "#180"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
         },
         "gomod_drift": {
           "status": "ok",
@@ -532,25 +538,9 @@
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "18m ago"
-        },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "open_pr": {
-          "status": "ok",
-          "summary": "#180"
         }
       },
       "dep_syncs": [
@@ -671,22 +661,6 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "18m ago"
-        },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
@@ -694,6 +668,22 @@
         "open_pr": {
           "status": "ok",
           "summary": "#123"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         },
         "rebasebot": {
           "status": "ok",
@@ -703,8 +693,8 @@
           "status": "ok",
           "summary": "1.25.0"
         },
-        "ci_config": {
-          "status": "ok",
+        "upstream_sync": {
+          "status": "na",
           "summary": ""
         },
         "dep_sync": {
@@ -715,9 +705,9 @@
           "status": "na",
           "summary": ""
         },
-        "konflux": {
+        "upstream_image": {
           "status": "ok",
-          "summary": "rhel_9_golang_1.25"
+          "summary": "36m ago"
         }
       },
       "dep_syncs": [
@@ -838,29 +828,17 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-microsoft-azure @ v1.10.1",
       "checks": {
-        "upstream_image": {
-          "status": "ok",
-          "summary": "18m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
         "open_pr": {
           "status": "ok",
           "summary": "#181"
         },
-        "config": {
+        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
-        "go_version": {
+        "upstream_sync": {
           "status": "ok",
-          "summary": "1.25.0"
+          "summary": ""
         },
         "dep_sync": {
           "status": "fail",
@@ -870,21 +848,33 @@
           "status": "ok",
           "summary": ""
         },
-        "rebasebot": {
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "config": {
           "status": "ok",
           "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
         },
         "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
           "status": "ok",
           "summary": ""
         },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "36m ago"
         }
       },
       "dep_syncs": [
@@ -1012,6 +1002,18 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-gcp @ v1.10.1",
       "checks": {
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
@@ -1020,9 +1022,17 @@
           "status": "ok",
           "summary": ""
         },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
         "upstream_image": {
           "status": "ok",
-          "summary": "18m ago"
+          "summary": "36m ago"
         },
         "art_config": {
           "status": "ok",
@@ -1039,26 +1049,6 @@
         "config": {
           "status": "ok",
           "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
         }
       },
       "dep_syncs": [
@@ -1186,26 +1176,6 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
         "go_version": {
           "status": "ok",
           "summary": "1.25.0"
@@ -1218,6 +1188,22 @@
           "status": "fail",
           "summary": "0/1"
         },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "36m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
         "gomod_drift": {
           "status": "na",
           "summary": ""
@@ -1226,12 +1212,16 @@
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
-        "upstream_image": {
+        "productized": {
           "status": "ok",
-          "summary": "18m ago"
+          "summary": "1/1"
         },
-        "open_pr": {
-          "status": "na",
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
           "summary": ""
         }
       },
@@ -1291,8 +1281,8 @@
       ],
       "cves": {
         "critical": 1,
-        "high": 14,
-        "fixable": 13,
+        "high": 15,
+        "fixable": 14,
         "findings": [
           {
             "id": "CVE-2024-41110",
@@ -1321,6 +1311,13 @@
             "package": "github.com/go-jose/go-jose/v3",
             "installed_version": "v3.0.3",
             "fixed_version": "3.0.5"
+          },
+          {
+            "id": "CVE-2026-63209",
+            "severity": "HIGH",
+            "package": "github.com/klauspost/compress",
+            "installed_version": "v1.18.0",
+            "fixed_version": "1.18.7"
           },
           {
             "id": "CVE-2025-66506",
@@ -1409,21 +1406,41 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "ci_config": {
+        "go_version": {
           "status": "ok",
+          "summary": "1.25.0"
+        },
+        "upstream_sync": {
+          "status": "na",
           "summary": ""
         },
         "dep_sync": {
           "status": "fail",
           "summary": "0/6"
         },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "36m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "18m ago"
         },
         "productized": {
           "status": "ok",
@@ -1433,29 +1450,9 @@
           "status": "na",
           "summary": ""
         },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
         "rebasebot": {
           "status": "ok",
           "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
         }
       },
       "dep_syncs": [
@@ -1654,6 +1651,24 @@
           ]
         },
         {
+          "module": "https://github.com/openshift/restic",
+          "org": "openshift",
+          "repo": "restic",
+          "have": "739af56b30cb",
+          "head": "4c28891344efe989d8f9a47542e9e380eecc3dd6",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "07e7ea541c0d0866eed29b712b2fe9ca51355d6c",
+              "message": "Fix 7 CVEs"
+            },
+            {
+              "sha": "4c28891344efe989d8f9a47542e9e380eecc3dd6",
+              "message": "Merge pull request #72 from oadp-rebasebot/cve-fix/restic/oadp-1.4/20261013-1"
+            }
+          ]
+        },
+        {
           "module": "https://github.com/openshift/velero",
           "org": "openshift",
           "repo": "velero",
@@ -1716,24 +1731,6 @@
               "message": "Merge pull request #57 from oadp-rebasebot/cve-fix/kopia/oadp-1.4/20261013-1"
             }
           ]
-        },
-        {
-          "module": "https://github.com/openshift/restic",
-          "org": "openshift",
-          "repo": "restic",
-          "have": "739af56b30cb",
-          "head": "4c28891344efe989d8f9a47542e9e380eecc3dd6",
-          "in_sync": false,
-          "commits": [
-            {
-              "sha": "07e7ea541c0d0866eed29b712b2fe9ca51355d6c",
-              "message": "Fix 7 CVEs"
-            },
-            {
-              "sha": "4c28891344efe989d8f9a47542e9e380eecc3dd6",
-              "message": "Merge pull request #72 from oadp-rebasebot/cve-fix/restic/oadp-1.4/20261013-1"
-            }
-          ]
         }
       ],
       "issues": [
@@ -1744,9 +1741,16 @@
       ],
       "cves": {
         "critical": 0,
-        "high": 8,
-        "fixable": 8,
+        "high": 9,
+        "fixable": 9,
         "findings": [
+          {
+            "id": "CVE-2026-63209",
+            "severity": "HIGH",
+            "package": "github.com/klauspost/compress",
+            "installed_version": "v1.17.11",
+            "fixed_version": "1.18.7"
+          },
           {
             "id": "CVE-2026-56854",
             "severity": "HIGH",
@@ -1813,6 +1817,18 @@
       "skip": false,
       "upstream": "",
       "checks": {
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/2"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "36m ago"
+        },
         "config": {
           "status": "ok",
           "summary": ""
@@ -1825,13 +1841,9 @@
           "status": "ok",
           "summary": "1.25.0"
         },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/2"
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
         },
         "art_config": {
           "status": "ok",
@@ -1852,14 +1864,6 @@
         "upstream_sync": {
           "status": "na",
           "summary": ""
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "18m ago"
         }
       },
       "dep_syncs": [
@@ -1936,9 +1940,16 @@
       ],
       "cves": {
         "critical": 0,
-        "high": 10,
-        "fixable": 10,
+        "high": 11,
+        "fixable": 11,
         "findings": [
+          {
+            "id": "CVE-2026-63209",
+            "severity": "HIGH",
+            "package": "github.com/klauspost/compress",
+            "installed_version": "v1.18.0",
+            "fixed_version": "1.18.7"
+          },
           {
             "id": "CVE-2026-56854",
             "severity": "HIGH",
