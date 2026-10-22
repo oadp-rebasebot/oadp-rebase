@@ -327,6 +327,7 @@ RepoCard.displayName = 'RepoCard'
 
 function CveCard({ cves }: { cves: CveRepoSummary }) {
   const [showFindings, setShowFindings] = useState(false)
+  const age = cves.scanned_at ? relativeAge(cves.scanned_at) : null
 
   return (
     <div
@@ -341,6 +342,7 @@ function CveCard({ cves }: { cves: CveRepoSummary }) {
       <span style={{ color: colors.red }}>{cves.critical} critical</span>
       <span style={{ color: colors.yellow }}>{cves.high} high</span>
       <span style={{ color: colors.blue }}>{cves.fixable} fixable</span>
+      {age && <span style={{ marginLeft: 'auto', color: colors.muted, fontWeight: 400 }}>{age}</span>}
       {showFindings && (
         <div style={{
           position: 'absolute', zIndex: 20, left: 0, bottom: 'calc(100% + 6px)', width: 300,
@@ -378,4 +380,29 @@ function Badge({ color, href, children }: { color: string; href?: string; childr
     return <a href={href} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={style}>{children}</a>
   }
   return <span style={style}>{children}</span>
+}
+
+/**
+ * Render an ISO timestamp as a short age ("scanned 12m ago").
+ *
+ * Repos are re-scanned independently now — a merged CVE fix refreshes only the
+ * repo it landed in — so a snapshot can mix scan times and the age is what
+ * tells a viewer which numbers are current. Returns null for an unparseable or
+ * missing timestamp, so older snapshots simply omit the label.
+ */
+export function relativeAge(iso: string, now: number = Date.now()): string | null {
+  const then = Date.parse(iso)
+  if (Number.isNaN(then)) return null
+
+  const minutes = Math.floor((now - then) / 60_000)
+  // A clock skew should not render "scanned in -2m ago".
+  if (minutes < 0) return 'scanned just now'
+  if (minutes < 1) return 'scanned just now'
+  if (minutes < 60) return `scanned ${minutes}m ago`
+
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `scanned ${hours}h ago`
+
+  const days = Math.floor(hours / 24)
+  return `scanned ${days}d ago`
 }

@@ -34,12 +34,23 @@ jobs:
       - name: Build rebase-status
         run: make -C tools/rebase-status rebase-status
 
-      - name: Find latest scheduled CVE scan
+      - name: Resolve CVE scan run
         id: cve-scan
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          run_id=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/cve-scan.yaml/runs?event=schedule&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
+          # When this workflow is reacting to a CVE Scan run, use that run's
+          # artifact — it may be a targeted re-scan of one repo after a fix
+          # merged, and picking the daily run instead would discard it.
+          if [ "${{ github.event_name }}" = "workflow_run" ] \
+             && [ "${{ github.event.workflow_run.name }}" = "CVE Scan" ]; then
+            run_id="${{ github.event.workflow_run.id }}"
+            echo "Using the triggering CVE Scan run: ${run_id}"
+          else
+            run_id=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/cve-scan.yaml/runs?event=schedule&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
+            echo "Using the latest scheduled CVE Scan run: ${run_id:-none}"
+          fi
+
           echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
           if [ -n "$run_id" ] && gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/artifacts" --jq '.artifacts[] | select(.name == "cve-dashboard-data") | .id' | grep -q .; then
             echo "has_artifact=true" >> "$GITHUB_OUTPUT"
@@ -47,26 +58,86 @@ jobs:
             echo "has_artifact=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Download latest CVE scan summary
+      - name: Download CVE scan summary
         if: steps.cve-scan.outputs.has_artifact == 'true'
         uses: actions/download-artifact@v4
         with:
           name: cve-dashboard-data
-          path: /tmp/cve-dashboard-data
+          path: /tmp/cve-scan-new
           run-id: ${{ steps.cve-scan.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge CVE summary into published snapshot
+        run: |
+          # A targeted re-scan covers only the repos whose fix just merged, so
+          # its summary is merged over the published one. Replacing the snapshot
+          # wholesale would drop CVE data for every other repo.
+          #
+          # The scan summary carries scan_status per repo, which is how a repo
+          # that came back clean is told apart from one that was not scanned.
+          mkdir -p /tmp/cve-summary
+          base=/tmp/cve-summary/base.json
+
+          # Reconstruct the previous snapshot from the published dag files. They
+          # carry per-repo cves but not scan_status; a repo absent here and
+          # absent from the new summary simply stays absent.
+          : > /tmp/cve-summary/parts.ndjson
+          if git fetch --depth 1 origin "$DATA_BRANCH" 2>/dev/null; then
+            for branch in $BRANCHES; do
+              git show "origin/${DATA_BRANCH}:dag-${branch}.json" 2>/dev/null \
+                | jq -c --arg branch "$branch" '
+                    [.repos[]? | select(.cves != null) | {key: .repo, value: .cves}]
+                    | from_entries
+                    | select(length > 0)
+                    | {branches: {($branch): {repos: .}}}
+                  ' >> /tmp/cve-summary/parts.ndjson 2>/dev/null || true
+            done
+          fi
+          jq -s '{branches: (map(.branches) | add // {})}' /tmp/cve-summary/parts.ndjson > "$base"
+
+          new_summary=/tmp/cve-scan-new/cve-summary.json
+          if [ -f "$new_summary" ]; then
+            merged=$(jq -n \
+              --slurpfile base "$base" \
+              --slurpfile new "$new_summary" '
+              ($base[0] // {branches: {}}) as $b
+              | ($new[0] // {branches: {}}) as $n
+              | reduce ($n.branches | to_entries[]) as $be
+                  ($b;
+                   .branches[$be.key] //= {repos: {}, scan_status: {}}
+                   | .branches[$be.key].repos //= {}
+                   | .branches[$be.key].scan_status //= {}
+                   | reduce ($be.value.scan_status // {} | to_entries[]) as $se
+                       (.;
+                        .branches[$be.key].scan_status[$se.key] = $se.value
+                        | if $se.value == "clean"
+                          then del(.branches[$be.key].repos[$se.key])
+                          else .branches[$be.key].repos[$se.key] = $be.value.repos[$se.key]
+                          end))
+              | .branches |= with_entries(
+                  .value.critical = ([.value.repos[].critical] | add // 0)
+                  | .value.high = ([.value.repos[].high] | add // 0)
+                  | .value.fixable = ([.value.repos[].fixable] | add // 0)
+                  | .value.repos_scanned = ((.value.scan_status | length) // 0)
+                )
+            ')
+            echo "$merged" > /tmp/cve-summary/cve-summary.json
+          else
+            cp "$base" /tmp/cve-summary/cve-summary.json
+          fi
+
+          jq -c '{branches: (.branches | with_entries(.value = (.value.repos // {})))}' \
+            /tmp/cve-summary/cve-summary.json > /tmp/cve-summary/repos-by-branch.json
+          jq -r '.generated_at // empty' "$new_summary" > /tmp/cve-summary/generated-at.txt 2>/dev/null || true
+          echo "CVE summary ready: $(jq -c '.branches | keys' /tmp/cve-summary/repos-by-branch.json)"
 
       - name: Generate dashboard data
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p /tmp/dashboard-data
-          if git fetch origin "$DATA_BRANCH"; then
-            has_previous_data=true
-          else
-            has_previous_data=false
-          fi
           branches=""
+          cve_generated_at=$(cat /tmp/cve-summary/generated-at.txt 2>/dev/null || echo "")
 
           for branch in $BRANCHES; do
             set +e
@@ -81,14 +152,12 @@ jobs:
               exit 1
             fi
 
-            cve_scan='{}'
-            if [ -f /tmp/cve-dashboard-data/cve-summary.json ]; then
-              cve_scan=$(jq -c --arg branch "$branch" '.branches[$branch].repos // {}' /tmp/cve-dashboard-data/cve-summary.json)
-            elif [ "$has_previous_data" = true ] && git cat-file -e "origin/$DATA_BRANCH:dag-${branch}.json"; then
-              cve_scan=$(git show "origin/$DATA_BRANCH:dag-${branch}.json" | jq -c '[.repos[] | select(.cves != null) | {key: .repo, value: .cves}] | from_entries')
-            fi
-            echo "$raw_json" | jq --argjson cve_scan "$cve_scan" 'if type == "object" then {repos: [.repos[] | . + {cves: ($cve_scan[.repo] // null)}], cve_prs: (.cve_prs // [])} else {repos: [.[] | . + {cves: ($cve_scan[.repo] // null)}], cve_prs: []} end' \
-              > "/tmp/dashboard-data/dag-${branch}.json" \
+            cve_scan=$(jq -c --arg branch "$branch" '.branches[$branch] // {}' /tmp/cve-summary/repos-by-branch.json)
+            echo "$raw_json" | jq --argjson cve_scan "$cve_scan" --arg cve_generated_at "$cve_generated_at" '
+              (if type == "object" then {repos: [.repos[] | . + {cves: ($cve_scan[.repo] // null)}], cve_prs: (.cve_prs // [])}
+               else {repos: [.[] | . + {cves: ($cve_scan[.repo] // null)}], cve_prs: []} end)
+              | . + {cve_generated_at: (if $cve_generated_at == "" then null else $cve_generated_at end)}
+            ' > "/tmp/dashboard-data/dag-${branch}.json" \
               || printf '%s\n' '{"repos":[],"cve_prs":[]}' > "/tmp/dashboard-data/dag-${branch}.json"
             branches="${branches:+$branches,}\"$branch\""
           done
