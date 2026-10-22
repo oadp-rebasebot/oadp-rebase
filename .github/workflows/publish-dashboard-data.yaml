@@ -71,64 +71,37 @@ jobs:
         run: |
           # A targeted re-scan covers only the repos whose fix just merged, so
           # its summary is merged over the published one. Replacing the snapshot
-          # wholesale would drop CVE data for every other repo.
-          #
-          # The scan summary carries scan_status per repo, which is how a repo
-          # that came back clean is told apart from one that was not scanned.
-          mkdir -p /tmp/cve-summary
-          base=/tmp/cve-summary/base.json
-
-          # Reconstruct the previous snapshot from the published dag files. They
-          # carry per-repo cves but not scan_status; a repo absent here and
-          # absent from the new summary simply stays absent.
-          : > /tmp/cve-summary/parts.ndjson
+          # wholesale would drop CVE data for every other repo. The merge itself
+          # lives in summarize.sh so this workflow and the scan workflow share
+          # one implementation, including the freshness gate that stops an older
+          # scheduled summary from overwriting newer targeted results.
+          mkdir -p /tmp/cve-summary /tmp/cve-base
           if git fetch --depth 1 origin "$DATA_BRANCH" 2>/dev/null; then
             for branch in $BRANCHES; do
-              git show "origin/${DATA_BRANCH}:dag-${branch}.json" 2>/dev/null \
-                | jq -c --arg branch "$branch" '
-                    [.repos[]? | select(.cves != null) | {key: .repo, value: .cves}]
-                    | from_entries
-                    | select(length > 0)
-                    | {branches: {($branch): {repos: .}}}
-                  ' >> /tmp/cve-summary/parts.ndjson 2>/dev/null || true
+              git show "origin/${DATA_BRANCH}:dag-${branch}.json" \
+                > "/tmp/cve-base/dag-${branch}.json" 2>/dev/null \
+                || rm -f "/tmp/cve-base/dag-${branch}.json"
             done
           fi
-          jq -s '{branches: (map(.branches) | add // {})}' /tmp/cve-summary/parts.ndjson > "$base"
 
           new_summary=/tmp/cve-scan-new/cve-summary.json
           if [ -f "$new_summary" ]; then
-            merged=$(jq -n \
-              --slurpfile base "$base" \
-              --slurpfile new "$new_summary" '
-              ($base[0] // {branches: {}}) as $b
-              | ($new[0] // {branches: {}}) as $n
-              | reduce ($n.branches | to_entries[]) as $be
-                  ($b;
-                   .branches[$be.key] //= {repos: {}, scan_status: {}}
-                   | .branches[$be.key].repos //= {}
-                   | .branches[$be.key].scan_status //= {}
-                   | reduce ($be.value.scan_status // {} | to_entries[]) as $se
-                       (.;
-                        .branches[$be.key].scan_status[$se.key] = $se.value
-                        | if $se.value == "clean"
-                          then del(.branches[$be.key].repos[$se.key])
-                          else .branches[$be.key].repos[$se.key] = $be.value.repos[$se.key]
-                          end))
-              | .branches |= with_entries(
-                  .value.critical = ([.value.repos[].critical] | add // 0)
-                  | .value.high = ([.value.repos[].high] | add // 0)
-                  | .value.fixable = ([.value.repos[].fixable] | add // 0)
-                  | .value.repos_scanned = ((.value.scan_status | length) // 0)
-                )
-            ')
-            echo "$merged" > /tmp/cve-summary/cve-summary.json
+            bash tools/cve-scan/summarize.sh --mode merge \
+              --dag-dir /tmp/cve-base \
+              --summary "$new_summary" \
+              --output /tmp/cve-summary/cve-summary.json >> "$GITHUB_STEP_SUMMARY"
           else
-            cp "$base" /tmp/cve-summary/cve-summary.json
+            # No artifact this run: republish the published CVE data unchanged.
+            # Absent any --summary the helper carries the previous timestamp
+            # forward, which keeps cve_generated_at usable as a cursor.
+            bash tools/cve-scan/summarize.sh --mode merge \
+              --dag-dir /tmp/cve-base \
+              --output /tmp/cve-summary/cve-summary.json >> "$GITHUB_STEP_SUMMARY"
           fi
 
           jq -c '{branches: (.branches | with_entries(.value = (.value.repos // {})))}' \
             /tmp/cve-summary/cve-summary.json > /tmp/cve-summary/repos-by-branch.json
-          jq -r '.generated_at // empty' "$new_summary" > /tmp/cve-summary/generated-at.txt 2>/dev/null || true
+          cp /tmp/cve-summary/cve-summary.generated_at /tmp/cve-summary/generated-at.txt
           echo "CVE summary ready: $(jq -c '.branches | keys' /tmp/cve-summary/repos-by-branch.json)"
 
       - name: Generate dashboard data
