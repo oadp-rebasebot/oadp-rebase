@@ -7,10 +7,6 @@
       "skip": false,
       "upstream": "project-velero/kopia @ v0.17.0-velero.1",
       "checks": {
-        "upstream_image": {
-          "status": "na",
-          "summary": ""
-        },
         "art_config": {
           "status": "na",
           "summary": ""
@@ -19,9 +15,33 @@
           "status": "na",
           "summary": ""
         },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "na",
+          "summary": ""
+        },
         "open_pr": {
           "status": "na",
           "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
         },
         "ci_config": {
           "status": "na",
@@ -34,26 +54,6 @@
         "dep_sync": {
           "status": "ok",
           "summary": ""
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
         }
       },
       "cves": {
@@ -78,15 +78,19 @@
       "skip": true,
       "upstream": "",
       "checks": {
+        "ci_config": {
+          "status": "skip",
+          "summary": ""
+        },
         "upstream_sync": {
           "status": "skip",
           "summary": ""
         },
-        "dep_sync": {
+        "gomod_drift": {
           "status": "skip",
           "summary": ""
         },
-        "gomod_drift": {
+        "konflux": {
           "status": "skip",
           "summary": ""
         },
@@ -98,10 +102,6 @@
           "status": "skip",
           "summary": ""
         },
-        "open_pr": {
-          "status": "skip",
-          "summary": ""
-        },
         "config": {
           "status": "skip",
           "summary": ""
@@ -110,7 +110,7 @@
           "status": "skip",
           "summary": ""
         },
-        "konflux": {
+        "dep_sync": {
           "status": "skip",
           "summary": ""
         },
@@ -118,11 +118,11 @@
           "status": "skip",
           "summary": ""
         },
-        "rebasebot": {
+        "open_pr": {
           "status": "skip",
           "summary": ""
         },
-        "ci_config": {
+        "rebasebot": {
           "status": "skip",
           "summary": ""
         }
@@ -149,11 +149,15 @@
       "skip": false,
       "upstream": "velero-io/velero @ v1.14.0",
       "checks": {
-        "open_pr": {
-          "status": "na",
+        "rebasebot": {
+          "status": "ok",
           "summary": ""
         },
-        "rebasebot": {
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
           "status": "ok",
           "summary": ""
         },
@@ -171,21 +175,13 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "10m ago"
+          "summary": "32m ago"
         },
-        "config": {
-          "status": "ok",
+        "open_pr": {
+          "status": "na",
           "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
         },
         "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
           "status": "ok",
           "summary": ""
         },
@@ -196,6 +192,10 @@
         "productized": {
           "status": "ok",
           "summary": "2/2"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
         }
       },
       "dep_syncs": [
@@ -268,37 +268,9 @@
       "skip": false,
       "upstream": "kubevirt/kubevirt-velero-plugin @ v0.7.1",
       "checks": {
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
         "rebasebot": {
           "status": "ok",
           "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
         },
         "gomod_drift": {
           "status": "ok",
@@ -310,7 +282,35 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "9m ago"
+          "summary": "32m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
         },
         "art_config": {
           "status": "ok",
@@ -323,9 +323,13 @@
           "org": "openshift",
           "repo": "velero",
           "have": "95f0016887d9",
-          "head": "b7c72078ead296bd7a34824494b417bd3345291a",
+          "head": "5674777677b58280161ca5ad599f54f176d19916",
           "in_sync": false,
           "commits": [
+            {
+              "sha": "b54e967e47684a2ce7225976c9b7f367a99c7114",
+              "message": "Bump golangci-lint from v2.5.0 to v2.14.0"
+            },
             {
               "sha": "e8ae318d05ccc1ba8d0d83cacbdd4d6817e215e7",
               "message": "Add akarol and PrasadJoshi12 to OWNERS"
@@ -333,6 +337,10 @@
             {
               "sha": "b7c72078ead296bd7a34824494b417bd3345291a",
               "message": "Merge pull request #595 from redhat-chai-bot/add-akarol-owners-oadp-1.4"
+            },
+            {
+              "sha": "5674777677b58280161ca5ad599f54f176d19916",
+              "message": "Merge pull request #591 from redhat-chai-bot/fix/bump-golangci-lint-v2.14.0"
             }
           ]
         }
@@ -407,41 +415,21 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/2"
         },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
-        "art_config": {
+        "upstream_image": {
           "status": "ok",
-          "summary": "konflux.Dockerfile"
+          "summary": "32m ago"
         },
         "productized": {
           "status": "ok",
           "summary": "1/1"
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/2"
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "9m ago"
-        },
-        "open_pr": {
-          "status": "ok",
-          "summary": "#2509"
         },
         "config": {
           "status": "ok",
@@ -454,6 +442,26 @@
         "ci_config": {
           "status": "ok",
           "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "open_pr": {
+          "status": "ok",
+          "summary": "#2509"
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
         }
       },
       "dep_syncs": [
@@ -462,9 +470,13 @@
           "org": "openshift",
           "repo": "velero",
           "have": "8ee6993b52f5",
-          "head": "b7c72078ead296bd7a34824494b417bd3345291a",
+          "head": "5674777677b58280161ca5ad599f54f176d19916",
           "in_sync": false,
           "commits": [
+            {
+              "sha": "b54e967e47684a2ce7225976c9b7f367a99c7114",
+              "message": "Bump golangci-lint from v2.5.0 to v2.14.0"
+            },
             {
               "sha": "e8ae318d05ccc1ba8d0d83cacbdd4d6817e215e7",
               "message": "Add akarol and PrasadJoshi12 to OWNERS"
@@ -484,6 +496,10 @@
             {
               "sha": "b7c72078ead296bd7a34824494b417bd3345291a",
               "message": "Merge pull request #595 from redhat-chai-bot/add-akarol-owners-oadp-1.4"
+            },
+            {
+              "sha": "5674777677b58280161ca5ad599f54f176d19916",
+              "message": "Merge pull request #591 from redhat-chai-bot/fix/bump-golangci-lint-v2.14.0"
             }
           ]
         },
@@ -546,29 +562,29 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-aws @ v1.10.1",
       "checks": {
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
         "ci_config": {
           "status": "ok",
           "summary": ""
         },
-        "konflux": {
+        "gomod_drift": {
           "status": "ok",
-          "summary": "rhel_9_golang_1.25"
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "32m ago"
         },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
         },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "go_version": {
+        "productized": {
           "status": "ok",
-          "summary": "1.26.0"
+          "summary": "1/1"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
         },
         "upstream_sync": {
           "status": "ok",
@@ -578,21 +594,21 @@
           "status": "fail",
           "summary": "0/1"
         },
-        "gomod_drift": {
+        "konflux": {
           "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "open_pr": {
+          "status": "na",
           "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "10m ago"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
         },
         "config": {
           "status": "ok",
           "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
         }
       },
       "dep_syncs": [
@@ -601,9 +617,13 @@
           "org": "openshift",
           "repo": "velero",
           "have": "95f0016887d9",
-          "head": "b7c72078ead296bd7a34824494b417bd3345291a",
+          "head": "5674777677b58280161ca5ad599f54f176d19916",
           "in_sync": false,
           "commits": [
+            {
+              "sha": "b54e967e47684a2ce7225976c9b7f367a99c7114",
+              "message": "Bump golangci-lint from v2.5.0 to v2.14.0"
+            },
             {
               "sha": "e8ae318d05ccc1ba8d0d83cacbdd4d6817e215e7",
               "message": "Add akarol and PrasadJoshi12 to OWNERS"
@@ -611,6 +631,10 @@
             {
               "sha": "b7c72078ead296bd7a34824494b417bd3345291a",
               "message": "Merge pull request #595 from redhat-chai-bot/add-akarol-owners-oadp-1.4"
+            },
+            {
+              "sha": "5674777677b58280161ca5ad599f54f176d19916",
+              "message": "Merge pull request #591 from redhat-chai-bot/fix/bump-golangci-lint-v2.14.0"
             }
           ]
         }
@@ -685,19 +709,11 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "upstream_image": {
-          "status": "ok",
-          "summary": "9m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
         "open_pr": {
           "status": "ok",
           "summary": "#132"
         },
-        "rebasebot": {
+        "config": {
           "status": "ok",
           "summary": ""
         },
@@ -705,15 +721,27 @@
           "status": "ok",
           "summary": "1.26.0"
         },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "32m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
         },
         "productized": {
           "status": "ok",
           "summary": "1/1"
         },
-        "config": {
+        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
@@ -721,17 +749,13 @@
           "status": "ok",
           "summary": ""
         },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
         },
         "gomod_drift": {
           "status": "na",
           "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
         }
       },
       "dep_syncs": [
@@ -740,9 +764,13 @@
           "org": "openshift",
           "repo": "velero",
           "have": "8ee6993b52f5",
-          "head": "b7c72078ead296bd7a34824494b417bd3345291a",
+          "head": "5674777677b58280161ca5ad599f54f176d19916",
           "in_sync": false,
           "commits": [
+            {
+              "sha": "b54e967e47684a2ce7225976c9b7f367a99c7114",
+              "message": "Bump golangci-lint from v2.5.0 to v2.14.0"
+            },
             {
               "sha": "e8ae318d05ccc1ba8d0d83cacbdd4d6817e215e7",
               "message": "Add akarol and PrasadJoshi12 to OWNERS"
@@ -762,6 +790,10 @@
             {
               "sha": "b7c72078ead296bd7a34824494b417bd3345291a",
               "message": "Merge pull request #595 from redhat-chai-bot/add-akarol-owners-oadp-1.4"
+            },
+            {
+              "sha": "5674777677b58280161ca5ad599f54f176d19916",
+              "message": "Merge pull request #591 from redhat-chai-bot/fix/bump-golangci-lint-v2.14.0"
             }
           ]
         }
@@ -836,29 +868,13 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-microsoft-azure @ v1.10.1",
       "checks": {
-        "upstream_sync": {
+        "ci_config": {
           "status": "ok",
           "summary": ""
         },
         "gomod_drift": {
           "status": "ok",
           "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "9m ago"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
         },
         "konflux": {
           "status": "ok",
@@ -868,19 +884,35 @@
           "status": "ok",
           "summary": "konflux.Dockerfile"
         },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "32m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
         "open_pr": {
           "status": "na",
           "summary": ""
         },
         "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "ci_config": {
           "status": "ok",
           "summary": ""
         }
@@ -891,9 +923,13 @@
           "org": "openshift",
           "repo": "velero",
           "have": "95f0016887d9",
-          "head": "b7c72078ead296bd7a34824494b417bd3345291a",
+          "head": "5674777677b58280161ca5ad599f54f176d19916",
           "in_sync": false,
           "commits": [
+            {
+              "sha": "b54e967e47684a2ce7225976c9b7f367a99c7114",
+              "message": "Bump golangci-lint from v2.5.0 to v2.14.0"
+            },
             {
               "sha": "e8ae318d05ccc1ba8d0d83cacbdd4d6817e215e7",
               "message": "Add akarol and PrasadJoshi12 to OWNERS"
@@ -901,6 +937,10 @@
             {
               "sha": "b7c72078ead296bd7a34824494b417bd3345291a",
               "message": "Merge pull request #595 from redhat-chai-bot/add-akarol-owners-oadp-1.4"
+            },
+            {
+              "sha": "5674777677b58280161ca5ad599f54f176d19916",
+              "message": "Merge pull request #591 from redhat-chai-bot/fix/bump-golangci-lint-v2.14.0"
             }
           ]
         }
@@ -982,22 +1022,6 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-gcp @ v1.10.1",
       "checks": {
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
         "config": {
           "status": "ok",
           "summary": ""
@@ -1006,17 +1030,9 @@
           "status": "ok",
           "summary": ""
         },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
         "upstream_sync": {
           "status": "ok",
           "summary": ""
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
         },
         "gomod_drift": {
           "status": "ok",
@@ -1026,9 +1042,33 @@
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
         "upstream_image": {
           "status": "ok",
-          "summary": "9m ago"
+          "summary": "32m ago"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
         }
       },
       "dep_syncs": [
@@ -1037,9 +1077,13 @@
           "org": "openshift",
           "repo": "velero",
           "have": "95f0016887d9",
-          "head": "b7c72078ead296bd7a34824494b417bd3345291a",
+          "head": "5674777677b58280161ca5ad599f54f176d19916",
           "in_sync": false,
           "commits": [
+            {
+              "sha": "b54e967e47684a2ce7225976c9b7f367a99c7114",
+              "message": "Bump golangci-lint from v2.5.0 to v2.14.0"
+            },
             {
               "sha": "e8ae318d05ccc1ba8d0d83cacbdd4d6817e215e7",
               "message": "Add akarol and PrasadJoshi12 to OWNERS"
@@ -1047,6 +1091,10 @@
             {
               "sha": "b7c72078ead296bd7a34824494b417bd3345291a",
               "message": "Merge pull request #595 from redhat-chai-bot/add-akarol-owners-oadp-1.4"
+            },
+            {
+              "sha": "5674777677b58280161ca5ad599f54f176d19916",
+              "message": "Merge pull request #591 from redhat-chai-bot/fix/bump-golangci-lint-v2.14.0"
             }
           ]
         }
@@ -1128,28 +1176,40 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "9m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
         "productized": {
           "status": "ok",
           "summary": "1/1"
         },
-        "rebasebot": {
+        "config": {
           "status": "ok",
           "summary": ""
         },
         "ci_config": {
           "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "upstream_sync": {
+          "status": "na",
           "summary": ""
         },
         "dep_sync": {
@@ -1160,21 +1220,9 @@
           "status": "na",
           "summary": ""
         },
-        "konflux": {
+        "upstream_image": {
           "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
+          "summary": "32m ago"
         }
       },
       "dep_syncs": [
@@ -1183,7 +1231,7 @@
           "org": "openshift",
           "repo": "velero",
           "have": "2945c62545ba",
-          "head": "b7c72078ead296bd7a34824494b417bd3345291a",
+          "head": "5674777677b58280161ca5ad599f54f176d19916",
           "in_sync": false,
           "commits": [
             {
@@ -1223,6 +1271,10 @@
               "message": "Merge pull request #590 from oadp-rebasebot/rebase-bot-oadp-1.4"
             },
             {
+              "sha": "b54e967e47684a2ce7225976c9b7f367a99c7114",
+              "message": "Bump golangci-lint from v2.5.0 to v2.14.0"
+            },
+            {
               "sha": "e8ae318d05ccc1ba8d0d83cacbdd4d6817e215e7",
               "message": "Add akarol and PrasadJoshi12 to OWNERS"
             },
@@ -1241,6 +1293,10 @@
             {
               "sha": "b7c72078ead296bd7a34824494b417bd3345291a",
               "message": "Merge pull request #595 from redhat-chai-bot/add-akarol-owners-oadp-1.4"
+            },
+            {
+              "sha": "5674777677b58280161ca5ad599f54f176d19916",
+              "message": "Merge pull request #591 from redhat-chai-bot/fix/bump-golangci-lint-v2.14.0"
             }
           ]
         }
@@ -1378,11 +1434,31 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "config": {
+        "ci_config": {
           "status": "ok",
           "summary": ""
         },
-        "rebasebot": {
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "32m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
           "status": "ok",
           "summary": ""
         },
@@ -1394,37 +1470,17 @@
           "status": "na",
           "summary": ""
         },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
         },
-        "open_pr": {
-          "status": "na",
+        "rebasebot": {
+          "status": "ok",
           "summary": ""
         },
         "go_version": {
           "status": "ok",
           "summary": "1.25.0"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "9m ago"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -1571,7 +1627,7 @@
           "org": "openshift",
           "repo": "velero",
           "have": "2945c62545ba",
-          "head": "b7c72078ead296bd7a34824494b417bd3345291a",
+          "head": "5674777677b58280161ca5ad599f54f176d19916",
           "in_sync": false,
           "commits": [
             {
@@ -1611,6 +1667,10 @@
               "message": "Merge pull request #590 from oadp-rebasebot/rebase-bot-oadp-1.4"
             },
             {
+              "sha": "b54e967e47684a2ce7225976c9b7f367a99c7114",
+              "message": "Bump golangci-lint from v2.5.0 to v2.14.0"
+            },
+            {
               "sha": "e8ae318d05ccc1ba8d0d83cacbdd4d6817e215e7",
               "message": "Add akarol and PrasadJoshi12 to OWNERS"
             },
@@ -1629,11 +1689,127 @@
             {
               "sha": "b7c72078ead296bd7a34824494b417bd3345291a",
               "message": "Merge pull request #595 from redhat-chai-bot/add-akarol-owners-oadp-1.4"
+            },
+            {
+              "sha": "5674777677b58280161ca5ad599f54f176d19916",
+              "message": "Merge pull request #591 from redhat-chai-bot/fix/bump-golangci-lint-v2.14.0"
             }
           ]
         },
         {
           "module": "github.com/migtools/kopia",
+          "org": "migtools",
+          "repo": "kopia",
+          "have": "8c9b4fe2502c",
+          "head": "cac232fd9119a5de442b874f39e0a3b08719adf1",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "cadf48e89453b18694e7744beeb3d283c22ceeb9",
+              "message": "Fix 10 CVEs"
+            },
+            {
+              "sha": "5df37bbf94f9f3af22a8aaa9aa7471fe5d342197",
+              "message": "Merge pull request #57 from oadp-rebasebot/cve-fix/kopia/oadp-1.4/20261013-1"
+            },
+            {
+              "sha": "41f157b1cf6d67c5f84b76a02997c255adf9a1bd",
+              "message": "Fix 1 CVEs"
+            },
+            {
+              "sha": "32202dc3afcde63d2885c42905273c7b294ad391",
+              "message": "Merge pull request #59 from oadp-rebasebot/cve-fix/kopia/oadp-1.4/20261021-1"
+            },
+            {
+              "sha": "d50a59dcb1773d36a8b7752ad82ef2f0de541887",
+              "message": "ci: disable upstream-only license-check and code-coverage workflows"
+            },
+            {
+              "sha": "79289ad3a4f01c390b26115a042454accbb42058",
+              "message": "fix(test): repair internal/epoch test build broken by Go 1.25.8 bump"
+            },
+            {
+              "sha": "cac232fd9119a5de442b874f39e0a3b08719adf1",
+              "message": "Merge pull request #63 from migtools/ci/disable-upstream-workflows-1.4"
+            }
+          ]
+        },
+        {
+          "module": "https://github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "2945c62545ba",
+          "head": "5674777677b58280161ca5ad599f54f176d19916",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "cc9a73d549132b5499cf40efc3a3cc3bd2cf419e",
+              "message": "Merge pull request #10001 from shubham-pampattiwar/fix/skip-workflows-on-forks"
+            },
+            {
+              "sha": "4afd95eb159a0bc8941e5bd1f7de102d59233cc6",
+              "message": "Merge pull request #566 from kaovilai/workflow-skip-on-forks-oadp-1.4"
+            },
+            {
+              "sha": "e1d6013aa4fcfa91328c9662200b3d0d080d9ed2",
+              "message": "UPSTREAM: <drop>: Updating go modules"
+            },
+            {
+              "sha": "4f27d3bb6ea32a830e8967b1dc3e1e6743882569",
+              "message": "UPSTREAM: <drop>: update restic @ 4c2889134 (branch oadp-1.4)"
+            },
+            {
+              "sha": "bef922f7e95b1d931b1302ab2cdd36f61d66e97b",
+              "message": "Bump build-image Go version to 1.26-bookworm"
+            },
+            {
+              "sha": "0f4599ae5b01afd925c60e77882fdd9cee439e1c",
+              "message": "Bump golangci-lint to v2.13.0 for Go 1.26"
+            },
+            {
+              "sha": "9ae751a59a1702ee849265826cdf2bfa25b418a7",
+              "message": "Disable goconst and govet inline for golangci-lint v2.13.0"
+            },
+            {
+              "sha": "d2fac79988fce49f3b4c13617a331e732b625a44",
+              "message": "Pin Bitnami MinIO source for kind E2E tests"
+            },
+            {
+              "sha": "8ee6993b52f5e50f6bd32d89c8638f4d83aeb579",
+              "message": "Merge pull request #590 from oadp-rebasebot/rebase-bot-oadp-1.4"
+            },
+            {
+              "sha": "b54e967e47684a2ce7225976c9b7f367a99c7114",
+              "message": "Bump golangci-lint from v2.5.0 to v2.14.0"
+            },
+            {
+              "sha": "e8ae318d05ccc1ba8d0d83cacbdd4d6817e215e7",
+              "message": "Add akarol and PrasadJoshi12 to OWNERS"
+            },
+            {
+              "sha": "de248f968a3779ce6d4e896bbe93c249573f69d3",
+              "message": "UPSTREAM: <drop>: Updating go modules"
+            },
+            {
+              "sha": "0194193122b221188369810ea4b49b3383e64f7a",
+              "message": "UPSTREAM: <drop>: update restic @ 044cd2daf (branch oadp-1.4)"
+            },
+            {
+              "sha": "95f0016887d978d028c1391b8a59985c77638b08",
+              "message": "Merge pull request #598 from oadp-rebasebot/rebase-bot-oadp-1.4"
+            },
+            {
+              "sha": "b7c72078ead296bd7a34824494b417bd3345291a",
+              "message": "Merge pull request #595 from redhat-chai-bot/add-akarol-owners-oadp-1.4"
+            },
+            {
+              "sha": "5674777677b58280161ca5ad599f54f176d19916",
+              "message": "Merge pull request #591 from redhat-chai-bot/fix/bump-golangci-lint-v2.14.0"
+            }
+          ]
+        },
+        {
+          "module": "https://github.com/migtools/kopia",
           "org": "migtools",
           "repo": "kopia",
           "have": "8c9b4fe2502c",
@@ -1701,110 +1877,6 @@
             {
               "sha": "b8772004fb302428fcdc34b2291d9386b3223fad",
               "message": "Merge pull request #74 from kaovilai/ci/disable-tests-workflow-oadp-1.4"
-            }
-          ]
-        },
-        {
-          "module": "https://github.com/openshift/velero",
-          "org": "openshift",
-          "repo": "velero",
-          "have": "2945c62545ba",
-          "head": "b7c72078ead296bd7a34824494b417bd3345291a",
-          "in_sync": false,
-          "commits": [
-            {
-              "sha": "cc9a73d549132b5499cf40efc3a3cc3bd2cf419e",
-              "message": "Merge pull request #10001 from shubham-pampattiwar/fix/skip-workflows-on-forks"
-            },
-            {
-              "sha": "4afd95eb159a0bc8941e5bd1f7de102d59233cc6",
-              "message": "Merge pull request #566 from kaovilai/workflow-skip-on-forks-oadp-1.4"
-            },
-            {
-              "sha": "e1d6013aa4fcfa91328c9662200b3d0d080d9ed2",
-              "message": "UPSTREAM: <drop>: Updating go modules"
-            },
-            {
-              "sha": "4f27d3bb6ea32a830e8967b1dc3e1e6743882569",
-              "message": "UPSTREAM: <drop>: update restic @ 4c2889134 (branch oadp-1.4)"
-            },
-            {
-              "sha": "bef922f7e95b1d931b1302ab2cdd36f61d66e97b",
-              "message": "Bump build-image Go version to 1.26-bookworm"
-            },
-            {
-              "sha": "0f4599ae5b01afd925c60e77882fdd9cee439e1c",
-              "message": "Bump golangci-lint to v2.13.0 for Go 1.26"
-            },
-            {
-              "sha": "9ae751a59a1702ee849265826cdf2bfa25b418a7",
-              "message": "Disable goconst and govet inline for golangci-lint v2.13.0"
-            },
-            {
-              "sha": "d2fac79988fce49f3b4c13617a331e732b625a44",
-              "message": "Pin Bitnami MinIO source for kind E2E tests"
-            },
-            {
-              "sha": "8ee6993b52f5e50f6bd32d89c8638f4d83aeb579",
-              "message": "Merge pull request #590 from oadp-rebasebot/rebase-bot-oadp-1.4"
-            },
-            {
-              "sha": "e8ae318d05ccc1ba8d0d83cacbdd4d6817e215e7",
-              "message": "Add akarol and PrasadJoshi12 to OWNERS"
-            },
-            {
-              "sha": "de248f968a3779ce6d4e896bbe93c249573f69d3",
-              "message": "UPSTREAM: <drop>: Updating go modules"
-            },
-            {
-              "sha": "0194193122b221188369810ea4b49b3383e64f7a",
-              "message": "UPSTREAM: <drop>: update restic @ 044cd2daf (branch oadp-1.4)"
-            },
-            {
-              "sha": "95f0016887d978d028c1391b8a59985c77638b08",
-              "message": "Merge pull request #598 from oadp-rebasebot/rebase-bot-oadp-1.4"
-            },
-            {
-              "sha": "b7c72078ead296bd7a34824494b417bd3345291a",
-              "message": "Merge pull request #595 from redhat-chai-bot/add-akarol-owners-oadp-1.4"
-            }
-          ]
-        },
-        {
-          "module": "https://github.com/migtools/kopia",
-          "org": "migtools",
-          "repo": "kopia",
-          "have": "8c9b4fe2502c",
-          "head": "cac232fd9119a5de442b874f39e0a3b08719adf1",
-          "in_sync": false,
-          "commits": [
-            {
-              "sha": "cadf48e89453b18694e7744beeb3d283c22ceeb9",
-              "message": "Fix 10 CVEs"
-            },
-            {
-              "sha": "5df37bbf94f9f3af22a8aaa9aa7471fe5d342197",
-              "message": "Merge pull request #57 from oadp-rebasebot/cve-fix/kopia/oadp-1.4/20261013-1"
-            },
-            {
-              "sha": "41f157b1cf6d67c5f84b76a02997c255adf9a1bd",
-              "message": "Fix 1 CVEs"
-            },
-            {
-              "sha": "32202dc3afcde63d2885c42905273c7b294ad391",
-              "message": "Merge pull request #59 from oadp-rebasebot/cve-fix/kopia/oadp-1.4/20261021-1"
-            },
-            {
-              "sha": "d50a59dcb1773d36a8b7752ad82ef2f0de541887",
-              "message": "ci: disable upstream-only license-check and code-coverage workflows"
-            },
-            {
-              "sha": "79289ad3a4f01c390b26115a042454accbb42058",
-              "message": "fix(test): repair internal/epoch test build broken by Go 1.25.8 bump"
-            },
-            {
-              "sha": "cac232fd9119a5de442b874f39e0a3b08719adf1",
-              "message": "Merge pull request #63 from migtools/ci/disable-upstream-workflows-1.4"
             }
           ]
         }
@@ -1893,25 +1965,13 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
-        },
         "upstream_sync": {
           "status": "na",
           "summary": ""
         },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/2"
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
         },
         "konflux": {
           "status": "ok",
@@ -1921,25 +1981,37 @@
           "status": "ok",
           "summary": "konflux.Dockerfile"
         },
-        "config": {
+        "productized": {
           "status": "ok",
-          "summary": ""
+          "summary": "1/1"
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
         },
         "ci_config": {
           "status": "ok",
           "summary": ""
         },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/2"
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "9m ago"
+          "summary": "32m ago"
         },
-        "productized": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
           "status": "ok",
-          "summary": "1/1"
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
         }
       },
       "dep_syncs": [
@@ -1948,7 +2020,7 @@
           "org": "openshift",
           "repo": "velero",
           "have": "2945c62545ba",
-          "head": "b7c72078ead296bd7a34824494b417bd3345291a",
+          "head": "5674777677b58280161ca5ad599f54f176d19916",
           "in_sync": false,
           "commits": [
             {
@@ -1988,6 +2060,10 @@
               "message": "Merge pull request #590 from oadp-rebasebot/rebase-bot-oadp-1.4"
             },
             {
+              "sha": "b54e967e47684a2ce7225976c9b7f367a99c7114",
+              "message": "Bump golangci-lint from v2.5.0 to v2.14.0"
+            },
+            {
               "sha": "e8ae318d05ccc1ba8d0d83cacbdd4d6817e215e7",
               "message": "Add akarol and PrasadJoshi12 to OWNERS"
             },
@@ -2006,6 +2082,10 @@
             {
               "sha": "b7c72078ead296bd7a34824494b417bd3345291a",
               "message": "Merge pull request #595 from redhat-chai-bot/add-akarol-owners-oadp-1.4"
+            },
+            {
+              "sha": "5674777677b58280161ca5ad599f54f176d19916",
+              "message": "Merge pull request #591 from redhat-chai-bot/fix/bump-golangci-lint-v2.14.0"
             }
           ]
         },
