@@ -4,6 +4,7 @@ import { classifyStatus, deriveLabel, deriveOrg, isPlugin } from '../dag-data'
 import { getDepIds, getDependents } from '../layout'
 import { colors, statusColors, orgColors } from '../styles/theme'
 import { DetailPanel } from './DetailPanel'
+import { relativeAge } from '../relativeAge'
 
 interface DAGCanvasProps {
   repos: RepoData[]
@@ -382,27 +383,3 @@ function Badge({ color, href, children }: { color: string; href?: string; childr
   return <span style={style}>{children}</span>
 }
 
-/**
- * Render an ISO timestamp as a short age ("scanned 12m ago").
- *
- * Repos are re-scanned independently now — a merged CVE fix refreshes only the
- * repo it landed in — so a snapshot can mix scan times and the age is what
- * tells a viewer which numbers are current. Returns null for an unparseable or
- * missing timestamp, so older snapshots simply omit the label.
- */
-export function relativeAge(iso: string, now: number = Date.now()): string | null {
-  const then = Date.parse(iso)
-  if (Number.isNaN(then)) return null
-
-  const minutes = Math.floor((now - then) / 60_000)
-  // A clock skew should not render "scanned in -2m ago".
-  if (minutes < 0) return 'scanned just now'
-  if (minutes < 1) return 'scanned just now'
-  if (minutes < 60) return `scanned ${minutes}m ago`
-
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `scanned ${hours}h ago`
-
-  const days = Math.floor(hours / 24)
-  return `scanned ${days}d ago`
-}

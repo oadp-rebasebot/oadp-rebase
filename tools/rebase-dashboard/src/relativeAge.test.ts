@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { relativeAge } from './components/DAGCanvas'
+import { relativeAge } from './relativeAge'
 
 // A fixed "now" so the assertions do not depend on the wall clock.
 const now = Date.parse('2026-01-02T12:00:00Z')
