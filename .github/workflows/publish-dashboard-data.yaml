@@ -134,17 +134,21 @@ jobs:
               # can stamp clean_scanned_at on them. collect_from_dag reads that field
               # back so the per-repo freshness gate knows when a clean result was
               # recorded, and a stale daily summary cannot restore cleared findings.
+              # cve_branch.scan_times maps each clean repo to its actual scan time,
+              # not the summary-level cursor. Without it, all clean repos would be
+              # stamped with the max cursor, making the gate over-aggressive when a
+              # concurrent scan for a different repo advances cve_generated_at.
               ($cve_branch.repos // {}) as $cve_repos
               | ($cve_branch.scan_status // {}) as $status
-              | ($cve_branch.generated_at // $cve_generated_at) as $gen_at
+              | ($cve_branch.scan_times // {}) as $scan_times
               | (if type == "object"
                  then {repos: [.repos[] | . + {
                          cves: ($cve_repos[.repo] // null),
-                         clean_scanned_at: (if $status[.repo] == "clean" then $gen_at else null end)
+                         clean_scanned_at: (if $status[.repo] == "clean" then ($scan_times[.repo] // null) else null end)
                        }], cve_prs: (.cve_prs // [])}
                  else {repos: [.[] | . + {
                          cves: ($cve_repos[.repo] // null),
-                         clean_scanned_at: (if $status[.repo] == "clean" then $gen_at else null end)
+                         clean_scanned_at: (if $status[.repo] == "clean" then ($scan_times[.repo] // null) else null end)
                        }], cve_prs: []}
                  end)
               | . + {cve_generated_at: (if $cve_generated_at == "" then null else $cve_generated_at end)}
