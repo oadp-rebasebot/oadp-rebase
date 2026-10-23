@@ -47,8 +47,30 @@ jobs:
             run_id="${{ github.event.workflow_run.id }}"
             echo "Using the triggering CVE Scan run: ${run_id}"
           else
-            run_id=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/cve-scan.yaml/runs?event=schedule&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
-            echo "Using the latest scheduled CVE Scan run: ${run_id:-none}"
+            # Fall back to the most recent successful scan that actually
+            # published a summary — whatever triggered it. GitHub does not fire
+            # workflow_run for runs whose actor is github-actions[bot], so a
+            # targeted re-scan dispatched by cve-merge-watch.yaml never reaches
+            # the workflow_run branch above. Restricting this to event=schedule
+            # (as it did before) meant those results were unreachable from the
+            # hourly cron too, so a landed CVE fix stayed invisible on the
+            # dashboard until the next daily scan.
+            #
+            # Newest-first over a small window, taking the first run that has
+            # the artifact: runs that failed before the summary step still show
+            # up as success in some cases, and an artifact-less run would
+            # otherwise be picked and skip the merge entirely.
+            run_id=""
+            for candidate in $(gh api \
+                "repos/${GITHUB_REPOSITORY}/actions/workflows/cve-scan.yaml/runs?status=success&per_page=15" \
+                --jq '.workflow_runs[].id'); do
+              if gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${candidate}/artifacts" \
+                  --jq '.artifacts[].name' | grep -qx cve-dashboard-data; then
+                run_id="$candidate"
+                break
+              fi
+            done
+            echo "Using the latest successful CVE Scan run with a summary: ${run_id:-none}"
           fi
 
           echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
