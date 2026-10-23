@@ -66,6 +66,9 @@ export interface CveRepoSummary {
   high: number
   fixable: number
   findings: CveFinding[]
+  /** When this repo was last scanned. Absent on snapshots published before
+   *  per-repo scan ages were recorded. */
+  scanned_at?: string
 }
 
 export interface BranchData {

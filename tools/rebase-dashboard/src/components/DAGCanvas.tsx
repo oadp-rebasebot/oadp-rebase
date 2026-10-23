@@ -4,6 +4,7 @@ import { classifyStatus, deriveLabel, deriveOrg, isPlugin } from '../dag-data'
 import { getDepIds, getDependents } from '../layout'
 import { colors, statusColors, orgColors } from '../styles/theme'
 import { DetailPanel } from './DetailPanel'
+import { relativeAge } from '../relativeAge'
 
 interface DAGCanvasProps {
   repos: RepoData[]
@@ -327,6 +328,7 @@ RepoCard.displayName = 'RepoCard'
 
 function CveCard({ cves }: { cves: CveRepoSummary }) {
   const [showFindings, setShowFindings] = useState(false)
+  const age = cves.scanned_at ? relativeAge(cves.scanned_at) : null
 
   return (
     <div
@@ -341,6 +343,7 @@ function CveCard({ cves }: { cves: CveRepoSummary }) {
       <span style={{ color: colors.red }}>{cves.critical} critical</span>
       <span style={{ color: colors.yellow }}>{cves.high} high</span>
       <span style={{ color: colors.blue }}>{cves.fixable} fixable</span>
+      {age && <span style={{ marginLeft: 'auto', color: colors.muted, fontWeight: 400 }}>{age}</span>}
       {showFindings && (
         <div style={{
           position: 'absolute', zIndex: 20, left: 0, bottom: 'calc(100% + 6px)', width: 300,
@@ -379,3 +382,4 @@ function Badge({ color, href, children }: { color: string; href?: string; childr
   }
   return <span style={style}>{children}</span>
 }
+

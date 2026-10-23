@@ -137,8 +137,9 @@ auto-rebase-test:
 	@bash tools/auto-rebase/test.sh
 
 cve-scan-test:
-	@echo "=== CVE scan tests — remediation selection logic ==="
+	@echo "=== CVE scan tests — remediation selection and dashboard summary ==="
 	@bash tools/cve-scan/test-remediate.sh
+	@bash tools/cve-scan/test-summarize.sh
 
 shellcheck:
 	@echo "=== ShellCheck — lint all shell scripts ==="
