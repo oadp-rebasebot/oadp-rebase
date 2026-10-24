@@ -241,6 +241,12 @@ load_config() {
         rm -f "$temp_config"
     fi
 
+    # Make the SSOT tag available to hooks when using the local rebasebot CLI.
+    # Container mode passes it explicitly through -e below.
+    if [ -n "${VELERO_UPSTREAM_TAG:-}" ]; then
+        export VELERO_UPSTREAM_TAG
+    fi
+
     log_success "Config loaded"
 }
 
@@ -408,6 +414,7 @@ run_container_rebase() {
   -v \"$SECRETS_DIR:/secrets:Z,ro\" $WORKING_MOUNT $HOOKS_MOUNT \
   -e GIT_USERNAME=\"$GIT_USERNAME\" \
   -e GIT_EMAIL=\"$GIT_EMAIL\" \
+  ${VELERO_UPSTREAM_TAG:+-e VELERO_UPSTREAM_TAG=\"$VELERO_UPSTREAM_TAG\"} \
   ${GO_VET_TAGS:+-e GO_VET_TAGS=\"$GO_VET_TAGS\"} \
   ${GO_VET_SKIP:+-e GO_VET_SKIP=\"$GO_VET_SKIP\"} \
   $EXTRA_ENV_FLAGS \
