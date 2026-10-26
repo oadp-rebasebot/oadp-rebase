@@ -15,7 +15,6 @@ on:
 
 env:
   BRANCHES: oadp-dev oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3
-  NOTIFY_BRANCHES: oadp-1.6
 
 permissions:
   contents: write
@@ -97,9 +96,7 @@ jobs:
           fi
 
   notify-slack:
-    if: >-
-      (github.event_name == 'workflow_run' && github.event.workflow_run.event == 'schedule') ||
-      (github.event_name == 'workflow_dispatch' && inputs.notify_branches != '')
+    if: github.event_name == 'workflow_dispatch' && inputs.notify_branches != ''
     needs: update-wiki
     runs-on: ubuntu-latest
     steps:
@@ -116,7 +113,7 @@ jobs:
       - name: Generate Slack payload
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NOTIFY_BRANCHES: ${{ github.event_name != 'workflow_dispatch' && env.NOTIFY_BRANCHES || inputs.notify_branches }}
+          NOTIFY_BRANCHES: ${{ inputs.notify_branches }}
         run: |
           [ -z "$NOTIFY_BRANCHES" ] && { echo "No branches to notify"; exit 0; }
 
