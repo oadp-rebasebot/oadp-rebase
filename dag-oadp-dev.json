@@ -7,6 +7,26 @@
       "skip": false,
       "upstream": "project-velero/kopia @ $UPSTREAM_KOPIA_TAG_BRANCH_FOR_VELERO",
       "checks": {
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.8"
+        },
+        "upstream_sync": {
+          "status": "warn",
+          "summary": "err"
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "na",
+          "summary": ""
+        },
         "open_pr": {
           "status": "na",
           "summary": ""
@@ -19,31 +39,11 @@
           "status": "ok",
           "summary": ""
         },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.8"
-        },
         "ci_config": {
           "status": "na",
           "summary": ""
         },
-        "upstream_sync": {
-          "status": "warn",
-          "summary": "err"
-        },
         "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "na",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_image": {
           "status": "na",
           "summary": ""
         },
@@ -156,38 +156,6 @@
       "skip": true,
       "upstream": "",
       "checks": {
-        "upstream_sync": {
-          "status": "skip",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "skip",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "skip",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "skip",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "skip",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "skip",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "skip",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "skip",
-          "summary": ""
-        },
         "productized": {
           "status": "skip",
           "summary": ""
@@ -201,6 +169,38 @@
           "summary": ""
         },
         "rebasebot": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "skip",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "skip",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "skip",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "skip",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "skip",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "art_config": {
           "status": "skip",
           "summary": ""
         }
@@ -285,31 +285,15 @@
       "skip": false,
       "upstream": "filebrowser/filebrowser @ master",
       "checks": {
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
         "upstream_sync": {
           "status": "fail",
           "summary": "diverged"
         },
-        "dep_sync": {
-          "status": "ok",
+        "art_config": {
+          "status": "na",
           "summary": ""
         },
-        "gomod_drift": {
-          "status": "fail",
-          "summary": "4"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "21m ago"
-        },
-        "open_pr": {
+        "productized": {
           "status": "na",
           "summary": ""
         },
@@ -321,24 +305,40 @@
           "status": "ok",
           "summary": ""
         },
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "fail",
+          "summary": "4"
+        },
         "konflux": {
           "status": "na",
           "summary": ""
         },
-        "art_config": {
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
+        },
+        "open_pr": {
           "status": "na",
           "summary": ""
         },
-        "productized": {
-          "status": "na",
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
           "summary": ""
         }
       },
       "gomod_drifts": [
         {
-          "module": "golang.org/x/text",
-          "downstream": "v0.38.0",
-          "upstream": "v0.40.0"
+          "module": "github.com/asticode/go-astisub",
+          "downstream": "v0.41.0",
+          "upstream": "v0.42.0"
         },
         {
           "module": "golang.org/x/crypto",
@@ -351,9 +351,9 @@
           "upstream": "v0.44.0"
         },
         {
-          "module": "github.com/asticode/go-astisub",
-          "downstream": "v0.41.0",
-          "upstream": "v0.42.0"
+          "module": "golang.org/x/text",
+          "downstream": "v0.38.0",
+          "upstream": "v0.40.0"
         }
       ],
       "issues": [
@@ -426,6 +426,10 @@
           "status": "ok",
           "summary": ""
         },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
         "ci_config": {
           "status": "na",
           "summary": ""
@@ -434,15 +438,15 @@
           "status": "na",
           "summary": ""
         },
-        "dep_sync": {
-          "status": "ok",
+        "gomod_drift": {
+          "status": "na",
           "summary": ""
         },
         "konflux": {
           "status": "na",
           "summary": ""
         },
-        "art_config": {
+        "upstream_image": {
           "status": "na",
           "summary": ""
         },
@@ -450,15 +454,11 @@
           "status": "ok",
           "summary": ""
         },
-        "go_version": {
+        "dep_sync": {
           "status": "ok",
-          "summary": "1.25.0"
-        },
-        "gomod_drift": {
-          "status": "na",
           "summary": ""
         },
-        "upstream_image": {
+        "art_config": {
           "status": "na",
           "summary": ""
         },
@@ -477,8 +477,8 @@
       "skip": false,
       "upstream": "migtools/kopia @ oadp-dev",
       "checks": {
-        "config": {
-          "status": "ok",
+        "art_config": {
+          "status": "na",
           "summary": ""
         },
         "rebasebot": {
@@ -489,11 +489,7 @@
           "status": "ok",
           "summary": "1.26.10"
         },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "dep_sync": {
+        "upstream_sync": {
           "status": "ok",
           "summary": ""
         },
@@ -503,9 +499,9 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "21m ago"
+          "summary": "14m ago"
         },
-        "art_config": {
+        "productized": {
           "status": "na",
           "summary": ""
         },
@@ -513,17 +509,21 @@
           "status": "na",
           "summary": ""
         },
-        "upstream_sync": {
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
           "status": "ok",
           "summary": ""
         },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.26"
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
         }
       },
       "cves": null,
@@ -536,34 +536,6 @@
       "skip": false,
       "upstream": "velero-io/velero @ main",
       "checks": {
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "upstream_sync": {
-          "status": "fail",
-          "summary": "diverged"
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
         "ci_config": {
           "status": "ok",
           "summary": ""
@@ -572,17 +544,45 @@
           "status": "fail",
           "summary": "0/2"
         },
-        "gomod_drift": {
-          "status": "fail",
-          "summary": "9"
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "21m ago"
+          "summary": "14m ago"
         },
         "art_config": {
           "status": "na",
           "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "fail",
+          "summary": "diverged"
+        },
+        "gomod_drift": {
+          "status": "fail",
+          "summary": "9"
+        },
+        "productized": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
         }
       },
       "dep_syncs": [
@@ -643,12 +643,12 @@
           "upstream": "v1.83.2"
         },
         {
-          "module": "github.com/kubernetes-csi/external-snapshotter/client/v8",
-          "downstream": "v8.4.0",
-          "upstream": "v8.6.0"
+          "module": "k8s.io/apimachinery",
+          "downstream": "v0.36.0",
+          "upstream": "v0.36.1"
         },
         {
-          "module": "k8s.io/apimachinery",
+          "module": "k8s.io/api",
           "downstream": "v0.36.0",
           "upstream": "v0.36.1"
         },
@@ -658,14 +658,9 @@
           "upstream": "v1.36.12"
         },
         {
-          "module": "k8s.io/api",
-          "downstream": "v0.36.0",
-          "upstream": "v0.36.1"
-        },
-        {
-          "module": "golang.org/x/mod",
-          "downstream": "v0.36.0",
-          "upstream": "v0.40.0"
+          "module": "github.com/kubernetes-csi/external-snapshotter/client/v8",
+          "downstream": "v8.4.0",
+          "upstream": "v8.6.0"
         },
         {
           "module": "golang.org/x/sys",
@@ -676,6 +671,11 @@
           "module": "k8s.io/client-go",
           "downstream": "v0.36.0",
           "upstream": "v0.36.1"
+        },
+        {
+          "module": "golang.org/x/mod",
+          "downstream": "v0.36.0",
+          "upstream": "v0.40.0"
         }
       ],
       "issues": [
@@ -807,21 +807,25 @@
       "skip": false,
       "upstream": "kubevirt/kubevirt-velero-plugin @ main",
       "checks": {
-        "open_pr": {
-          "status": "na",
+        "config": {
+          "status": "ok",
           "summary": ""
         },
         "rebasebot": {
           "status": "ok",
           "summary": ""
         },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
         "ci_config": {
           "status": "ok",
           "summary": ""
         },
-        "upstream_sync": {
+        "dep_sync": {
           "status": "fail",
-          "summary": "diverged"
+          "summary": "0/1"
         },
         "gomod_drift": {
           "status": "ok",
@@ -833,23 +837,19 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "21m ago"
+          "summary": "14m ago"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "fail",
+          "summary": "diverged"
         },
         "art_config": {
           "status": "na",
           "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
         },
         "productized": {
           "status": "na",
@@ -1888,7 +1888,11 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "open_pr": {
+        "upstream_image": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
           "status": "na",
           "summary": ""
         },
@@ -1896,15 +1900,27 @@
           "status": "ok",
           "summary": ""
         },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
         "rebasebot": {
           "status": "ok",
           "summary": ""
         },
         "ci_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_sync": {
           "status": "na",
           "summary": ""
         },
@@ -1916,25 +1932,9 @@
           "status": "na",
           "summary": ""
         },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "na",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
         }
       },
       "dep_syncs": [
@@ -2965,7 +2965,7 @@
       "skip": true,
       "upstream": "",
       "checks": {
-        "gomod_drift": {
+        "upstream_image": {
           "status": "skip",
           "summary": ""
         },
@@ -2973,15 +2973,7 @@
           "status": "skip",
           "summary": ""
         },
-        "open_pr": {
-          "status": "skip",
-          "summary": ""
-        },
         "config": {
-          "status": "skip",
-          "summary": ""
-        },
-        "go_version": {
           "status": "skip",
           "summary": ""
         },
@@ -2989,11 +2981,11 @@
           "status": "skip",
           "summary": ""
         },
-        "konflux": {
+        "dep_sync": {
           "status": "skip",
           "summary": ""
         },
-        "upstream_image": {
+        "gomod_drift": {
           "status": "skip",
           "summary": ""
         },
@@ -3001,7 +2993,15 @@
           "status": "skip",
           "summary": ""
         },
+        "open_pr": {
+          "status": "skip",
+          "summary": ""
+        },
         "rebasebot": {
+          "status": "skip",
+          "summary": ""
+        },
+        "go_version": {
           "status": "skip",
           "summary": ""
         },
@@ -3009,7 +3009,7 @@
           "status": "skip",
           "summary": ""
         },
-        "dep_sync": {
+        "konflux": {
           "status": "skip",
           "summary": ""
         }
@@ -3262,21 +3262,21 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "upstream_image": {
-          "status": "ok",
-          "summary": "21m ago"
-        },
-        "art_config": {
+        "open_pr": {
           "status": "na",
           "summary": ""
         },
-        "productized": {
-          "status": "na",
+        "config": {
+          "status": "ok",
           "summary": ""
         },
         "rebasebot": {
           "status": "ok",
           "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
         },
         "ci_config": {
           "status": "ok",
@@ -3290,23 +3290,23 @@
           "status": "fail",
           "summary": "0/2"
         },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
         "gomod_drift": {
           "status": "na",
           "summary": ""
         },
         "konflux": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
           "status": "na",
           "summary": ""
         }
@@ -4250,22 +4250,6 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-aws @ main",
       "checks": {
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
         "config": {
           "status": "ok",
           "summary": ""
@@ -4282,19 +4266,35 @@
           "status": "fail",
           "summary": "diverged"
         },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
         "upstream_image": {
           "status": "ok",
-          "summary": "21m ago"
+          "summary": "14m ago"
         },
         "art_config": {
           "status": "na",
           "summary": ""
         },
         "productized": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
           "status": "na",
           "summary": ""
         }
@@ -5387,16 +5387,16 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "21m ago"
-        },
         "rebasebot": {
           "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
           "summary": ""
         },
         "dep_sync": {
@@ -5406,6 +5406,10 @@
         "gomod_drift": {
           "status": "na",
           "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
         },
         "art_config": {
           "status": "na",
@@ -5427,13 +5431,9 @@
           "status": "ok",
           "summary": "1.25.0"
         },
-        "ci_config": {
+        "konflux": {
           "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
+          "summary": "rhel_9_golang_1.25"
         }
       },
       "dep_syncs": [
@@ -6555,11 +6555,11 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-microsoft-azure @ main",
       "checks": {
-        "open_pr": {
-          "status": "na",
+        "config": {
+          "status": "ok",
           "summary": ""
         },
-        "config": {
+        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
@@ -6568,22 +6568,6 @@
           "summary": "1.26.0"
         },
         "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
@@ -6599,9 +6583,25 @@
           "status": "ok",
           "summary": ""
         },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
         "upstream_image": {
           "status": "ok",
-          "summary": "21m ago"
+          "summary": "14m ago"
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
+          "status": "na",
+          "summary": ""
         }
       },
       "dep_syncs": [
@@ -7699,37 +7699,9 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-gcp @ main",
       "checks": {
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "21m ago"
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
         "open_pr": {
           "status": "ok",
           "summary": "#163"
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
         },
         "rebasebot": {
           "status": "ok",
@@ -7746,6 +7718,34 @@
         "gomod_drift": {
           "status": "ok",
           "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
         }
       },
       "dep_syncs": [
@@ -8836,16 +8836,12 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "ci_config": {
+        "dep_sync": {
           "status": "fail",
+          "summary": "0/2"
+        },
+        "gomod_drift": {
+          "status": "na",
           "summary": ""
         },
         "konflux": {
@@ -8854,7 +8850,23 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "21m ago"
+          "summary": "14m ago"
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
         },
         "productized": {
           "status": "na",
@@ -8864,24 +8876,12 @@
           "status": "na",
           "summary": ""
         },
-        "config": {
+        "go_version": {
           "status": "ok",
-          "summary": ""
+          "summary": "1.26.0"
         },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "dep_sync": {
+        "ci_config": {
           "status": "fail",
-          "summary": "0/2"
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "na",
           "summary": ""
         }
       },
@@ -10836,27 +10836,7 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
         "art_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
           "status": "na",
           "summary": ""
         },
@@ -10868,13 +10848,17 @@
           "status": "ok",
           "summary": ""
         },
-        "upstream_sync": {
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "gomod_drift": {
           "status": "na",
           "summary": ""
         },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "21m ago"
+        "productized": {
+          "status": "na",
+          "summary": ""
         },
         "config": {
           "status": "ok",
@@ -10883,6 +10867,22 @@
         "rebasebot": {
           "status": "ok",
           "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
         }
       },
       "dep_syncs": [
@@ -11948,34 +11948,6 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.26"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
@@ -11984,15 +11956,43 @@
           "status": "na",
           "summary": ""
         },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.26"
+        },
         "upstream_image": {
           "status": "ok",
-          "summary": "21m ago"
+          "summary": "14m ago"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
         },
         "art_config": {
           "status": "na",
           "summary": ""
         },
         "productized": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
           "status": "na",
           "summary": ""
         }
@@ -13081,6 +13081,18 @@
       "skip": false,
       "upstream": "",
       "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
@@ -13089,21 +13101,9 @@
           "status": "na",
           "summary": ""
         },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
         "upstream_image": {
           "status": "ok",
-          "summary": "21m ago"
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
+          "summary": "14m ago"
         },
         "rebasebot": {
           "status": "ok",
@@ -13117,15 +13117,15 @@
           "status": "ok",
           "summary": ""
         },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
         },
         "art_config": {
           "status": "na",
           "summary": ""
         },
-        "open_pr": {
+        "productized": {
           "status": "na",
           "summary": ""
         }
@@ -14239,33 +14239,13 @@
           "status": "ok",
           "summary": ""
         },
-        "rebasebot": {
+        "go_version": {
           "status": "ok",
-          "summary": ""
+          "summary": "1.25.0 (tc 1.25.8)"
         },
         "ci_config": {
           "status": "ok",
           "summary": ""
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "21m ago"
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "ok",
-          "summary": "#81"
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0 (tc 1.25.8)"
         },
         "upstream_sync": {
           "status": "na",
@@ -14278,6 +14258,26 @@
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
+        },
+        "productized": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "ok",
+          "summary": "#81"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
         },
         "art_config": {
           "status": "na",
@@ -17569,22 +17569,6 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/4"
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
         "productized": {
           "status": "na",
           "summary": ""
@@ -17593,7 +17577,7 @@
           "status": "ok",
           "summary": "#234"
         },
-        "rebasebot": {
+        "config": {
           "status": "ok",
           "summary": ""
         },
@@ -17605,16 +17589,32 @@
           "status": "na",
           "summary": ""
         },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/4"
+        },
         "upstream_image": {
           "status": "ok",
-          "summary": "21m ago"
+          "summary": "14m ago"
         },
-        "config": {
-          "status": "ok",
+        "art_config": {
+          "status": "na",
           "summary": ""
         }
       },
@@ -20406,36 +20406,8 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "konflux": {
-          "status": "na",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "21m ago"
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
         "open_pr": {
           "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
           "summary": ""
         },
         "go_version": {
@@ -20446,11 +20418,39 @@
           "status": "ok",
           "summary": ""
         },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "14m ago"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/2"
         },
         "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "na",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
           "status": "na",
           "summary": ""
         }
