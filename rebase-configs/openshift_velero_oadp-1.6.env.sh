@@ -20,5 +20,6 @@ HOOK_SCRIPTS="--pre-rebase-hook \
   ${HOOK_SCRIPTS_LOCATION}/go-replace_kopia_oadp-1.6.sh \
   ${HOOK_SCRIPTS_LOCATION}/go-mod-tidy-and-commit.sh \
   ${HOOK_SCRIPTS_LOCATION}/restic-submodule-and-commit_oadp-1.6.sh \
+  ${HOOK_SCRIPTS_LOCATION}/update-velero-version-in-konflux-dockerfile.sh \
   ${HOOK_SCRIPTS_LOCATION}/normalize-dockerfiles-and-commit.sh \
   "
