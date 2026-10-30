@@ -183,6 +183,19 @@ spec:
         accessMode: ReadOnly
 ```
 
+### Why do restored PVCs stay unbound when the storage class uses WaitForFirstConsumer binding?
+
+With node-agent restore enabled, PVCs on a storage class that binds `WaitForFirstConsumer` can fail to bind when node affinity is configured, which leaves the restore waiting on PVCs that never become bound. Set `ignoreDelayBinding` in the DataProtectionApplication so the node agent ignores the binding delay:
+
+```yaml
+spec:
+  configuration:
+    nodeAgent:
+      enable: true
+      restorePVC:
+        ignoreDelayBinding: true
+```
+
 ### Why does a restore fail when a GitOps controller manages the same resources?
 
 The `app.kubernetes.io/instance` label used by GitOps controllers such as Argo CD can collide with the resources OADP manages during a restore, and the restore then fails. Set the controller's resource tracking method to `annotation+label` or `annotation` so it stops claiming ownership through labels. If the restore still fails, disable the controller for the duration of the restore and re-enable it afterwards.
