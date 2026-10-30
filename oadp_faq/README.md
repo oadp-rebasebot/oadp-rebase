@@ -67,7 +67,7 @@ Each OADP release supports a specific range of OpenShift Container Platform vers
 
 ### Why does the OADP version I installed not match my cluster version?
 
-OADP releases are tied to OpenShift Container Platform versions. When the installed operator is newer than the release that supports your cluster version, installation and validation can fail. Install the OADP release that supports your current OpenShift version, or upgrade OpenShift to a version the installed OADP release supports.
+OADP releases are tied to OpenShift Container Platform versions. When the installed operator is newer than the release that supports your cluster version, installation and validation can fail. Install the OADP release that supports your current OpenShift version, or upgrade OpenShift to a version the installed OADP release supports. See [OADP operator version is higher than the supported cluster version](https://access.redhat.com/solutions/7138407).
 
 ## Backup storage and credentials
 
@@ -166,6 +166,8 @@ Common causes and mitigations:
 - A pre-existing namespace on the destination cluster with different annotations: remove the namespace before restoring, or align file ownership after restore.
 - A label selector backup that did not include the namespace object: add the matching label to the namespace so it is backed up with its annotations.
 
+See [resolving overlapping UID ranges in OpenShift namespaces after migration](https://access.redhat.com/articles/6844071) for the procedure that repairs file ownership.
+
 ### How do I back up from one cluster and restore into another?
 
 Both clusters need backup storage locations with matching names and object storage paths, and they must share the same object storage credentials. Let OADP create the destination namespace, and delete existing PVCs that the restore must recreate. With the restic uploader, also remove the workload that mounts those volumes before restoring into a namespace where the volumes already exist.
@@ -229,7 +231,7 @@ The CSI plugin must be enabled and the [CSI backup prerequisites](https://docs.r
 
 ### Why can't Azure Files PVCs be restored from snapshots?
 
-The Azure Files CSI driver supports taking snapshots but not restoring from them, so PVCs on Azure Files cannot be recovered from a CSI snapshot. Use file system backup, or the CSI data mover, for Azure Files volumes instead.
+The Azure Files CSI driver supports taking snapshots but not restoring from them, so PVCs on Azure Files cannot be recovered from a CSI snapshot. Use file system backup, or the CSI data mover, for Azure Files volumes instead. See [OADP or Velero restore of an Azure Files CSI PVC creates an empty file share](https://access.redhat.com/solutions/7011280).
 
 ### Why does a VolumeSnapshotContent end up in a failed state?
 
@@ -320,15 +322,15 @@ metadata:
     kubevirt.io/skip-backup-hooks: "true"
 ```
 
-Newer OADP releases contain fixes for these freeze issues, so upgrade if you are on an affected version.
+Newer OADP releases contain fixes for these freeze issues, so upgrade if you are on an affected version. See [OADP or Cohesity backup freezes a VM during backup](https://access.redhat.com/solutions/7137659).
 
 ### Should I regenerate VM identity after restoring a VM?
 
-When a restored virtual machine runs alongside the original, regenerate its machine UUID and MAC addresses so the two instances do not present duplicate identities or collide on network addresses. A restore that replaces the only copy of a virtual machine does not need new identity values.
+When a restored virtual machine runs alongside the original, regenerate its machine UUID and MAC addresses so the two instances do not present duplicate identities or collide on network addresses. A restore that replaces the only copy of a virtual machine does not need new identity values. See [labels to apply on a virtual machine restore definition](https://access.redhat.com/solutions/7141128).
 
 ### Why does backing up a Windows VM finish as PartiallyFailed?
 
-A Windows virtual machine backup can end PartiallyFailed when the guest agent does not complete the freeze or thaw step in time. Re-run the backup, and if it keeps failing, back the virtual machine up with the freeze hooks skipped.
+A Windows virtual machine backup can end PartiallyFailed when the guest agent does not complete the freeze or thaw step in time. Re-run the backup, and if it keeps failing, back the virtual machine up with the freeze hooks skipped. See [OADP backup of Windows VMs ends with PartiallyFailed status](https://access.redhat.com/solutions/7101204).
 
 ### Why is Ceph capacity higher than expected after restoring VMs?
 
