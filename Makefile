@@ -95,12 +95,12 @@ verify-crd-regen:
 		for config in rebase-configs/$${prefix}_*.env.sh; do \
 			[ -f "$$config" ] || continue; \
 			grep -q 'SOURCE_UPSTREAM_REPO' "$$config" || continue; \
-			active=$$(grep -n -v '^[[:space:]]*#' "$$config"); \
-			mm=$$(echo "$$active" | grep 'make-manifests-and-commit.sh' | head -1 | cut -d: -f1); \
+			hooks=$$(bash -c '. "$$1" >/dev/null 2>&1; printf "%s\n" $$HOOK_SCRIPTS' _ "$$config" | grep '\.sh$$' | sed 's|.*/||' | grep -n .) || { echo "  UNRESOLVED HOOK_SCRIPTS: $$config"; fail=1; continue; }; \
+			mm=$$(echo "$$hooks" | grep 'make-manifests-and-commit.sh$$' | head -1 | cut -d: -f1); \
 			if [ -z "$$mm" ]; then \
 				echo "  MISSING make-manifests-and-commit.sh: $$config"; fail=1; continue; \
 			fi; \
-			last_go=$$(echo "$$active" | grep 'go-mod-tidy-and-commit.sh\|go-replace_\|go-use-tag_' | tail -1 | cut -d: -f1); \
+			last_go=$$(echo "$$hooks" | grep 'go-mod-tidy-and-commit.sh$$\|:go-replace_\|:go-use-tag_' | tail -1 | cut -d: -f1); \
 			if [ "$$mm" -le "$${last_go:-0}" ]; then echo "  ORDER: make-manifests must follow go-mod hooks: $$config"; fail=1; fi; \
 		done; \
 	done; \
