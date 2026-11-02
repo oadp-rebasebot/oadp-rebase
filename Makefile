@@ -1,4 +1,4 @@
-.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-repos-yaml go-test auto-rebase-test cve-scan-test shellcheck
+.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-crd-regen verify-repos-yaml go-test auto-rebase-test cve-scan-test shellcheck
 
 generate:
 	@bash tools/generate-go-replace-velero.sh
@@ -87,6 +87,23 @@ verify-kopia-alignment:
 	done; \
 	[ $$fail -eq 0 ] && echo "Kopia alignment OK" || exit 1
 
+verify-crd-regen:
+	@echo "=== CRD regen — configs of generates_crds repos run make-manifests-and-commit.sh after go-mod hooks ==="
+	@fail=0; \
+	for prefix in $$(yq -r '.repos[] | select(.generates_crds == true) | .config_prefix' repos.yaml); do \
+		for config in rebase-configs/$${prefix}_*.env.sh; do \
+			[ -f "$$config" ] || continue; \
+			grep -q 'SOURCE_UPSTREAM_REPO' "$$config" || continue; \
+			if ! grep -q 'make-manifests-and-commit.sh' "$$config"; then \
+				echo "  MISSING make-manifests-and-commit.sh: $$config"; fail=1; continue; \
+			fi; \
+			last_go=$$(grep -n 'go-mod-tidy-and-commit.sh\|go-replace_\|go-use-tag_' "$$config" | tail -1 | cut -d: -f1); \
+			mm=$$(grep -n 'make-manifests-and-commit.sh' "$$config" | head -1 | cut -d: -f1); \
+			if [ "$$mm" -le "$$last_go" ]; then echo "  ORDER: make-manifests must follow go-mod hooks: $$config"; fail=1; fi; \
+		done; \
+	done; \
+	[ $$fail -eq 0 ] && echo "CRD regen hooks OK" || { echo "ERROR: generated CRDs would drift after dependency bumps"; exit 1; }
+
 verify-repos-yaml:
 	@echo "=== repos.yaml — valid YAML and every config_prefix has matching config files ==="
 	@yq eval 'true' repos.yaml > /dev/null || { echo "FAIL: repos.yaml is not valid YAML"; exit 1; }
@@ -151,6 +168,6 @@ shellcheck:
 	done; \
 	[ $$fail -eq 0 ] && echo "All files passed ShellCheck" || exit 1
 
-test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks go-test auto-rebase-test cve-scan-test
+test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks verify-crd-regen go-test auto-rebase-test cve-scan-test
 	@echo ""
 	@echo "All checks passed."

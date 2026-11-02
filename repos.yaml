@@ -3,6 +3,8 @@
 #
 # Required fields: org, repo, wave, config_prefix
 # Optional fields: main_only, dev_branch, min_branch, max_branch, images,
+#                  generates_crds (repo has `make manifests`; configs must run
+#                  make-manifests-and-commit.sh after go-mod bumps),
 #                  expected_conflicts
 
 waves:
@@ -139,6 +141,7 @@ repos:
     repo: oadp-non-admin
     wave: 4
     config_prefix: migtools_oadp_non_admin
+    generates_crds: true
     min_branch: oadp-1.5
     images:
       - namespace: konveyor
@@ -158,6 +161,7 @@ repos:
     repo: kubevirt-datamover-controller
     wave: 4
     config_prefix: migtools_kubevirt_datamover_controller
+    generates_crds: true
     min_branch: oadp-1.6
     images:
       - namespace: konveyor
@@ -168,6 +172,7 @@ repos:
     repo: oadp-vm-file-restore
     wave: 4
     config_prefix: migtools_oadp_vm_file_restore
+    generates_crds: true
     min_branch: oadp-1.6
     images:
       - namespace: konveyor
