@@ -89,17 +89,19 @@ verify-kopia-alignment:
 
 verify-crd-regen:
 	@echo "=== CRD regen — configs of generates_crds repos run make-manifests-and-commit.sh after go-mod hooks ==="
-	@fail=0; \
-	for prefix in $$(yq -r '.repos[] | select(.generates_crds == true) | .config_prefix' repos.yaml); do \
+	@prefixes=$$(yq -r '.repos[] | select(.generates_crds == true) | .config_prefix' repos.yaml) || { echo "ERROR: yq failed to read repos.yaml"; exit 1; }; \
+	fail=0; \
+	for prefix in $$prefixes; do \
 		for config in rebase-configs/$${prefix}_*.env.sh; do \
 			[ -f "$$config" ] || continue; \
 			grep -q 'SOURCE_UPSTREAM_REPO' "$$config" || continue; \
-			if ! grep -q 'make-manifests-and-commit.sh' "$$config"; then \
+			active=$$(grep -n -v '^[[:space:]]*#' "$$config"); \
+			mm=$$(echo "$$active" | grep 'make-manifests-and-commit.sh' | head -1 | cut -d: -f1); \
+			if [ -z "$$mm" ]; then \
 				echo "  MISSING make-manifests-and-commit.sh: $$config"; fail=1; continue; \
 			fi; \
-			last_go=$$(grep -n 'go-mod-tidy-and-commit.sh\|go-replace_\|go-use-tag_' "$$config" | tail -1 | cut -d: -f1); \
-			mm=$$(grep -n 'make-manifests-and-commit.sh' "$$config" | head -1 | cut -d: -f1); \
-			if [ "$$mm" -le "$$last_go" ]; then echo "  ORDER: make-manifests must follow go-mod hooks: $$config"; fail=1; fi; \
+			last_go=$$(echo "$$active" | grep 'go-mod-tidy-and-commit.sh\|go-replace_\|go-use-tag_' | tail -1 | cut -d: -f1); \
+			if [ "$$mm" -le "$${last_go:-0}" ]; then echo "  ORDER: make-manifests must follow go-mod hooks: $$config"; fail=1; fi; \
 		done; \
 	done; \
 	[ $$fail -eq 0 ] && echo "CRD regen hooks OK" || { echo "ERROR: generated CRDs would drift after dependency bumps"; exit 1; }
