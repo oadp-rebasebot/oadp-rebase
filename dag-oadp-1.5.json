@@ -7,42 +7,6 @@
       "skip": false,
       "upstream": "project-velero/kopia @ v0.19.0-velero.1",
       "checks": {
-        "dep_sync": {
-          "status": "warn",
-          "summary": "err"
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "na",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
         "go_version": {
           "status": "ok",
           "summary": "1.26.0"
@@ -54,14 +18,44 @@
         "upstream_sync": {
           "status": "ok",
           "summary": ""
+        },
+        "upstream_image": {
+          "status": "na",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
+          "status": "na",
+          "summary": ""
         }
       },
-      "issues": [
-        {
-          "severity": "warning",
-          "message": "API error loading .gitmodules: GitHub API /repos/migtools/kopia/contents/.gitmodules?ref=oadp-1.5 returned 502"
-        }
-      ],
       "cves": {
         "critical": 0,
         "high": 1,
@@ -86,35 +80,11 @@
       "skip": true,
       "upstream": "",
       "checks": {
-        "productized": {
-          "status": "skip",
-          "summary": ""
-        },
         "open_pr": {
           "status": "skip",
           "summary": ""
         },
         "config": {
-          "status": "skip",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "skip",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "skip",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "skip",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "skip",
-          "summary": ""
-        },
-        "ci_config": {
           "status": "skip",
           "summary": ""
         },
@@ -126,11 +96,35 @@
           "status": "skip",
           "summary": ""
         },
+        "konflux": {
+          "status": "skip",
+          "summary": ""
+        },
         "upstream_image": {
           "status": "skip",
           "summary": ""
         },
         "art_config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "productized": {
+          "status": "skip",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "skip",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "skip",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_sync": {
           "status": "skip",
           "summary": ""
         }
@@ -171,23 +165,23 @@
           "status": "ok",
           "summary": "1.25.0"
         },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
         "gomod_drift": {
           "status": "ok",
           "summary": ""
         },
-        "art_config": {
-          "status": "fail",
-          "summary": ""
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
         },
         "productized": {
           "status": "ok",
           "summary": "1/1"
         },
         "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
           "status": "ok",
           "summary": ""
         },
@@ -199,13 +193,13 @@
           "status": "fail",
           "summary": "0/2"
         },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
         "upstream_image": {
           "status": "ok",
-          "summary": "8m ago"
+          "summary": "1h ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
         }
       },
       "dep_syncs": [
@@ -258,10 +252,6 @@
         {
           "severity": "error",
           "message": "2 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.5/images"
         }
       ],
       "cves": {
@@ -309,17 +299,37 @@
       "skip": false,
       "upstream": "kubevirt/kubevirt-velero-plugin @ release-v0.8",
       "checks": {
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
         "go_version": {
           "status": "ok",
           "summary": "1.25.0"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
         },
         "ci_config": {
           "status": "ok",
           "summary": ""
         },
+        "upstream_sync": {
+          "status": "fail",
+          "summary": "diverged"
+        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
         },
         "konflux": {
           "status": "ok",
@@ -329,29 +339,9 @@
           "status": "ok",
           "summary": "konflux.Dockerfile"
         },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "fail",
-          "summary": "diverged"
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
         "productized": {
           "status": "ok",
           "summary": "1/1"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
         },
         "config": {
           "status": "ok",
@@ -462,25 +452,37 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
         },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.24"
         },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
+        "open_pr": {
+          "status": "na",
+          "summary": ""
         },
         "config": {
           "status": "ok",
           "summary": ""
         },
-        "rebasebot": {
+        "go_version": {
           "status": "ok",
+          "summary": "1.25.0 (tc 1.25.8)"
+        },
+        "upstream_sync": {
+          "status": "na",
           "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
         },
         "art_config": {
           "status": "ok",
@@ -490,25 +492,13 @@
           "status": "ok",
           "summary": "1/1"
         },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "go_version": {
+        "rebasebot": {
           "status": "ok",
-          "summary": "1.25.0 (tc 1.25.8)"
+          "summary": ""
         },
         "ci_config": {
-          "status": "warn",
-          "summary": "err"
-        },
-        "upstream_sync": {
-          "status": "na",
+          "status": "ok",
           "summary": ""
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
         }
       },
       "dep_syncs": [
@@ -569,10 +559,6 @@
       ],
       "issues": [
         {
-          "severity": "warning",
-          "message": "API error: GitHub API /repos/openshift/release/contents/ci-operator/config/openshift/hypershift-oadp-plugin returned 502"
-        },
-        {
           "severity": "error",
           "message": "1 internal dep(s) out of sync"
         }
@@ -608,13 +594,21 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
         },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
         },
         "config": {
           "status": "ok",
@@ -628,13 +622,17 @@
           "status": "na",
           "summary": ""
         },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
         },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
         },
         "rebasebot": {
           "status": "ok",
@@ -643,18 +641,6 @@
         "ci_config": {
           "status": "ok",
           "summary": ""
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
         }
       },
       "dep_syncs": [
@@ -764,34 +750,6 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-aws @ v1.12.2",
       "checks": {
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "ok",
-          "summary": ""
-        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
@@ -804,13 +762,41 @@
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
         "productized": {
           "status": "ok",
           "summary": "1/1"
         },
-        "open_pr": {
-          "status": "warn",
-          "summary": "err"
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
         }
       },
       "dep_syncs": [
@@ -871,10 +857,6 @@
       ],
       "issues": [
         {
-          "severity": "warning",
-          "message": "API error: GitHub API /repos/openshift/velero-plugin-for-aws/pulls?state=open&base=oadp-1.5&per_page=100 returned 502"
-        },
-        {
           "severity": "error",
           "message": "1 internal dep(s) out of sync"
         }
@@ -917,37 +899,9 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "go_version": {
-          "status": "warn",
-          "summary": "err"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
         "dep_sync": {
-          "status": "warn",
-          "summary": "err"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
+          "status": "fail",
+          "summary": "0/1"
         },
         "konflux": {
           "status": "ok",
@@ -955,25 +909,105 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "8m ago"
+          "summary": "1h ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
         },
         "productized": {
           "status": "ok",
           "summary": "1/1"
         },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
         "config": {
           "status": "ok",
           "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
         }
       },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "3fd503971caa",
+          "head": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "ae19c4def263640b18fa818733aaa8e44b920819",
+              "message": "Add ConfigMap support for keepLatestMaintenanceJobs"
+            },
+            {
+              "sha": "62a0eea7aef46b295efb76535f42cdfe1cb24d31",
+              "message": "Fix corev1api alias in maintenance_test.go for oadp-1.5"
+            },
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            },
+            {
+              "sha": "12946909f3cfcbb7128cf73137fd46b8d6a45d2a",
+              "message": "Add akarol and PrasadJoshi12 to OWNERS"
+            },
+            {
+              "sha": "a48122a5773ef87308491828469c096c3cf6d777",
+              "message": "Merge pull request #596 from redhat-chai-bot/add-akarol-owners-oadp-1.5"
+            },
+            {
+              "sha": "e42d690b0caa7c6a4210189c73e5db9877308b85",
+              "message": "Fix compile failures in backup repository controller test backport"
+            },
+            {
+              "sha": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
+              "message": "Merge pull request #593 from Joeavaikath/backport-9135-keepLatestMaintenanceJobs-oadp-1.5"
+            }
+          ]
+        }
+      ],
       "issues": [
         {
-          "severity": "warning",
-          "message": "API error: GitHub API /repos/openshift/velero-plugin-for-legacy-aws/contents/go.mod?ref=oadp-1.5 returned 502"
-        },
-        {
-          "severity": "warning",
-          "message": "API error: GitHub API /repos/openshift/velero-plugin-for-legacy-aws/contents/go.mod?ref=oadp-1.5 returned 502"
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
         }
       ],
       "cves": {
@@ -1014,29 +1048,13 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-microsoft-azure @ v1.12.2",
       "checks": {
-        "config": {
+        "upstream_sync": {
           "status": "ok",
           "summary": ""
         },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
         },
         "art_config": {
           "status": "ok",
@@ -1050,15 +1068,31 @@
           "status": "na",
           "summary": ""
         },
-        "upstream_sync": {
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "gomod_drift": {
           "status": "ok",
           "summary": ""
         },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
         },
-        "gomod_drift": {
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
           "status": "ok",
           "summary": ""
         }
@@ -1163,18 +1197,6 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-gcp @ v1.12.2",
       "checks": {
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
         "upstream_sync": {
           "status": "ok",
           "summary": ""
@@ -1183,13 +1205,17 @@
           "status": "fail",
           "summary": "0/1"
         },
-        "gomod_drift": {
+        "konflux": {
           "status": "ok",
-          "summary": ""
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
         },
         "art_config": {
-          "status": "fail",
-          "summary": ""
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
         },
         "productized": {
           "status": "ok",
@@ -1203,13 +1229,21 @@
           "status": "ok",
           "summary": ""
         },
-        "go_version": {
-          "status": "warn",
-          "summary": "err"
-        },
-        "konflux": {
+        "ci_config": {
           "status": "ok",
-          "summary": "rhel_9_golang_1.25"
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
         }
       },
       "dep_syncs": [
@@ -1270,16 +1304,8 @@
       ],
       "issues": [
         {
-          "severity": "warning",
-          "message": "API error: GitHub API /repos/openshift/velero-plugin-for-gcp/contents/go.mod?ref=oadp-1.5 returned 502"
-        },
-        {
           "severity": "error",
           "message": "1 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.5/images"
         }
       ],
       "cves": {
@@ -1327,21 +1353,9 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/2"
         },
         "art_config": {
           "status": "ok",
@@ -1355,23 +1369,35 @@
           "status": "na",
           "summary": ""
         },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
         "rebasebot": {
           "status": "ok",
           "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
         },
         "ci_config": {
           "status": "ok",
           "summary": ""
         },
-        "upstream_sync": {
+        "gomod_drift": {
           "status": "na",
           "summary": ""
         },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/2"
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
         },
-        "gomod_drift": {
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
+        "upstream_sync": {
           "status": "na",
           "summary": ""
         }
@@ -1503,19 +1529,11 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
         },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "ci_config": {
+        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
@@ -1531,6 +1549,14 @@
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
         "open_pr": {
           "status": "na",
           "summary": ""
@@ -1539,13 +1565,13 @@
           "status": "ok",
           "summary": ""
         },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
         "go_version": {
           "status": "ok",
           "summary": "1.25.7"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
         },
         "upstream_sync": {
           "status": "na",
@@ -1707,8 +1733,28 @@
       "skip": false,
       "upstream": "",
       "checks": {
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
         "upstream_sync": {
           "status": "na",
+          "summary": ""
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "ci_config": {
+          "status": "ok",
           "summary": ""
         },
         "dep_sync": {
@@ -1723,36 +1769,16 @@
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
         "upstream_image": {
           "status": "ok",
-          "summary": "8m ago"
+          "summary": "1h ago"
         },
         "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
-        "productized": {
           "status": "ok",
-          "summary": "1/1"
+          "summary": "konflux.Dockerfile"
         },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
-        },
-        "ci_config": {
-          "status": "ok",
+        "open_pr": {
+          "status": "na",
           "summary": ""
         }
       },
@@ -1970,10 +1996,6 @@
         {
           "severity": "error",
           "message": "6 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.5/images"
         }
       ],
       "cves": {
@@ -2007,13 +2029,9 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
+        "art_config": {
           "status": "ok",
-          "summary": ""
+          "summary": "konflux.Dockerfile"
         },
         "rebasebot": {
           "status": "ok",
@@ -2021,10 +2039,6 @@
         },
         "ci_config": {
           "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
           "summary": ""
         },
         "dep_sync": {
@@ -2035,25 +2049,33 @@
           "status": "na",
           "summary": ""
         },
-        "konflux": {
+        "upstream_image": {
           "status": "ok",
-          "summary": "rhel_9_golang_1.25"
+          "summary": "1h ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
         },
         "go_version": {
           "status": "ok",
           "summary": "1.25.0"
         },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
         },
-        "art_config": {
+        "konflux": {
           "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
+          "summary": "rhel_9_golang_1.25"
         }
       },
       "dep_syncs": [

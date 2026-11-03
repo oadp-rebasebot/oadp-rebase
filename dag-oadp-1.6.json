@@ -7,7 +7,7 @@
       "skip": false,
       "upstream": "project-velero/kopia @ v0.22.3-velero-patch",
       "checks": {
-        "open_pr": {
+        "productized": {
           "status": "na",
           "summary": ""
         },
@@ -23,7 +23,15 @@
           "status": "ok",
           "summary": "1.26.0"
         },
+        "upstream_image": {
+          "status": "na",
+          "summary": ""
+        },
         "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
           "status": "na",
           "summary": ""
         },
@@ -46,14 +54,6 @@
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
         }
       },
       "cves": {
@@ -91,22 +91,6 @@
           "status": "skip",
           "summary": ""
         },
-        "ci_config": {
-          "status": "skip",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "skip",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "skip",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "skip",
-          "summary": ""
-        },
         "config": {
           "status": "skip",
           "summary": ""
@@ -115,15 +99,31 @@
           "status": "skip",
           "summary": ""
         },
-        "go_version": {
-          "status": "skip",
-          "summary": ""
-        },
         "upstream_sync": {
           "status": "skip",
           "summary": ""
         },
+        "dep_sync": {
+          "status": "skip",
+          "summary": ""
+        },
         "konflux": {
+          "status": "skip",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "skip",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "skip",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_image": {
           "status": "skip",
           "summary": ""
         },
@@ -167,19 +167,78 @@
       "skip": false,
       "upstream": "filebrowser/filebrowser @ v2.63.23",
       "checks": {
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
         "upstream_sync": {
           "status": "ok",
           "summary": ""
         },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
         "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
           "status": "na",
           "summary": ""
         },
-        "art_config": {
-          "status": "fail",
+        "rebasebot": {
+          "status": "ok",
           "summary": ""
         },
-        "ci_config": {
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        }
+      },
+      "cves": null,
+      "clean_scanned_at": "2026-11-02T07:26:37Z"
+    },
+    {
+      "repo": "migtools/oadp-vmdp",
+      "branch": "oadp-1.6",
+      "wave": 1,
+      "skip": false,
+      "upstream": "migtools/kopia @ oadp-1.6",
+      "checks": {
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
@@ -191,51 +250,14 @@
           "status": "ok",
           "summary": ""
         },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
         "productized": {
-          "status": "na",
-          "summary": ""
+          "status": "ok",
+          "summary": "1/1"
         },
         "open_pr": {
           "status": "na",
           "summary": ""
         },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "warn",
-          "summary": "err"
-        }
-      },
-      "issues": [
-        {
-          "severity": "warning",
-          "message": "API error: GitHub API /repos/migtools/filebrowser/contents/go.mod?ref=oadp-1.6 returned 504"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
-        }
-      ],
-      "cves": null,
-      "clean_scanned_at": "2026-11-02T07:26:37Z"
-    },
-    {
-      "repo": "migtools/oadp-vmdp",
-      "branch": "oadp-1.6",
-      "wave": 1,
-      "skip": false,
-      "upstream": "migtools/kopia @ oadp-1.6",
-      "checks": {
         "config": {
           "status": "ok",
           "summary": ""
@@ -251,46 +273,8 @@
         "upstream_sync": {
           "status": "ok",
           "summary": ""
-        },
-        "dep_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
         }
       },
-      "issues": [
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
-        }
-      ],
       "cves": {
         "critical": 0,
         "high": 2,
@@ -322,41 +306,17 @@
       "skip": false,
       "upstream": "velero-io/velero @ v1.18.4",
       "checks": {
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "upstream_sync": {
-          "status": "ok",
-          "summary": ""
-        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/2"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
         },
         "rebasebot": {
           "status": "ok",
           "summary": ""
         },
-        "ci_config": {
+        "go_version": {
           "status": "ok",
-          "summary": ""
+          "summary": "1.26.0"
         },
         "gomod_drift": {
           "status": "ok",
@@ -366,8 +326,32 @@
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
         "art_config": {
-          "status": "fail",
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
           "summary": ""
         }
       },
@@ -413,10 +397,6 @@
         {
           "severity": "error",
           "message": "2 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
         }
       ],
       "cves": {
@@ -450,28 +430,12 @@
       "skip": false,
       "upstream": "kubevirt/kubevirt-velero-plugin @ v0.9.1",
       "checks": {
-        "ci_config": {
-          "status": "warn",
-          "summary": "err"
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
-        "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
         "open_pr": {
           "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
           "summary": ""
         },
         "rebasebot": {
@@ -490,13 +454,29 @@
           "status": "fail",
           "summary": "0/1"
         },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
-        "config": {
+        "upstream_image": {
           "status": "ok",
-          "summary": ""
+          "summary": "1h ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -529,16 +509,8 @@
       ],
       "issues": [
         {
-          "severity": "warning",
-          "message": "API error: GitHub API /repos/openshift/release/contents/ci-operator/config/migtools/kubevirt-velero-plugin returned 500"
-        },
-        {
           "severity": "error",
           "message": "1 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
         }
       ],
       "cves": null,
@@ -551,6 +523,26 @@
       "skip": false,
       "upstream": "",
       "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
         "rebasebot": {
           "status": "ok",
           "summary": ""
@@ -560,44 +552,24 @@
           "summary": "1.26.0"
         },
         "ci_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
+          "status": "ok",
           "summary": ""
         },
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
         },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
         "konflux": {
-          "status": "na",
-          "summary": ""
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
         },
         "upstream_image": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
           "status": "ok",
-          "summary": ""
+          "summary": "1h ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
         }
       },
       "dep_syncs": [
@@ -644,6 +616,18 @@
       "skip": false,
       "upstream": "",
       "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
         "upstream_sync": {
           "status": "na",
           "summary": ""
@@ -656,16 +640,12 @@
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
-        "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
         "productized": {
-          "status": "na",
-          "summary": ""
+          "status": "ok",
+          "summary": "1/1"
         },
-        "open_pr": {
-          "status": "na",
+        "rebasebot": {
+          "status": "ok",
           "summary": ""
         },
         "go_version": {
@@ -678,19 +658,11 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "8m ago"
+          "summary": "1h ago"
         },
-        "config": {
+        "art_config": {
           "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
+          "summary": "konflux.Dockerfile"
         }
       },
       "dep_syncs": [
@@ -743,10 +715,6 @@
         {
           "severity": "error",
           "message": "2 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
         }
       ],
       "cves": {
@@ -780,9 +748,45 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-aws @ v1.14.4",
       "checks": {
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
         "open_pr": {
           "status": "na",
           "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         },
         "config": {
           "status": "ok",
@@ -791,42 +795,6 @@
         "go_version": {
           "status": "ok",
           "summary": "1.26.0"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
         }
       },
       "dep_syncs": [
@@ -861,10 +829,6 @@
         {
           "severity": "error",
           "message": "1 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
         }
       ],
       "cves": null,
@@ -877,6 +841,22 @@
       "skip": false,
       "upstream": "",
       "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
         "config": {
           "status": "ok",
           "summary": ""
@@ -885,8 +865,8 @@
           "status": "ok",
           "summary": "1.26.0"
         },
-        "upstream_sync": {
-          "status": "na",
+        "ci_config": {
+          "status": "ok",
           "summary": ""
         },
         "dep_sync": {
@@ -897,33 +877,17 @@
           "status": "na",
           "summary": ""
         },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
         "upstream_image": {
           "status": "ok",
-          "summary": "8m ago"
+          "summary": "1h ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
         },
         "productized": {
-          "status": "na",
-          "summary": ""
+          "status": "ok",
+          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -958,10 +922,6 @@
         {
           "severity": "error",
           "message": "1 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
         }
       ],
       "cves": null,
@@ -974,21 +934,33 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-microsoft-azure @ v1.14.4",
       "checks": {
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
-        "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
         "config": {
           "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
           "summary": ""
         },
         "rebasebot": {
           "status": "ok",
           "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
         },
         "ci_config": {
           "status": "ok",
@@ -1009,18 +981,6 @@
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
         }
       },
       "dep_syncs": [
@@ -1055,10 +1015,6 @@
         {
           "severity": "error",
           "message": "1 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
         }
       ],
       "cves": null,
@@ -1071,22 +1027,6 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-gcp @ v1.14.4",
       "checks": {
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
         "open_pr": {
           "status": "na",
           "summary": ""
@@ -1095,29 +1035,45 @@
           "status": "ok",
           "summary": ""
         },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
         "go_version": {
           "status": "ok",
           "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
         },
         "upstream_sync": {
           "status": "ok",
           "summary": ""
         },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
         "gomod_drift": {
           "status": "ok",
           "summary": ""
         },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
         "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
-        "rebasebot": {
           "status": "ok",
-          "summary": ""
+          "summary": "konflux.Dockerfile"
         },
-        "ci_config": {
+        "productized": {
           "status": "ok",
-          "summary": ""
+          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -1152,10 +1108,6 @@
         {
           "severity": "error",
           "message": "1 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
         }
       ],
       "cves": {
@@ -1182,29 +1134,13 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "ci_config": {
+        "go_version": {
           "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
+          "summary": "1.26.0"
         },
         "dep_sync": {
           "status": "fail",
           "summary": "0/2"
-        },
-        "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
         },
         "gomod_drift": {
           "status": "na",
@@ -1216,7 +1152,15 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "8m ago"
+          "summary": "1h ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
         },
         "config": {
           "status": "ok",
@@ -1226,9 +1170,17 @@
           "status": "ok",
           "summary": ""
         },
-        "go_version": {
+        "ci_config": {
           "status": "ok",
-          "summary": "1.26.0"
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
         }
       },
       "dep_syncs": [
@@ -1281,10 +1233,6 @@
         {
           "severity": "error",
           "message": "2 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
         }
       ],
       "cves": null,
@@ -1297,39 +1245,7 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/2"
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
-        "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
         "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
           "status": "na",
           "summary": ""
         },
@@ -1341,9 +1257,41 @@
           "status": "ok",
           "summary": ""
         },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
         "upstream_sync": {
           "status": "na",
           "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/2"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -1396,10 +1344,6 @@
         {
           "severity": "error",
           "message": "2 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
         }
       ],
       "cves": {
@@ -1447,35 +1391,19 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "upstream_image": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
           "status": "ok",
-          "summary": "8m ago"
+          "summary": ""
         },
         "go_version": {
           "status": "ok",
           "summary": "1.26.0"
         },
         "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
@@ -1487,13 +1415,29 @@
           "status": "fail",
           "summary": "0/1"
         },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
         "gomod_drift": {
           "status": "na",
           "summary": ""
         },
-        "konflux": {
+        "upstream_image": {
           "status": "ok",
-          "summary": "rhel_9_golang_1.25"
+          "summary": "1h ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -1528,10 +1472,6 @@
         {
           "severity": "error",
           "message": "1 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
         }
       ],
       "cves": {
@@ -1558,7 +1498,7 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "open_pr": {
+        "gomod_drift": {
           "status": "na",
           "summary": ""
         },
@@ -1566,13 +1506,37 @@
           "status": "ok",
           "summary": ""
         },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
         "ci_config": {
           "status": "ok",
           "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.26"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "3 cfgs"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "3/3"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
         },
         "upstream_sync": {
           "status": "na",
@@ -1581,30 +1545,6 @@
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.26"
-        },
-        "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
         }
       },
       "dep_syncs": [
@@ -1639,10 +1579,6 @@
         {
           "severity": "error",
           "message": "1 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
         }
       ],
       "cves": null,
@@ -1655,38 +1591,6 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "warn",
-          "summary": "err"
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.26"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "8m ago"
-        },
-        "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
         "open_pr": {
           "status": "na",
           "summary": ""
@@ -1695,6 +1599,26 @@
           "status": "ok",
           "summary": ""
         },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "1/6"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
         "rebasebot": {
           "status": "ok",
           "summary": ""
@@ -1702,16 +1626,140 @@
         "go_version": {
           "status": "ok",
           "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.26"
         }
       },
-      "issues": [
+      "dep_syncs": [
         {
-          "severity": "warning",
-          "message": "API error loading .gitmodules: GitHub API /repos/openshift/oadp-must-gather/contents/.gitmodules?ref=oadp-1.6 returned 500"
+          "module": "github.com/migtools/oadp-non-admin",
+          "org": "migtools",
+          "repo": "oadp-non-admin",
+          "have": "2367e0fd45af",
+          "head": "2367e0fd45af64340ae6ccf9178431f23c8cbec7",
+          "in_sync": true
         },
         {
+          "module": "github.com/openshift/oadp-operator",
+          "org": "openshift",
+          "repo": "oadp-operator",
+          "have": "2d9a5c464972",
+          "head": "483de5e05055352af7500c46bf40f5b9b447ddb8",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "af03780db438efc2f3c0fb472d2f1628813b3a11",
+              "message": "Add akarol to OWNERS"
+            },
+            {
+              "sha": "483de5e05055352af7500c46bf40f5b9b447ddb8",
+              "message": "Merge pull request #2507 from redhat-chai-bot/add-akarol-owners-oadp-1.6"
+            }
+          ]
+        },
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "c15f70524d0e",
+          "head": "6ec33ac9e956d7b0c40d31e8b0f488e3d8f195ed",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "0bb356af76ef89d10248a7bff0528792728e97eb",
+              "message": "Add akarol to OWNERS"
+            },
+            {
+              "sha": "063f21d581fe71ed5cfdb769f5684d41a1fd4298",
+              "message": "Merge pull request #597 from redhat-chai-bot/add-akarol-owners-oadp-1.6"
+            },
+            {
+              "sha": "65f25b4d1b237d997f459833a1d8805ae54e3ff8",
+              "message": "Reject restores from backups not in a completed or partially failed phase (#9792)"
+            },
+            {
+              "sha": "6ec33ac9e956d7b0c40d31e8b0f488e3d8f195ed",
+              "message": "Merge pull request #600 from kaovilai/OADP-8895-9792-oadp-1.6"
+            }
+          ]
+        },
+        {
+          "module": "https://github.com/openshift/restic.git",
+          "org": "openshift",
+          "repo": "restic",
+          "have": "616512f2dee8",
+          "head": "e808d4d5a3b2033a4163cf7b9b97717fc61c0c2a",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "31e761b3436d1627e607df3d46dace9e9bd15382",
+              "message": "ci: disable upstream tests workflow"
+            },
+            {
+              "sha": "e808d4d5a3b2033a4163cf7b9b97717fc61c0c2a",
+              "message": "Merge pull request #76 from kaovilai/ci/disable-tests-workflow-oadp-1.6"
+            }
+          ]
+        },
+        {
+          "module": "https://github.com/migtools/kopia",
+          "org": "migtools",
+          "repo": "kopia",
+          "have": "47fc4a34751a",
+          "head": "f83e62070a5dc7db7b75aa0f571f29bf369012dc",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "c698479f7fdaedcd0f884769bf1193e83bf1591d",
+              "message": "ci: disable quay binaries push workflow"
+            },
+            {
+              "sha": "f83e62070a5dc7db7b75aa0f571f29bf369012dc",
+              "message": "Merge pull request #62 from migtools/ci/disable-quay-push-1.6"
+            }
+          ]
+        },
+        {
+          "module": "https://github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "c15f70524d0e",
+          "head": "6ec33ac9e956d7b0c40d31e8b0f488e3d8f195ed",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "0bb356af76ef89d10248a7bff0528792728e97eb",
+              "message": "Add akarol to OWNERS"
+            },
+            {
+              "sha": "063f21d581fe71ed5cfdb769f5684d41a1fd4298",
+              "message": "Merge pull request #597 from redhat-chai-bot/add-akarol-owners-oadp-1.6"
+            },
+            {
+              "sha": "65f25b4d1b237d997f459833a1d8805ae54e3ff8",
+              "message": "Reject restores from backups not in a completed or partially failed phase (#9792)"
+            },
+            {
+              "sha": "6ec33ac9e956d7b0c40d31e8b0f488e3d8f195ed",
+              "message": "Merge pull request #600 from kaovilai/OADP-8895-9792-oadp-1.6"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
           "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
+          "message": "5 internal dep(s) out of sync"
         }
       ],
       "cves": null,
@@ -1740,47 +1788,115 @@
           "status": "ok",
           "summary": "1.26.0"
         },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "1h ago"
+        },
         "upstream_sync": {
           "status": "na",
           "summary": ""
         },
         "dep_sync": {
-          "status": "warn",
-          "summary": "err"
+          "status": "fail",
+          "summary": "1/4"
         },
         "gomod_drift": {
           "status": "na",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "fail",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
           "summary": ""
         },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.26"
         },
-        "upstream_image": {
+        "art_config": {
           "status": "ok",
-          "summary": "8m ago"
+          "summary": "konflux.Dockerfile"
         },
         "productized": {
-          "status": "na",
-          "summary": ""
+          "status": "ok",
+          "summary": "1/1"
         }
       },
-      "issues": [
+      "dep_syncs": [
         {
-          "severity": "warning",
-          "message": "API error loading .gitmodules: GitHub API /repos/migtools/oadp-cli/contents/.gitmodules?ref=oadp-1.6 returned 504"
+          "module": "github.com/migtools/oadp-non-admin",
+          "org": "migtools",
+          "repo": "oadp-non-admin",
+          "have": "2367e0fd45af",
+          "head": "2367e0fd45af64340ae6ccf9178431f23c8cbec7",
+          "in_sync": true
         },
         {
+          "module": "github.com/openshift/oadp-operator",
+          "org": "openshift",
+          "repo": "oadp-operator",
+          "have": "2d9a5c464972",
+          "head": "483de5e05055352af7500c46bf40f5b9b447ddb8",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "af03780db438efc2f3c0fb472d2f1628813b3a11",
+              "message": "Add akarol to OWNERS"
+            },
+            {
+              "sha": "483de5e05055352af7500c46bf40f5b9b447ddb8",
+              "message": "Merge pull request #2507 from redhat-chai-bot/add-akarol-owners-oadp-1.6"
+            }
+          ]
+        },
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "c15f70524d0e",
+          "head": "6ec33ac9e956d7b0c40d31e8b0f488e3d8f195ed",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "0bb356af76ef89d10248a7bff0528792728e97eb",
+              "message": "Add akarol to OWNERS"
+            },
+            {
+              "sha": "063f21d581fe71ed5cfdb769f5684d41a1fd4298",
+              "message": "Merge pull request #597 from redhat-chai-bot/add-akarol-owners-oadp-1.6"
+            },
+            {
+              "sha": "65f25b4d1b237d997f459833a1d8805ae54e3ff8",
+              "message": "Reject restores from backups not in a completed or partially failed phase (#9792)"
+            },
+            {
+              "sha": "6ec33ac9e956d7b0c40d31e8b0f488e3d8f195ed",
+              "message": "Merge pull request #600 from kaovilai/OADP-8895-9792-oadp-1.6"
+            }
+          ]
+        },
+        {
+          "module": "github.com/migtools/kopia",
+          "org": "migtools",
+          "repo": "kopia",
+          "have": "47fc4a34751a",
+          "head": "f83e62070a5dc7db7b75aa0f571f29bf369012dc",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "c698479f7fdaedcd0f884769bf1193e83bf1591d",
+              "message": "ci: disable quay binaries push workflow"
+            },
+            {
+              "sha": "f83e62070a5dc7db7b75aa0f571f29bf369012dc",
+              "message": "Merge pull request #62 from migtools/ci/disable-quay-push-1.6"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
           "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
+          "message": "3 internal dep(s) out of sync"
         }
       ],
       "cves": null,
@@ -1793,25 +1909,17 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.26"
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "8m ago"
+          "summary": "1h ago"
         },
         "art_config": {
-          "status": "fail",
-          "summary": ""
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
         },
         "config": {
           "status": "ok",
@@ -1821,8 +1929,24 @@
           "status": "ok",
           "summary": ""
         },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
         "ci_config": {
           "status": "ok",
+          "summary": ""
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
           "summary": ""
         },
         "dep_sync": {
@@ -1830,14 +1954,6 @@
           "summary": "1/2"
         },
         "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
           "status": "na",
           "summary": ""
         }
@@ -1882,10 +1998,6 @@
         {
           "severity": "error",
           "message": "1 internal dep(s) out of sync"
-        },
-        {
-          "severity": "error",
-          "message": "no ocp-build-data config; add YAML to https://github.com/openshift-eng/ocp-build-data/tree/oadp-1.6/images"
         }
       ],
       "cves": {
