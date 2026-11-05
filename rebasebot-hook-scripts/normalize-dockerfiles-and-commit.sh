@@ -62,7 +62,7 @@ normalize_dockerfiles() {
         #   registry.ci.openshift.org/... (not "golang:" prefix)
         #   quay.io/konveyor/builder:... (not "golang:" prefix)
         #   docker_build('.../golang:1.25.7', ...)  (not a FROM instruction)
-        if grep -qE '(^|["[:space:]])FROM[[:space:]].*\bgolang:[0-9]+\.[0-9]+\.[0-9]+' "$dockerfile"; then
+        if grep -qE '(^|["[:space:]])[Ff][Rr][Oo][Mm][[:space:]].*\bgolang:[0-9]+\.[0-9]+\.[0-9]+' "$dockerfile"; then
             echo "=== Normalizing $dockerfile ==="
 
             # Strip patch version from golang: image references, only on
@@ -72,7 +72,7 @@ normalize_dockerfiles() {
             # golang:1.25.8           ->  golang:1.25
             # golang:1.23.6-bullseye  ->  golang:1.23-bullseye
             # golang:1.25.0           ->  golang:1.25
-            sed -i -E '/(^|["[:space:]])FROM[[:space:]]/s/(golang:[0-9]+\.[0-9]+)\.[0-9]+/\1/g' "$dockerfile"
+            sed -i -E '/(^|["[:space:]])[Ff][Rr][Oo][Mm][[:space:]]/s/(golang:[0-9]+\.[0-9]+)\.[0-9]+/\1/g' "$dockerfile"
 
             changed=1
         else
