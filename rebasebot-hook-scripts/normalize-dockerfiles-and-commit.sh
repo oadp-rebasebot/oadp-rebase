@@ -11,10 +11,10 @@ set -o pipefail  # Return the exit status of the last command in the pipe that f
 # minor version (golang:1.25) always resolves to the latest patch.
 #
 # What this script does:
-#   1. Finds all Dockerfile*, Containerfile* and Tiltfile* in the
-#      repository.  Tiltfiles embed a dockerfile (container_build) whose
-#      FROM lines reference the same "golang:" images, e.g. velero's
-#      tilt-helper image.
+#   1. Finds all Dockerfile*, Containerfile*, *.Dockerfile (e.g.
+#      konflux.Dockerfile) and Tiltfile* in the repository.  Tiltfiles
+#      embed a dockerfile (container_build) whose FROM lines reference
+#      the same "golang:" images, e.g. velero's tilt-helper image.
 #   2. In FROM lines that reference the upstream "golang:" image,
 #      strips the patch version: golang:1.25.7-bookworm -> golang:1.25-bookworm
 #   3. Leaves non-golang images untouched (konveyor/builder, brew.registry,
@@ -78,7 +78,7 @@ normalize_dockerfiles() {
         else
             echo "=== Skipping $dockerfile (no golang patch version found) ==="
         fi
-    done < <(find . \( -name 'Dockerfile*' -o -name 'Containerfile*' -o -name 'Tiltfile*' \) -not -path '*/vendor/*' -print0)
+    done < <(find . \( -name 'Dockerfile*' -o -name 'Containerfile*' -o -name '*.Dockerfile' -o -name 'Tiltfile*' \) -not -path '*/vendor/*' -print0)
 
     if [ "$changed" -eq 0 ]; then
         echo "=== No Dockerfiles needed normalization ==="
