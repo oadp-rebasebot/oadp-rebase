@@ -47,27 +47,32 @@ normalize_dockerfiles() {
 
     # Find all Dockerfile* and Containerfile* (any depth)
     while IFS= read -r -d '' dockerfile; do
-        # Only process files that have a golang: FROM line with a patch version.
-        # Match patterns like:
-        #   golang:1.25.7
-        #   golang:1.25.7-bookworm
-        #   golang:1.23.6-bullseye
-        #   golang:1.25.0
+        # Only process files that have a golang: FROM instruction with a
+        # patch version.  A FROM instruction starts a line, or follows the
+        # opening quote of an embedded dockerfile string (Tiltfile's
+        # dockerfile_contents = """FROM ...).  Match patterns like:
+        #   FROM golang:1.25.7
+        #   FROM golang:1.25.7-bookworm
+        #   FROM golang:1.23.6-bullseye
+        #   FROM golang:1.25.0
         # But NOT:
-        #   golang:1.25
-        #   golang:1.25-bookworm  (already correct)
+        #   FROM golang:1.25
+        #   FROM golang:1.25-bookworm  (already correct)
         #   brew.registry.redhat.io/...  (not "golang:" prefix)
         #   registry.ci.openshift.org/... (not "golang:" prefix)
         #   quay.io/konveyor/builder:... (not "golang:" prefix)
-        if grep -qE 'FROM\s+.*\bgolang:[0-9]+\.[0-9]+\.[0-9]+' "$dockerfile"; then
+        #   docker_build('.../golang:1.25.7', ...)  (not a FROM instruction)
+        if grep -qE '(^|["[:space:]])FROM[[:space:]].*\bgolang:[0-9]+\.[0-9]+\.[0-9]+' "$dockerfile"; then
             echo "=== Normalizing $dockerfile ==="
 
-            # Strip patch version from golang: image references.
+            # Strip patch version from golang: image references, only on
+            # FROM instruction lines, so image names referenced elsewhere
+            # (e.g. Tiltfile docker_build calls) are left untouched.
             # golang:1.25.7-bookworm  ->  golang:1.25-bookworm
             # golang:1.25.8           ->  golang:1.25
             # golang:1.23.6-bullseye  ->  golang:1.23-bullseye
             # golang:1.25.0           ->  golang:1.25
-            sed -i -E 's/(golang:[0-9]+\.[0-9]+)\.[0-9]+/\1/g' "$dockerfile"
+            sed -i -E '/(^|["[:space:]])FROM[[:space:]]/s/(golang:[0-9]+\.[0-9]+)\.[0-9]+/\1/g' "$dockerfile"
 
             changed=1
         else
