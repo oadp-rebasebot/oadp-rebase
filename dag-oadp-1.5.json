@@ -7,11 +7,15 @@
       "skip": false,
       "upstream": "project-velero/kopia @ v0.19.0-velero.1",
       "checks": {
-        "upstream_sync": {
-          "status": "ok",
+        "open_pr": {
+          "status": "na",
           "summary": ""
         },
         "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
           "status": "ok",
           "summary": ""
         },
@@ -19,11 +23,15 @@
           "status": "na",
           "summary": ""
         },
-        "art_config": {
+        "productized": {
           "status": "na",
           "summary": ""
         },
         "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
@@ -35,7 +43,7 @@
           "status": "na",
           "summary": ""
         },
-        "gomod_drift": {
+        "upstream_sync": {
           "status": "ok",
           "summary": ""
         },
@@ -43,24 +51,16 @@
           "status": "na",
           "summary": ""
         },
-        "productized": {
+        "art_config": {
           "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
           "summary": ""
         }
       },
       "cves": {
         "critical": 0,
-        "high": 1,
-        "fixable": 1,
-        "scanned_at": "2026-11-06T07:23:59Z",
+        "high": 2,
+        "fixable": 2,
+        "scanned_at": "2026-11-08T07:23:05Z",
         "findings": [
           {
             "id": "CVE-2026-116587",
@@ -68,6 +68,13 @@
             "package": "github.com/go-jose/go-jose/v4",
             "installed_version": "v4.1.4",
             "fixed_version": "4.1.6"
+          },
+          {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.60.0",
+            "fixed_version": "0.62.0"
           }
         ]
       },
@@ -80,39 +87,7 @@
       "skip": true,
       "upstream": "",
       "checks": {
-        "gomod_drift": {
-          "status": "skip",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "skip",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "skip",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "skip",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "skip",
-          "summary": ""
-        },
-        "productized": {
-          "status": "skip",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "skip",
-          "summary": ""
-        },
         "config": {
-          "status": "skip",
-          "summary": ""
-        },
-        "rebasebot": {
           "status": "skip",
           "summary": ""
         },
@@ -124,16 +99,48 @@
           "status": "skip",
           "summary": ""
         },
+        "gomod_drift": {
+          "status": "skip",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "skip",
+          "summary": ""
+        },
+        "productized": {
+          "status": "skip",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "skip",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "skip",
+          "summary": ""
+        },
         "dep_sync": {
+          "status": "skip",
+          "summary": ""
+        },
+        "art_config": {
           "status": "skip",
           "summary": ""
         }
       },
       "cves": {
         "critical": 0,
-        "high": 1,
-        "fixable": 1,
-        "scanned_at": "2026-11-06T07:23:59Z",
+        "high": 2,
+        "fixable": 2,
+        "scanned_at": "2026-11-08T07:23:05Z",
         "findings": [
           {
             "id": "CVE-2026-116587",
@@ -141,6 +148,13 @@
             "package": "github.com/go-jose/go-jose/v4",
             "installed_version": "v4.1.4",
             "fixed_version": "4.1.6"
+          },
+          {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.60.0",
+            "fixed_version": "0.62.0"
           }
         ]
       },
@@ -153,6 +167,10 @@
       "skip": false,
       "upstream": "velero-io/velero @ v1.16.2",
       "checks": {
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
         "upstream_sync": {
           "status": "ok",
           "summary": ""
@@ -161,37 +179,33 @@
           "status": "fail",
           "summary": "0/2"
         },
-        "konflux": {
+        "gomod_drift": {
           "status": "ok",
-          "summary": "rhel_9_golang_1.25"
+          "summary": ""
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "22m ago"
+          "summary": "13m ago"
         },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
+        "open_pr": {
+          "status": "na",
+          "summary": ""
         },
         "go_version": {
           "status": "ok",
           "summary": "1.25.0"
         },
-        "ci_config": {
+        "konflux": {
           "status": "ok",
-          "summary": ""
+          "summary": "rhel_9_golang_1.25"
         },
-        "gomod_drift": {
+        "art_config": {
           "status": "ok",
-          "summary": ""
+          "summary": "konflux.Dockerfile"
         },
         "productized": {
           "status": "ok",
           "summary": "1/1"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
         },
         "config": {
           "status": "ok",
@@ -256,9 +270,9 @@
       ],
       "cves": {
         "critical": 0,
-        "high": 4,
-        "fixable": 4,
-        "scanned_at": "2026-11-06T07:23:59Z",
+        "high": 5,
+        "fixable": 5,
+        "scanned_at": "2026-11-08T07:23:05Z",
         "findings": [
           {
             "id": "CVE-2026-116587",
@@ -273,6 +287,13 @@
             "package": "github.com/klauspost/compress",
             "installed_version": "v1.17.11",
             "fixed_version": "1.18.7"
+          },
+          {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.62.0"
           },
           {
             "id": "CVE-2026-78669",
@@ -299,9 +320,25 @@
       "skip": false,
       "upstream": "kubevirt/kubevirt-velero-plugin @ release-v0.8",
       "checks": {
-        "art_config": {
+        "ci_config": {
           "status": "ok",
-          "summary": "konflux.Dockerfile"
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "fail",
+          "summary": "diverged"
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "13m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         },
         "config": {
           "status": "ok",
@@ -315,37 +352,21 @@
           "status": "ok",
           "summary": "1.25.0"
         },
-        "upstream_sync": {
-          "status": "fail",
-          "summary": "diverged"
-        },
         "gomod_drift": {
           "status": "ok",
           "summary": ""
         },
-        "upstream_image": {
+        "konflux": {
           "status": "ok",
-          "summary": "22m ago"
+          "summary": "rhel_9_golang_1.24"
         },
-        "productized": {
+        "art_config": {
           "status": "ok",
-          "summary": "1/1"
+          "summary": "konflux.Dockerfile"
         },
         "open_pr": {
           "status": "na",
           "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.24"
         }
       },
       "dep_syncs": [
@@ -416,9 +437,9 @@
       ],
       "cves": {
         "critical": 0,
-        "high": 3,
-        "fixable": 3,
-        "scanned_at": "2026-11-06T07:23:59Z",
+        "high": 4,
+        "fixable": 4,
+        "scanned_at": "2026-11-08T07:23:05Z",
         "findings": [
           {
             "id": "CVE-2026-63209",
@@ -426,6 +447,13 @@
             "package": "github.com/klauspost/compress",
             "installed_version": "v1.17.11",
             "fixed_version": "1.18.7"
+          },
+          {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.62.0"
           },
           {
             "id": "CVE-2026-78669",
@@ -452,7 +480,35 @@
       "skip": false,
       "upstream": "",
       "checks": {
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.24"
+        },
         "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "13m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
@@ -464,41 +520,13 @@
           "status": "ok",
           "summary": ""
         },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
         },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "22m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
         "gomod_drift": {
           "status": "na",
           "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.24"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -565,10 +593,17 @@
       ],
       "cves": {
         "critical": 0,
-        "high": 2,
-        "fixable": 2,
-        "scanned_at": "2026-11-06T07:23:59Z",
+        "high": 3,
+        "fixable": 3,
+        "scanned_at": "2026-11-08T07:23:05Z",
         "findings": [
+          {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.62.0"
+          },
           {
             "id": "CVE-2026-78669",
             "severity": "HIGH",
@@ -594,14 +629,6 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
         "rebasebot": {
           "status": "ok",
           "summary": ""
@@ -614,21 +641,13 @@
           "status": "na",
           "summary": ""
         },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
         "gomod_drift": {
           "status": "na",
           "summary": ""
         },
-        "konflux": {
+        "art_config": {
           "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "22m ago"
+          "summary": "konflux.Dockerfile"
         },
         "productized": {
           "status": "ok",
@@ -641,6 +660,22 @@
         "config": {
           "status": "ok",
           "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "13m ago"
         }
       },
       "dep_syncs": [
@@ -707,9 +742,9 @@
       ],
       "cves": {
         "critical": 0,
-        "high": 4,
-        "fixable": 4,
-        "scanned_at": "2026-11-06T07:23:59Z",
+        "high": 5,
+        "fixable": 5,
+        "scanned_at": "2026-11-08T07:23:05Z",
         "findings": [
           {
             "id": "CVE-2026-116587",
@@ -724,6 +759,13 @@
             "package": "github.com/klauspost/compress",
             "installed_version": "v1.17.11",
             "fixed_version": "1.18.7"
+          },
+          {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.62.0"
           },
           {
             "id": "CVE-2026-78669",
@@ -750,23 +792,7 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-aws @ v1.12.2",
       "checks": {
-        "upstream_image": {
-          "status": "ok",
-          "summary": "22m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "ci_config": {
+        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
@@ -778,154 +804,13 @@
           "status": "ok",
           "summary": ""
         },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        }
-      },
-      "dep_syncs": [
-        {
-          "module": "github.com/openshift/velero",
-          "org": "openshift",
-          "repo": "velero",
-          "have": "3fd503971caa",
-          "head": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
-          "in_sync": false,
-          "commits": [
-            {
-              "sha": "ae19c4def263640b18fa818733aaa8e44b920819",
-              "message": "Add ConfigMap support for keepLatestMaintenanceJobs"
-            },
-            {
-              "sha": "62a0eea7aef46b295efb76535f42cdfe1cb24d31",
-              "message": "Fix corev1api alias in maintenance_test.go for oadp-1.5"
-            },
-            {
-              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
-              "message": "Skip upstream-only workflows on forks"
-            },
-            {
-              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
-              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
-            },
-            {
-              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
-              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
-            },
-            {
-              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
-              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
-            },
-            {
-              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
-              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
-            },
-            {
-              "sha": "12946909f3cfcbb7128cf73137fd46b8d6a45d2a",
-              "message": "Add akarol and PrasadJoshi12 to OWNERS"
-            },
-            {
-              "sha": "a48122a5773ef87308491828469c096c3cf6d777",
-              "message": "Merge pull request #596 from redhat-chai-bot/add-akarol-owners-oadp-1.5"
-            },
-            {
-              "sha": "e42d690b0caa7c6a4210189c73e5db9877308b85",
-              "message": "Fix compile failures in backup repository controller test backport"
-            },
-            {
-              "sha": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
-              "message": "Merge pull request #593 from Joeavaikath/backport-9135-keepLatestMaintenanceJobs-oadp-1.5"
-            }
-          ]
-        }
-      ],
-      "issues": [
-        {
-          "severity": "error",
-          "message": "1 internal dep(s) out of sync"
-        }
-      ],
-      "cves": {
-        "critical": 0,
-        "high": 3,
-        "fixable": 3,
-        "scanned_at": "2026-11-06T07:23:59Z",
-        "findings": [
-          {
-            "id": "CVE-2026-63209",
-            "severity": "HIGH",
-            "package": "github.com/klauspost/compress",
-            "installed_version": "v1.17.11",
-            "fixed_version": "1.18.7"
-          },
-          {
-            "id": "CVE-2026-78669",
-            "severity": "HIGH",
-            "package": "golang.org/x/net",
-            "installed_version": "v0.58.0",
-            "fixed_version": "0.60.0"
-          },
-          {
-            "id": "CVE-2026-84445",
-            "severity": "HIGH",
-            "package": "google.golang.org/grpc",
-            "installed_version": "v1.83.1",
-            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
-          }
-        ]
-      },
-      "clean_scanned_at": null
-    },
-    {
-      "repo": "openshift/velero-plugin-for-legacy-aws",
-      "branch": "oadp-1.5",
-      "wave": 3,
-      "skip": false,
-      "upstream": "",
-      "checks": {
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
         "config": {
           "status": "ok",
           "summary": ""
         },
-        "rebasebot": {
+        "go_version": {
           "status": "ok",
-          "summary": ""
+          "summary": "1.25.0"
         },
         "ci_config": {
           "status": "ok",
@@ -941,273 +826,7 @@
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "22m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        }
-      },
-      "dep_syncs": [
-        {
-          "module": "github.com/openshift/velero",
-          "org": "openshift",
-          "repo": "velero",
-          "have": "3fd503971caa",
-          "head": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
-          "in_sync": false,
-          "commits": [
-            {
-              "sha": "ae19c4def263640b18fa818733aaa8e44b920819",
-              "message": "Add ConfigMap support for keepLatestMaintenanceJobs"
-            },
-            {
-              "sha": "62a0eea7aef46b295efb76535f42cdfe1cb24d31",
-              "message": "Fix corev1api alias in maintenance_test.go for oadp-1.5"
-            },
-            {
-              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
-              "message": "Skip upstream-only workflows on forks"
-            },
-            {
-              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
-              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
-            },
-            {
-              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
-              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
-            },
-            {
-              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
-              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
-            },
-            {
-              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
-              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
-            },
-            {
-              "sha": "12946909f3cfcbb7128cf73137fd46b8d6a45d2a",
-              "message": "Add akarol and PrasadJoshi12 to OWNERS"
-            },
-            {
-              "sha": "a48122a5773ef87308491828469c096c3cf6d777",
-              "message": "Merge pull request #596 from redhat-chai-bot/add-akarol-owners-oadp-1.5"
-            },
-            {
-              "sha": "e42d690b0caa7c6a4210189c73e5db9877308b85",
-              "message": "Fix compile failures in backup repository controller test backport"
-            },
-            {
-              "sha": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
-              "message": "Merge pull request #593 from Joeavaikath/backport-9135-keepLatestMaintenanceJobs-oadp-1.5"
-            }
-          ]
-        }
-      ],
-      "issues": [
-        {
-          "severity": "error",
-          "message": "1 internal dep(s) out of sync"
-        }
-      ],
-      "cves": {
-        "critical": 0,
-        "high": 3,
-        "fixable": 3,
-        "scanned_at": "2026-11-06T07:23:59Z",
-        "findings": [
-          {
-            "id": "CVE-2026-63209",
-            "severity": "HIGH",
-            "package": "github.com/klauspost/compress",
-            "installed_version": "v1.17.11",
-            "fixed_version": "1.18.7"
-          },
-          {
-            "id": "CVE-2026-78669",
-            "severity": "HIGH",
-            "package": "golang.org/x/net",
-            "installed_version": "v0.58.0",
-            "fixed_version": "0.60.0"
-          },
-          {
-            "id": "CVE-2026-84445",
-            "severity": "HIGH",
-            "package": "google.golang.org/grpc",
-            "installed_version": "v1.83.1",
-            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
-          }
-        ]
-      },
-      "clean_scanned_at": null
-    },
-    {
-      "repo": "openshift/velero-plugin-for-microsoft-azure",
-      "branch": "oadp-1.5",
-      "wave": 3,
-      "skip": false,
-      "upstream": "velero-io/velero-plugin-for-microsoft-azure @ v1.12.2",
-      "checks": {
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "22m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        }
-      },
-      "dep_syncs": [
-        {
-          "module": "github.com/openshift/velero",
-          "org": "openshift",
-          "repo": "velero",
-          "have": "3fd503971caa",
-          "head": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
-          "in_sync": false,
-          "commits": [
-            {
-              "sha": "ae19c4def263640b18fa818733aaa8e44b920819",
-              "message": "Add ConfigMap support for keepLatestMaintenanceJobs"
-            },
-            {
-              "sha": "62a0eea7aef46b295efb76535f42cdfe1cb24d31",
-              "message": "Fix corev1api alias in maintenance_test.go for oadp-1.5"
-            },
-            {
-              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
-              "message": "Skip upstream-only workflows on forks"
-            },
-            {
-              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
-              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
-            },
-            {
-              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
-              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
-            },
-            {
-              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
-              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
-            },
-            {
-              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
-              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
-            },
-            {
-              "sha": "12946909f3cfcbb7128cf73137fd46b8d6a45d2a",
-              "message": "Add akarol and PrasadJoshi12 to OWNERS"
-            },
-            {
-              "sha": "a48122a5773ef87308491828469c096c3cf6d777",
-              "message": "Merge pull request #596 from redhat-chai-bot/add-akarol-owners-oadp-1.5"
-            },
-            {
-              "sha": "e42d690b0caa7c6a4210189c73e5db9877308b85",
-              "message": "Fix compile failures in backup repository controller test backport"
-            },
-            {
-              "sha": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
-              "message": "Merge pull request #593 from Joeavaikath/backport-9135-keepLatestMaintenanceJobs-oadp-1.5"
-            }
-          ]
-        }
-      ],
-      "issues": [
-        {
-          "severity": "error",
-          "message": "1 internal dep(s) out of sync"
-        }
-      ],
-      "cves": {
-        "critical": 0,
-        "high": 3,
-        "fixable": 3,
-        "scanned_at": "2026-11-06T07:23:59Z",
-        "findings": [
-          {
-            "id": "CVE-2026-63209",
-            "severity": "HIGH",
-            "package": "github.com/klauspost/compress",
-            "installed_version": "v1.17.11",
-            "fixed_version": "1.18.7"
-          },
-          {
-            "id": "CVE-2026-78669",
-            "severity": "HIGH",
-            "package": "golang.org/x/net",
-            "installed_version": "v0.58.0",
-            "fixed_version": "0.60.0"
-          },
-          {
-            "id": "CVE-2026-84445",
-            "severity": "HIGH",
-            "package": "google.golang.org/grpc",
-            "installed_version": "v1.83.1",
-            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
-          }
-        ]
-      },
-      "clean_scanned_at": null
-    },
-    {
-      "repo": "openshift/velero-plugin-for-gcp",
-      "branch": "oadp-1.5",
-      "wave": 3,
-      "skip": false,
-      "upstream": "velero-io/velero-plugin-for-gcp @ v1.12.2",
-      "checks": {
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "22m ago"
+          "summary": "13m ago"
         },
         "art_config": {
           "status": "ok",
@@ -1217,33 +836,9 @@
           "status": "ok",
           "summary": "1/1"
         },
-        "config": {
-          "status": "ok",
+        "open_pr": {
+          "status": "na",
           "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.25.0"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
         }
       },
       "dep_syncs": [
@@ -1312,7 +907,475 @@
         "critical": 0,
         "high": 4,
         "fixable": 4,
-        "scanned_at": "2026-11-06T07:23:59Z",
+        "scanned_at": "2026-11-08T07:23:05Z",
+        "findings": [
+          {
+            "id": "CVE-2026-63209",
+            "severity": "HIGH",
+            "package": "github.com/klauspost/compress",
+            "installed_version": "v1.17.11",
+            "fixed_version": "1.18.7"
+          },
+          {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.62.0"
+          },
+          {
+            "id": "CVE-2026-78669",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.60.0"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.83.1",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          }
+        ]
+      },
+      "clean_scanned_at": null
+    },
+    {
+      "repo": "openshift/velero-plugin-for-legacy-aws",
+      "branch": "oadp-1.5",
+      "wave": 3,
+      "skip": false,
+      "upstream": "",
+      "checks": {
+        "upstream_image": {
+          "status": "ok",
+          "summary": "13m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "3fd503971caa",
+          "head": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "ae19c4def263640b18fa818733aaa8e44b920819",
+              "message": "Add ConfigMap support for keepLatestMaintenanceJobs"
+            },
+            {
+              "sha": "62a0eea7aef46b295efb76535f42cdfe1cb24d31",
+              "message": "Fix corev1api alias in maintenance_test.go for oadp-1.5"
+            },
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            },
+            {
+              "sha": "12946909f3cfcbb7128cf73137fd46b8d6a45d2a",
+              "message": "Add akarol and PrasadJoshi12 to OWNERS"
+            },
+            {
+              "sha": "a48122a5773ef87308491828469c096c3cf6d777",
+              "message": "Merge pull request #596 from redhat-chai-bot/add-akarol-owners-oadp-1.5"
+            },
+            {
+              "sha": "e42d690b0caa7c6a4210189c73e5db9877308b85",
+              "message": "Fix compile failures in backup repository controller test backport"
+            },
+            {
+              "sha": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
+              "message": "Merge pull request #593 from Joeavaikath/backport-9135-keepLatestMaintenanceJobs-oadp-1.5"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
+        }
+      ],
+      "cves": {
+        "critical": 0,
+        "high": 4,
+        "fixable": 4,
+        "scanned_at": "2026-11-08T07:23:05Z",
+        "findings": [
+          {
+            "id": "CVE-2026-63209",
+            "severity": "HIGH",
+            "package": "github.com/klauspost/compress",
+            "installed_version": "v1.17.11",
+            "fixed_version": "1.18.7"
+          },
+          {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.62.0"
+          },
+          {
+            "id": "CVE-2026-78669",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.60.0"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.83.1",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          }
+        ]
+      },
+      "clean_scanned_at": null
+    },
+    {
+      "repo": "openshift/velero-plugin-for-microsoft-azure",
+      "branch": "oadp-1.5",
+      "wave": 3,
+      "skip": false,
+      "upstream": "velero-io/velero-plugin-for-microsoft-azure @ v1.12.2",
+      "checks": {
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "13m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "3fd503971caa",
+          "head": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "ae19c4def263640b18fa818733aaa8e44b920819",
+              "message": "Add ConfigMap support for keepLatestMaintenanceJobs"
+            },
+            {
+              "sha": "62a0eea7aef46b295efb76535f42cdfe1cb24d31",
+              "message": "Fix corev1api alias in maintenance_test.go for oadp-1.5"
+            },
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            },
+            {
+              "sha": "12946909f3cfcbb7128cf73137fd46b8d6a45d2a",
+              "message": "Add akarol and PrasadJoshi12 to OWNERS"
+            },
+            {
+              "sha": "a48122a5773ef87308491828469c096c3cf6d777",
+              "message": "Merge pull request #596 from redhat-chai-bot/add-akarol-owners-oadp-1.5"
+            },
+            {
+              "sha": "e42d690b0caa7c6a4210189c73e5db9877308b85",
+              "message": "Fix compile failures in backup repository controller test backport"
+            },
+            {
+              "sha": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
+              "message": "Merge pull request #593 from Joeavaikath/backport-9135-keepLatestMaintenanceJobs-oadp-1.5"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
+        }
+      ],
+      "cves": {
+        "critical": 0,
+        "high": 4,
+        "fixable": 4,
+        "scanned_at": "2026-11-08T07:23:05Z",
+        "findings": [
+          {
+            "id": "CVE-2026-63209",
+            "severity": "HIGH",
+            "package": "github.com/klauspost/compress",
+            "installed_version": "v1.17.11",
+            "fixed_version": "1.18.7"
+          },
+          {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.62.0"
+          },
+          {
+            "id": "CVE-2026-78669",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.60.0"
+          },
+          {
+            "id": "CVE-2026-84445",
+            "severity": "HIGH",
+            "package": "google.golang.org/grpc",
+            "installed_version": "v1.83.1",
+            "fixed_version": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e"
+          }
+        ]
+      },
+      "clean_scanned_at": null
+    },
+    {
+      "repo": "openshift/velero-plugin-for-gcp",
+      "branch": "oadp-1.5",
+      "wave": 3,
+      "skip": false,
+      "upstream": "velero-io/velero-plugin-for-gcp @ v1.12.2",
+      "checks": {
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.25.0"
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "13m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        }
+      },
+      "dep_syncs": [
+        {
+          "module": "github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "3fd503971caa",
+          "head": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "ae19c4def263640b18fa818733aaa8e44b920819",
+              "message": "Add ConfigMap support for keepLatestMaintenanceJobs"
+            },
+            {
+              "sha": "62a0eea7aef46b295efb76535f42cdfe1cb24d31",
+              "message": "Fix corev1api alias in maintenance_test.go for oadp-1.5"
+            },
+            {
+              "sha": "107a3dd4ad248fb9324f7750083b58d09b63ab8d",
+              "message": "Skip upstream-only workflows on forks"
+            },
+            {
+              "sha": "256486499cd30022d2654cd0e99a99823acc3f67",
+              "message": "ci: pin Bitnami MinIO build in the e2e workflow on oadp-1.5"
+            },
+            {
+              "sha": "169d41bb4bed6debc4d0dc742b990919f74a8e97",
+              "message": "ci: replace unmaintained engineerd/setup-kind with helm/kind-action in e2e workflow"
+            },
+            {
+              "sha": "5cadc6726d2dd37c5d37e5aa84aa4c4cdf2a1057",
+              "message": "Add BSL status check for Velero Installation and BSL creation. (#9163)"
+            },
+            {
+              "sha": "31d41dff6dc7a6b751eff1b66b3978c3751f6d31",
+              "message": "Merge pull request #567 from kaovilai/workflow-skip-on-forks-oadp-1.5"
+            },
+            {
+              "sha": "12946909f3cfcbb7128cf73137fd46b8d6a45d2a",
+              "message": "Add akarol and PrasadJoshi12 to OWNERS"
+            },
+            {
+              "sha": "a48122a5773ef87308491828469c096c3cf6d777",
+              "message": "Merge pull request #596 from redhat-chai-bot/add-akarol-owners-oadp-1.5"
+            },
+            {
+              "sha": "e42d690b0caa7c6a4210189c73e5db9877308b85",
+              "message": "Fix compile failures in backup repository controller test backport"
+            },
+            {
+              "sha": "99ef9f01fce38ffa9ccd05df43afceb211ef1677",
+              "message": "Merge pull request #593 from Joeavaikath/backport-9135-keepLatestMaintenanceJobs-oadp-1.5"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "severity": "error",
+          "message": "1 internal dep(s) out of sync"
+        }
+      ],
+      "cves": {
+        "critical": 0,
+        "high": 5,
+        "fixable": 5,
+        "scanned_at": "2026-11-08T07:23:05Z",
         "findings": [
           {
             "id": "CVE-2026-116587",
@@ -1327,6 +1390,13 @@
             "package": "github.com/klauspost/compress",
             "installed_version": "v1.17.11",
             "fixed_version": "1.18.7"
+          },
+          {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.62.0"
           },
           {
             "id": "CVE-2026-78669",
@@ -1353,7 +1423,15 @@
       "skip": false,
       "upstream": "",
       "checks": {
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
         "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
           "status": "ok",
           "summary": ""
         },
@@ -1365,6 +1443,10 @@
           "status": "na",
           "summary": ""
         },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
@@ -1373,33 +1455,21 @@
           "status": "ok",
           "summary": "1/1"
         },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
         "go_version": {
           "status": "ok",
           "summary": "1.25.0"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
         },
         "dep_sync": {
           "status": "fail",
           "summary": "0/2"
         },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
         "upstream_image": {
           "status": "ok",
-          "summary": "22m ago"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
+          "summary": "13m ago"
         }
       },
       "dep_syncs": [
@@ -1508,9 +1578,9 @@
       ],
       "cves": {
         "critical": 0,
-        "high": 2,
-        "fixable": 2,
-        "scanned_at": "2026-11-06T07:23:59Z",
+        "high": 3,
+        "fixable": 3,
+        "scanned_at": "2026-11-08T07:23:05Z",
         "findings": [
           {
             "id": "CVE-2026-63209",
@@ -1518,6 +1588,13 @@
             "package": "github.com/klauspost/compress",
             "installed_version": "v1.17.11",
             "fixed_version": "1.18.7"
+          },
+          {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.62.0"
           },
           {
             "id": "CVE-2026-78669",
@@ -1537,39 +1614,11 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "open_pr": {
-          "status": "na",
-          "summary": ""
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         },
         "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/2"
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "golang-builder-v1.26-rhel9"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "config": {
           "status": "ok",
           "summary": ""
         },
@@ -1577,13 +1626,41 @@
           "status": "ok",
           "summary": "1.25.7"
         },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/2"
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "golang-builder-v1.26-rhel9"
+        },
         "upstream_image": {
           "status": "ok",
-          "summary": "22m ago"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
+          "summary": "13m ago"
         }
       },
       "dep_syncs": [
@@ -1692,9 +1769,9 @@
       ],
       "cves": {
         "critical": 0,
-        "high": 6,
-        "fixable": 4,
-        "scanned_at": "2026-11-06T07:23:59Z",
+        "high": 7,
+        "fixable": 5,
+        "scanned_at": "2026-11-08T07:23:05Z",
         "findings": [
           {
             "id": "CVE-2026-41567",
@@ -1725,6 +1802,13 @@
             "fixed_version": "1.18.7"
           },
           {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.62.0"
+          },
+          {
             "id": "CVE-2026-78669",
             "severity": "HIGH",
             "package": "golang.org/x/net",
@@ -1749,33 +1833,21 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/6"
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "22m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
         "config": {
           "status": "ok",
           "summary": ""
         },
-        "upstream_sync": {
-          "status": "na",
+        "rebasebot": {
+          "status": "ok",
           "summary": ""
         },
-        "konflux": {
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/6"
+        },
+        "upstream_image": {
           "status": "ok",
-          "summary": "rhel_9_golang_1.25"
+          "summary": "13m ago"
         },
         "productized": {
           "status": "ok",
@@ -1785,10 +1857,6 @@
           "status": "na",
           "summary": ""
         },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
         "go_version": {
           "status": "ok",
           "summary": "1.25.0"
@@ -1796,6 +1864,22 @@
         "ci_config": {
           "status": "ok",
           "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
         }
       },
       "dep_syncs": [
@@ -2024,9 +2108,9 @@
       ],
       "cves": {
         "critical": 0,
-        "high": 2,
-        "fixable": 2,
-        "scanned_at": "2026-11-06T07:23:59Z",
+        "high": 3,
+        "fixable": 3,
+        "scanned_at": "2026-11-08T07:23:05Z",
         "findings": [
           {
             "id": "CVE-2026-63209",
@@ -2034,6 +2118,13 @@
             "package": "github.com/klauspost/compress",
             "installed_version": "v1.17.11",
             "fixed_version": "1.18.7"
+          },
+          {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.62.0"
           },
           {
             "id": "CVE-2026-78669",
@@ -2053,41 +2144,13 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/4"
-        },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "22m ago"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "13m ago"
         },
         "art_config": {
           "status": "ok",
@@ -2097,9 +2160,37 @@
           "status": "na",
           "summary": ""
         },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
         "go_version": {
           "status": "ok",
           "summary": "1.25.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/4"
         }
       },
       "dep_syncs": [
@@ -2248,10 +2339,17 @@
       ],
       "cves": {
         "critical": 0,
-        "high": 2,
-        "fixable": 2,
-        "scanned_at": "2026-11-06T07:23:59Z",
+        "high": 3,
+        "fixable": 3,
+        "scanned_at": "2026-11-08T07:23:05Z",
         "findings": [
+          {
+            "id": "CVE-2026-78661",
+            "severity": "HIGH",
+            "package": "golang.org/x/net",
+            "installed_version": "v0.58.0",
+            "fixed_version": "0.62.0"
+          },
           {
             "id": "CVE-2026-78669",
             "severity": "HIGH",
@@ -2272,5 +2370,5 @@
     }
   ],
   "cve_prs": [],
-  "cve_generated_at": "2026-11-06T07:23:59Z"
+  "cve_generated_at": "2026-11-08T07:23:05Z"
 }
