@@ -3,7 +3,7 @@
 Common questions and answers collected from recurring OADP support discussions.
 
 <!-- BEGIN AUTO-MAINTAINED: forum-oadp -->
-Last content update: 2026-10-30
+Last content update: 2026-11-16
 
 ## Installation and configuration
 
@@ -229,6 +229,17 @@ spec:
 
 The CSI plugin must be enabled and the [CSI backup prerequisites](https://docs.redhat.com/en/documentation/openshift_container_platform/latest/html/backup_and_restore/oadp-application-backup-and-restore#oadp-backing-up-pvs-csi-doc) must be met.
 
+### How do I select a VolumeSnapshotClass when multiple classes exist for the same CSI driver?
+
+When multiple VolumeSnapshotClasses reference the same CSI driver, the `velero.io/csi-volumesnapshot-class: "true"` label on a VolumeSnapshotClass allows only one default per driver. To select a different class, use one of these methods (listed from lowest to highest priority):
+
+1. Backup or Schedule annotation: set `velero.io/csi-volumesnapshot-class_<driver-name>: "<class-name>"` on the Backup or Schedule object.
+2. PVC annotation: set `velero.io/csi-volumesnapshot-class: "<class-name>"` on the individual PersistentVolumeClaim.
+
+The PVC annotation overrides every other method. When two storage arrays share one CSI driver, the Backup annotation is the simplest way to choose the class for all volumes in a single backup.
+
+See [Velero CSI snapshot documentation](https://velero.io/docs/main/csi/).
+
 ### Why can't Azure Files PVCs be restored from snapshots?
 
 The Azure Files CSI driver supports taking snapshots but not restoring from them, so PVCs on Azure Files cannot be recovered from a CSI snapshot. Use file system backup, or the CSI data mover, for Azure Files volumes instead. See [OADP or Velero restore of an Azure Files CSI PVC creates an empty file share](https://access.redhat.com/solutions/7011280).
@@ -277,6 +288,12 @@ This is expected while the data mover is still running. The application PVC keep
 The backup scanned the volume and then found a file missing when it tried to read it, which happens when files churn during the backup. The backup reports the error and finishes with warnings, and the missing file is simply not in the snapshot.
 
 Reduce the effect by quiescing the workload during backup, excluding the churning volume, or using a CSI snapshot instead of file system backup for that volume.
+
+### What happens to Restic file-system backups when upgrading to OADP 1.6?
+
+OADP 1.6 removes the Restic uploader. Setting `uploaderType: restic` in `spec.configuration.nodeAgent.uploaderType` in the DataProtectionApplication CR causes a reconcile error. Change the value to `kopia` before or during the upgrade. Restores of backups originally created with the Restic uploader continue to work under Kopia.
+
+When upgrading directly from OADP 1.4, the `spec.configuration.nodeAgent` fields also change names between 1.4 and 1.5. Read the upgrade notes for each intermediate release before making DPA changes.
 
 ### Why are data mover pods not placed where the node agent runs in OADP 1.5?
 
