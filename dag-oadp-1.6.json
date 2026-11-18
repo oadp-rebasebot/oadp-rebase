@@ -7,8 +7,32 @@
       "skip": false,
       "upstream": "project-velero/kopia @ v0.22.3-velero-patch",
       "checks": {
+        "productized": {
+          "status": "na",
+          "summary": ""
+        },
         "config": {
           "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "na",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
           "summary": ""
         },
         "rebasebot": {
@@ -19,41 +43,17 @@
           "status": "na",
           "summary": ""
         },
-        "upstream_image": {
-          "status": "na",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "na",
-          "summary": ""
-        },
-        "productized": {
-          "status": "na",
-          "summary": ""
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
         "upstream_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "gomod_drift": {
           "status": "ok",
           "summary": ""
         },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "na",
+          "summary": ""
         }
       },
       "cves": {
@@ -98,27 +98,15 @@
           "status": "skip",
           "summary": ""
         },
-        "art_config": {
-          "status": "skip",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "skip",
-          "summary": ""
-        },
         "konflux": {
           "status": "skip",
           "summary": ""
         },
-        "upstream_image": {
+        "art_config": {
           "status": "skip",
           "summary": ""
         },
         "productized": {
-          "status": "skip",
-          "summary": ""
-        },
-        "open_pr": {
           "status": "skip",
           "summary": ""
         },
@@ -127,6 +115,18 @@
           "summary": ""
         },
         "rebasebot": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "skip",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "skip",
+          "summary": ""
+        },
+        "open_pr": {
           "status": "skip",
           "summary": ""
         },
@@ -181,41 +181,13 @@
       "skip": false,
       "upstream": "filebrowser/filebrowser @ v2.63.23",
       "checks": {
-        "config": {
+        "art_config": {
           "status": "ok",
-          "summary": ""
+          "summary": "konflux.Dockerfile"
         },
         "rebasebot": {
           "status": "ok",
           "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "11m ago"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
         },
         "dep_sync": {
           "status": "ok",
@@ -225,9 +197,37 @@
           "status": "ok",
           "summary": ""
         },
-        "art_config": {
+        "konflux": {
           "status": "ok",
-          "summary": "konflux.Dockerfile"
+          "summary": "rhel_9_golang_1.25"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "8m ago"
         }
       },
       "cves": {
@@ -254,6 +254,30 @@
       "skip": false,
       "upstream": "migtools/kopia @ oadp-1.6",
       "checks": {
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
         "open_pr": {
           "status": "na",
           "summary": ""
@@ -274,33 +298,9 @@
           "status": "ok",
           "summary": ""
         },
-        "upstream_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
         "upstream_image": {
           "status": "ok",
-          "summary": "11m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
+          "summary": "8m ago"
         }
       },
       "cves": {
@@ -341,42 +341,6 @@
       "skip": false,
       "upstream": "velero-io/velero @ v1.18.4",
       "checks": {
-        "upstream_sync": {
-          "status": "ok",
-          "summary": ""
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "11m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/2"
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
         "config": {
           "status": "ok",
           "summary": ""
@@ -385,9 +349,45 @@
           "status": "ok",
           "summary": ""
         },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/2"
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
         "ci_config": {
           "status": "ok",
           "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "8m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -472,13 +472,33 @@
       "skip": false,
       "upstream": "kubevirt/kubevirt-velero-plugin @ v0.9.1",
       "checks": {
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "8m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
         "open_pr": {
           "status": "na",
           "summary": ""
         },
-        "config": {
+        "rebasebot": {
           "status": "ok",
           "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
         },
         "ci_config": {
           "status": "ok",
@@ -496,29 +516,9 @@
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "11m ago"
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -579,12 +579,20 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "upstream_image": {
-          "status": "ok",
-          "summary": "11m ago"
+        "open_pr": {
+          "status": "na",
+          "summary": ""
         },
-        "ci_config": {
+        "rebasebot": {
           "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
+          "status": "na",
           "summary": ""
         },
         "dep_sync": {
@@ -599,6 +607,18 @@
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "8m ago"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
@@ -606,26 +626,6 @@
         "productized": {
           "status": "ok",
           "summary": "1/1"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
         }
       },
       "dep_syncs": [
@@ -686,17 +686,25 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/2"
         },
         "gomod_drift": {
           "status": "na",
           "summary": ""
         },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
         "upstream_image": {
           "status": "ok",
-          "summary": "11m ago"
+          "summary": "8m ago"
         },
         "art_config": {
           "status": "ok",
@@ -705,6 +713,14 @@
         "productized": {
           "status": "ok",
           "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
         },
         "rebasebot": {
           "status": "ok",
@@ -715,22 +731,6 @@
           "summary": "1.26.0"
         },
         "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/2"
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
           "status": "ok",
           "summary": ""
         }
@@ -825,6 +825,42 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-aws @ v1.14.4",
       "checks": {
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "gomod_drift": {
+          "status": "ok",
+          "summary": ""
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/1"
@@ -833,45 +869,9 @@
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "gomod_drift": {
-          "status": "ok",
-          "summary": ""
-        },
         "upstream_image": {
           "status": "ok",
-          "summary": "11m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "ok",
-          "summary": ""
+          "summary": "8m ago"
         }
       },
       "dep_syncs": [
@@ -932,33 +932,33 @@
       "skip": false,
       "upstream": "",
       "checks": {
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         },
         "open_pr": {
           "status": "na",
           "summary": ""
         },
-        "config": {
+        "rebasebot": {
           "status": "ok",
           "summary": ""
         },
         "go_version": {
           "status": "ok",
           "summary": "1.26.0"
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
         },
         "ci_config": {
           "status": "ok",
@@ -968,17 +968,17 @@
           "status": "na",
           "summary": ""
         },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
         "gomod_drift": {
           "status": "na",
           "summary": ""
         },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
         "upstream_image": {
           "status": "ok",
-          "summary": "11m ago"
+          "summary": "8m ago"
         }
       },
       "dep_syncs": [
@@ -1039,27 +1039,11 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-microsoft-azure @ v1.14.4",
       "checks": {
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
         "rebasebot": {
           "status": "ok",
           "summary": ""
         },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
         "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
           "status": "ok",
           "summary": ""
         },
@@ -1071,21 +1055,37 @@
           "status": "ok",
           "summary": ""
         },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.25"
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "11m ago"
+          "summary": "8m ago"
         },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "upstream_sync": {
+          "status": "ok",
+          "summary": ""
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -1146,9 +1146,13 @@
       "skip": false,
       "upstream": "velero-io/velero-plugin-for-gcp @ v1.14.4",
       "checks": {
-        "config": {
+        "konflux": {
           "status": "ok",
-          "summary": ""
+          "summary": "rhel_9_golang_1.25"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "8m ago"
         },
         "rebasebot": {
           "status": "ok",
@@ -1158,20 +1162,28 @@
           "status": "ok",
           "summary": "1.26.0"
         },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
+        "open_pr": {
+          "status": "na",
+          "summary": ""
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
+        },
         "ci_config": {
           "status": "ok",
           "summary": ""
         },
         "upstream_sync": {
           "status": "ok",
-          "summary": ""
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "open_pr": {
-          "status": "na",
           "summary": ""
         },
         "dep_sync": {
@@ -1181,18 +1193,6 @@
         "gomod_drift": {
           "status": "ok",
           "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "11m ago"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -1260,10 +1260,6 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
         "open_pr": {
           "status": "na",
           "summary": ""
@@ -1272,29 +1268,25 @@
           "status": "ok",
           "summary": ""
         },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/2"
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
         },
         "gomod_drift": {
           "status": "na",
           "summary": ""
         },
-        "upstream_image": {
+        "konflux": {
           "status": "ok",
-          "summary": "11m ago"
+          "summary": "rhel_9_golang_1.25"
         },
-        "productized": {
+        "art_config": {
           "status": "ok",
-          "summary": "1/1"
+          "summary": "konflux.Dockerfile"
         },
         "rebasebot": {
           "status": "ok",
           "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
         },
         "ci_config": {
           "status": "ok",
@@ -1304,9 +1296,17 @@
           "status": "na",
           "summary": ""
         },
-        "konflux": {
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/2"
+        },
+        "upstream_image": {
           "status": "ok",
-          "summary": "rhel_9_golang_1.25"
+          "summary": "8m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -1315,7 +1315,7 @@
           "org": "openshift",
           "repo": "oadp-operator",
           "have": "2d9a5c464972",
-          "head": "e72af83c135e58b5a41af28964bda1be5c5dc9ef",
+          "head": "6e285898ccac281c1b211e960d59c626fb2f1add",
           "in_sync": false,
           "commits": [
             {
@@ -1329,6 +1329,14 @@
             {
               "sha": "73ba48cbe4e9ad397e7ceb26f97a468427d0f32a",
               "message": "Fall back to pinned HCO release on clusters too old for nightly"
+            },
+            {
+              "sha": "a60ab5c312f983d67f7777f599357a569609f336",
+              "message": "fix: retry AWS bucket region discovery on transient S3 errors"
+            },
+            {
+              "sha": "b67bfef0008c4e00460296ced413c6911aa925b0",
+              "message": "fix: bound each AWS bucket region lookup attempt with a timeout"
             },
             {
               "sha": "e4f370a5249221fcc8a58f32b66a8aca9d63e63f",
@@ -1365,6 +1373,10 @@
             {
               "sha": "e72af83c135e58b5a41af28964bda1be5c5dc9ef",
               "message": "Merge pull request #2553 from openshift-cherrypick-robot/cherry-pick-2550-to-oadp-1.6"
+            },
+            {
+              "sha": "6e285898ccac281c1b211e960d59c626fb2f1add",
+              "message": "Merge pull request #2545 from kaovilai/cherry-pick-2515-to-oadp-1.6"
             }
           ]
         },
@@ -1425,38 +1437,6 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "11m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
         "open_pr": {
           "status": "na",
           "summary": ""
@@ -1465,13 +1445,45 @@
           "status": "ok",
           "summary": ""
         },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
         "go_version": {
           "status": "ok",
           "summary": "1.26.0"
         },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
         "dep_sync": {
           "status": "fail",
           "summary": "0/2"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "8m ago"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
         }
       },
       "dep_syncs": [
@@ -1480,7 +1492,7 @@
           "org": "openshift",
           "repo": "oadp-operator",
           "have": "2d9a5c464972",
-          "head": "e72af83c135e58b5a41af28964bda1be5c5dc9ef",
+          "head": "6e285898ccac281c1b211e960d59c626fb2f1add",
           "in_sync": false,
           "commits": [
             {
@@ -1494,6 +1506,14 @@
             {
               "sha": "73ba48cbe4e9ad397e7ceb26f97a468427d0f32a",
               "message": "Fall back to pinned HCO release on clusters too old for nightly"
+            },
+            {
+              "sha": "a60ab5c312f983d67f7777f599357a569609f336",
+              "message": "fix: retry AWS bucket region discovery on transient S3 errors"
+            },
+            {
+              "sha": "b67bfef0008c4e00460296ced413c6911aa925b0",
+              "message": "fix: bound each AWS bucket region lookup attempt with a timeout"
             },
             {
               "sha": "e4f370a5249221fcc8a58f32b66a8aca9d63e63f",
@@ -1530,6 +1550,10 @@
             {
               "sha": "e72af83c135e58b5a41af28964bda1be5c5dc9ef",
               "message": "Merge pull request #2553 from openshift-cherrypick-robot/cherry-pick-2550-to-oadp-1.6"
+            },
+            {
+              "sha": "6e285898ccac281c1b211e960d59c626fb2f1add",
+              "message": "Merge pull request #2545 from kaovilai/cherry-pick-2515-to-oadp-1.6"
             }
           ]
         },
@@ -1618,29 +1642,13 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
-        },
         "upstream_image": {
           "status": "ok",
-          "summary": "11m ago"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.25"
+          "summary": "8m ago"
         },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
-        },
-        "productized": {
-          "status": "ok",
-          "summary": "1/1"
         },
         "open_pr": {
           "status": "na",
@@ -1654,6 +1662,26 @@
           "status": "ok",
           "summary": ""
         },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
+        "dep_sync": {
+          "status": "fail",
+          "summary": "0/1"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.25"
+        },
+        "productized": {
+          "status": "ok",
+          "summary": "1/1"
+        },
         "go_version": {
           "status": "ok",
           "summary": "1.26.0"
@@ -1661,10 +1689,6 @@
         "upstream_sync": {
           "status": "na",
           "summary": ""
-        },
-        "dep_sync": {
-          "status": "fail",
-          "summary": "0/1"
         }
       },
       "dep_syncs": [
@@ -1732,8 +1756,36 @@
       "skip": false,
       "upstream": "",
       "checks": {
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
         "ci_config": {
           "status": "ok",
+          "summary": ""
+        },
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.26"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "8m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "3 cfgs"
+        },
+        "open_pr": {
+          "status": "na",
           "summary": ""
         },
         "dep_sync": {
@@ -1748,37 +1800,9 @@
           "status": "ok",
           "summary": "3/3"
         },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
         "config": {
           "status": "ok",
           "summary": ""
-        },
-        "upstream_sync": {
-          "status": "na",
-          "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.26"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "11m ago"
-        },
-        "art_config": {
-          "status": "ok",
-          "summary": "3 cfgs"
-        },
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
         }
       },
       "dep_syncs": [
@@ -1839,17 +1863,9 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "gomod_drift": {
+        "open_pr": {
           "status": "na",
           "summary": ""
-        },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.26"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "11m ago"
         },
         "config": {
           "status": "ok",
@@ -1859,13 +1875,33 @@
           "status": "ok",
           "summary": ""
         },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
         "upstream_sync": {
           "status": "na",
           "summary": ""
         },
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.26"
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "8m ago"
+        },
         "dep_sync": {
           "status": "fail",
           "summary": "1/6"
+        },
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
         },
         "art_config": {
           "status": "ok",
@@ -1874,18 +1910,6 @@
         "productized": {
           "status": "ok",
           "summary": "1/1"
-        },
-        "open_pr": {
-          "status": "na",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
         }
       },
       "dep_syncs": [
@@ -1902,7 +1926,7 @@
           "org": "openshift",
           "repo": "oadp-operator",
           "have": "2d9a5c464972",
-          "head": "e72af83c135e58b5a41af28964bda1be5c5dc9ef",
+          "head": "6e285898ccac281c1b211e960d59c626fb2f1add",
           "in_sync": false,
           "commits": [
             {
@@ -1916,6 +1940,14 @@
             {
               "sha": "73ba48cbe4e9ad397e7ceb26f97a468427d0f32a",
               "message": "Fall back to pinned HCO release on clusters too old for nightly"
+            },
+            {
+              "sha": "a60ab5c312f983d67f7777f599357a569609f336",
+              "message": "fix: retry AWS bucket region discovery on transient S3 errors"
+            },
+            {
+              "sha": "b67bfef0008c4e00460296ced413c6911aa925b0",
+              "message": "fix: bound each AWS bucket region lookup attempt with a timeout"
             },
             {
               "sha": "e4f370a5249221fcc8a58f32b66a8aca9d63e63f",
@@ -1952,37 +1984,15 @@
             {
               "sha": "e72af83c135e58b5a41af28964bda1be5c5dc9ef",
               "message": "Merge pull request #2553 from openshift-cherrypick-robot/cherry-pick-2550-to-oadp-1.6"
+            },
+            {
+              "sha": "6e285898ccac281c1b211e960d59c626fb2f1add",
+              "message": "Merge pull request #2545 from kaovilai/cherry-pick-2515-to-oadp-1.6"
             }
           ]
         },
         {
           "module": "github.com/openshift/velero",
-          "org": "openshift",
-          "repo": "velero",
-          "have": "c15f70524d0e",
-          "head": "6ec33ac9e956d7b0c40d31e8b0f488e3d8f195ed",
-          "in_sync": false,
-          "commits": [
-            {
-              "sha": "0bb356af76ef89d10248a7bff0528792728e97eb",
-              "message": "Add akarol to OWNERS"
-            },
-            {
-              "sha": "063f21d581fe71ed5cfdb769f5684d41a1fd4298",
-              "message": "Merge pull request #597 from redhat-chai-bot/add-akarol-owners-oadp-1.6"
-            },
-            {
-              "sha": "65f25b4d1b237d997f459833a1d8805ae54e3ff8",
-              "message": "Reject restores from backups not in a completed or partially failed phase (#9792)"
-            },
-            {
-              "sha": "6ec33ac9e956d7b0c40d31e8b0f488e3d8f195ed",
-              "message": "Merge pull request #600 from kaovilai/OADP-8895-9792-oadp-1.6"
-            }
-          ]
-        },
-        {
-          "module": "https://github.com/openshift/velero",
           "org": "openshift",
           "repo": "velero",
           "have": "c15f70524d0e",
@@ -2042,6 +2052,32 @@
               "message": "Merge pull request #62 from migtools/ci/disable-quay-push-1.6"
             }
           ]
+        },
+        {
+          "module": "https://github.com/openshift/velero",
+          "org": "openshift",
+          "repo": "velero",
+          "have": "c15f70524d0e",
+          "head": "6ec33ac9e956d7b0c40d31e8b0f488e3d8f195ed",
+          "in_sync": false,
+          "commits": [
+            {
+              "sha": "0bb356af76ef89d10248a7bff0528792728e97eb",
+              "message": "Add akarol to OWNERS"
+            },
+            {
+              "sha": "063f21d581fe71ed5cfdb769f5684d41a1fd4298",
+              "message": "Merge pull request #597 from redhat-chai-bot/add-akarol-owners-oadp-1.6"
+            },
+            {
+              "sha": "65f25b4d1b237d997f459833a1d8805ae54e3ff8",
+              "message": "Reject restores from backups not in a completed or partially failed phase (#9792)"
+            },
+            {
+              "sha": "6ec33ac9e956d7b0c40d31e8b0f488e3d8f195ed",
+              "message": "Merge pull request #600 from kaovilai/OADP-8895-9792-oadp-1.6"
+            }
+          ]
         }
       ],
       "issues": [
@@ -2074,20 +2110,32 @@
       "skip": false,
       "upstream": "",
       "checks": {
-        "rebasebot": {
-          "status": "ok",
-          "summary": ""
-        },
         "go_version": {
           "status": "ok",
           "summary": "1.26.0"
         },
-        "ci_config": {
+        "upstream_sync": {
+          "status": "na",
+          "summary": ""
+        },
+        "upstream_image": {
+          "status": "ok",
+          "summary": "8m ago"
+        },
+        "art_config": {
+          "status": "ok",
+          "summary": "konflux.Dockerfile"
+        },
+        "config": {
           "status": "ok",
           "summary": ""
         },
-        "upstream_sync": {
-          "status": "na",
+        "rebasebot": {
+          "status": "ok",
+          "summary": ""
+        },
+        "ci_config": {
+          "status": "ok",
           "summary": ""
         },
         "dep_sync": {
@@ -2098,21 +2146,9 @@
           "status": "na",
           "summary": ""
         },
-        "art_config": {
-          "status": "ok",
-          "summary": "konflux.Dockerfile"
-        },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
         "konflux": {
           "status": "ok",
           "summary": "rhel_9_golang_1.26"
-        },
-        "upstream_image": {
-          "status": "ok",
-          "summary": "11m ago"
         },
         "productized": {
           "status": "ok",
@@ -2137,7 +2173,7 @@
           "org": "openshift",
           "repo": "oadp-operator",
           "have": "2d9a5c464972",
-          "head": "e72af83c135e58b5a41af28964bda1be5c5dc9ef",
+          "head": "6e285898ccac281c1b211e960d59c626fb2f1add",
           "in_sync": false,
           "commits": [
             {
@@ -2151,6 +2187,14 @@
             {
               "sha": "73ba48cbe4e9ad397e7ceb26f97a468427d0f32a",
               "message": "Fall back to pinned HCO release on clusters too old for nightly"
+            },
+            {
+              "sha": "a60ab5c312f983d67f7777f599357a569609f336",
+              "message": "fix: retry AWS bucket region discovery on transient S3 errors"
+            },
+            {
+              "sha": "b67bfef0008c4e00460296ced413c6911aa925b0",
+              "message": "fix: bound each AWS bucket region lookup attempt with a timeout"
             },
             {
               "sha": "e4f370a5249221fcc8a58f32b66a8aca9d63e63f",
@@ -2187,6 +2231,10 @@
             {
               "sha": "e72af83c135e58b5a41af28964bda1be5c5dc9ef",
               "message": "Merge pull request #2553 from openshift-cherrypick-robot/cherry-pick-2550-to-oadp-1.6"
+            },
+            {
+              "sha": "6e285898ccac281c1b211e960d59c626fb2f1add",
+              "message": "Merge pull request #2545 from kaovilai/cherry-pick-2515-to-oadp-1.6"
             }
           ]
         },
@@ -2269,13 +2317,21 @@
           "status": "ok",
           "summary": ""
         },
+        "go_version": {
+          "status": "ok",
+          "summary": "1.26.0"
+        },
+        "ci_config": {
+          "status": "ok",
+          "summary": ""
+        },
         "dep_sync": {
           "status": "fail",
           "summary": "1/2"
         },
-        "konflux": {
-          "status": "ok",
-          "summary": "rhel_9_golang_1.26"
+        "gomod_drift": {
+          "status": "na",
+          "summary": ""
         },
         "productized": {
           "status": "ok",
@@ -2285,33 +2341,25 @@
           "status": "na",
           "summary": ""
         },
-        "config": {
-          "status": "ok",
-          "summary": ""
-        },
-        "go_version": {
-          "status": "ok",
-          "summary": "1.26.0"
-        },
-        "ci_config": {
-          "status": "ok",
-          "summary": ""
-        },
         "upstream_sync": {
           "status": "na",
           "summary": ""
         },
-        "gomod_drift": {
-          "status": "na",
-          "summary": ""
+        "konflux": {
+          "status": "ok",
+          "summary": "rhel_9_golang_1.26"
         },
         "upstream_image": {
           "status": "ok",
-          "summary": "11m ago"
+          "summary": "8m ago"
         },
         "art_config": {
           "status": "ok",
           "summary": "konflux.Dockerfile"
+        },
+        "config": {
+          "status": "ok",
+          "summary": ""
         }
       },
       "dep_syncs": [
