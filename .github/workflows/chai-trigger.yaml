@@ -52,15 +52,23 @@ jobs:
 
           # The JSON is the fenced block after the marker (a comment may
           # carry prose around it).
+          # Both extractions are failure-tolerant: a marked comment with no
+          # JSON must reach the schema check and be refused, not kill the
+          # step before valid=false is written (set -euo pipefail).
           PAYLOAD=$(sed -n '/<!-- '"$MARKER"' -->/,/^```$/p' <<< "$COMMENT" \
-            | sed -n '/^```json\{0,1\}$/,/^```$/p' | sed '1d;$d')
-          [ -n "$PAYLOAD" ] || PAYLOAD=$(grep -o '{.*}' <<< "$COMMENT" | head -1)
+            | sed -n '/^```json\{0,1\}$/,/^```$/p' | sed '1d;$d' || true)
+          [ -n "$PAYLOAD" ] || PAYLOAD=$(grep -o '{.*}' <<< "$COMMENT" | head -1 || true)
+          [ -n "$PAYLOAD" ] || {
+            echo "Marker present but no JSON payload." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
 
           echo "$PAYLOAD" | jq -e '
             type == "object"
             and (.trigger == "cve_scan" or .trigger == "rebase" or .trigger == "cve_scan_then_rebase")
             and ((.waves // "") | test("^[1-5]$"))
-            and (.dry_run == true or .dry_run == false)
+            and .dry_run == true
             and ([.oadp_1_4, .oadp_1_5, .oadp_1_6, .oadp_dev]
                  | all(. == null or . == true or . == false))
           ' > /dev/null || {
@@ -98,6 +106,23 @@ jobs:
           gh api "repos/${GH_REPO}/issues/comments/${COMMENT_ID}/reactions" \
             -f content='confused' > /dev/null || true
 
+      - name: Snapshot existing runs
+        id: snap
+        if: steps.parse.outputs.valid == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # Correlation base for the wait gate and the acknowledgment:
+          # whatever dispatch runs appear after this snapshot were created
+          # by this trigger (a racing dispatch serializes behind ours).
+          {
+            echo "scan=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
+              --limit 100 --json databaseId --jq 'map(.databaseId|tostring)|join(",")' || echo 0)"
+            echo "rebase=$(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch \
+              --limit 100 --json databaseId --jq 'map(.databaseId|tostring)|join(",")' || echo 0)"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Dispatch CVE scan
         if: >-
           steps.parse.outputs.valid == 'true' &&
@@ -133,10 +158,7 @@ jobs:
           # a dispatch racing ours queues behind it -- requiring all new
           # runs to succeed never lets a failed scan carry into the rebase,
           # and never skips ours because a newer run appeared.
-          sleep 15
-          BEFORE=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
-            --limit 100 --json databaseId --jq 'map(.databaseId|tostring)|join(",")')
-          [ -n "$BEFORE" ] || BEFORE=0
+          BEFORE=${{ steps.snap.outputs.scan }}
           echo "Dispatch runs before this trigger: $BEFORE"
 
           deadline=$((SECONDS + 7200))
@@ -163,8 +185,18 @@ jobs:
             sleep 30
           done
 
+          # A green conclusion is not a green scan: scan-repo.sh swallows
+          # clone and Trivy failures (ScanFailed:true, exit 0). The runs'
+          # own warning lines are the failure marker.
+          for rid in $(jq -r '.[].databaseId' <<< "$NEW"); do
+            if gh run view "$rid" --log 2>/dev/null | grep -qE '::warning::(Failed to clone|Trivy scan failed)'; then
+              echo "CVE scan run $rid reported a failed repository scan; not dispatching the rebase." >&2
+              exit 1
+            fi
+          done
+
           echo "scan_runs=$(jq -r 'map(.databaseId|tostring)|join(",")' <<< "$NEW")" >> "$GITHUB_OUTPUT"
-          echo "All new CVE scan runs succeeded."
+          echo "All new CVE scan runs succeeded, no repository scan failed."
 
       - name: Dispatch Auto Rebase
         if: >-
@@ -194,18 +226,31 @@ jobs:
           WAVES: ${{ steps.parse.outputs.waves }}
           DRY_RUN: ${{ steps.parse.outputs.dry_run }}
           SCAN_RUNS: ${{ steps.wait.outputs.scan_runs }}
+          SNAP_SCAN: ${{ steps.snap.outputs.scan }}
+          SNAP_REBASE: ${{ steps.snap.outputs.rebase }}
         run: |
-          sleep 10
+          sleep 15
+          # Link the runs this trigger created (snapshot diff), never a
+          # re-queried newest run that may belong to a manual or
+          # merge-watch dispatch.
+          new_urls() {
+            local workflow="$1" before="$2"
+            gh run list --workflow "$workflow" --event workflow_dispatch \
+              --limit 100 --json databaseId,url \
+              | jq -r --arg b "$before" \
+                'map(select(((.databaseId|tostring) as $i) | ($b|split(",")) | index($i) | not)) | .[].url'
+          }
           {
             echo "Triggered \`$TRIGGER\` (wave $WAVES, dry_run=$DRY_RUN)."
-            # The exact scan runs this trigger waited on, when it waited.
             if [ -n "$SCAN_RUNS" ] && [ "$SCAN_RUNS" != "0" ]; then
               for rid in ${SCAN_RUNS//,/ }; do
                 echo "- CVE scan: $(gh run view "$rid" --json url --jq .url)"
               done
             else
-              echo "- CVE scan: $(gh run list --workflow cve-scan.yaml --event workflow_dispatch --limit 1 --json url --jq '.[0].url')"
+              while IFS= read -r u; do echo "- CVE scan: $u"; done \
+                < <(new_urls cve-scan.yaml "$SNAP_SCAN")
             fi
-            echo "- Auto Rebase: $(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch --limit 1 --json url --jq '.[0].url')"
+            while IFS= read -r u; do echo "- Auto Rebase: $u"; done \
+              < <(new_urls auto-rebase-v2.yaml "$SNAP_REBASE")
           } > /tmp/ack.md
           gh issue comment "$ISSUE" --body-file /tmp/ack.md
