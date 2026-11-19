@@ -146,14 +146,20 @@ jobs:
           GH_REPO: ${{ github.repository }}
           BRANCHES: ${{ steps.parse.outputs.branches }}
         run: |
-          # GH_REPO is set: gh needs it when no checkout ran. Each selected
-          # branch maps to the workflow's boolean input (oadp-1.5 ->
-          # oadp_1_5, oadp-dev -> oadp_dev); adding a stream is one set
-          # entry in the schema and nothing here.
+          # GH_REPO is set: gh needs it when no checkout ran. Each branch
+          # maps to the workflow's boolean input (oadp-1.5 -> oadp_1_5,
+          # oadp-dev -> oadp_dev). EVERY boolean is passed explicitly:
+          # the sibling workflows' own defaults are not all false (e.g.
+          # oadp_1_6: true), so sending only the selected branch would
+          # silently run streams the payload never chose.
           ARGS=()
-          for br in $(jq -r '.[]' <<< "$BRANCHES"); do
+          for br in $(jq -r '.[]' <<< "$ALLOWED_BRANCHES"); do
             key=$(tr '.-' '__' <<< "$br")
-            ARGS+=(-f "$key=true")
+            if jq -e --arg b "$br" 'index($b) != null' <<< "$BRANCHES" >/dev/null; then
+              ARGS+=(-f "$key=true")
+            else
+              ARGS+=(-f "$key=false")
+            fi
           done
           gh workflow run auto-rebase-v2.yaml --ref oadp-dev \
             "${ARGS[@]}" \
@@ -236,10 +242,16 @@ jobs:
           GH_REPO: ${{ github.repository }}
           BRANCHES: ${{ steps.parse.outputs.branches }}
         run: |
+          # Same explicit-boolean rule as the rebase dispatch: cve-scan's
+          # own defaults include true values, so every stream is stated.
           ARGS=()
-          for br in $(jq -r '.[]' <<< "$BRANCHES"); do
+          for br in $(jq -r '.[]' <<< "$ALLOWED_BRANCHES"); do
             key=$(tr '.-' '__' <<< "$br")
-            ARGS+=(-f "$key=true")
+            if jq -e --arg b "$br" 'index($b) != null' <<< "$BRANCHES" >/dev/null; then
+              ARGS+=(-f "$key=true")
+            else
+              ARGS+=(-f "$key=false")
+            fi
           done
           gh workflow run cve-scan.yaml --ref oadp-dev \
             "${ARGS[@]}" \
