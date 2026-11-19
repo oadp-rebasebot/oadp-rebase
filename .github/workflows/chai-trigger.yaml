@@ -88,6 +88,10 @@ jobs:
             echo "waves=$(jq -r .waves <<< "$PAYLOAD")"
             echo "dry_run=$(jq -r .dry_run <<< "$PAYLOAD")"
             echo "branches=$(jq -c .branches <<< "$PAYLOAD")"
+            # Correlation id: carried into the dispatched runs' names, so
+            # the wait gate and the ack match THIS request's runs, never a
+            # competitor's, however the listing lags.
+            echo "request_id=chai-$(date +%s)-$$"
           } >> "$GITHUB_OUTPUT"
 
       - name: Acknowledge (invalid)
@@ -107,12 +111,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          # Correlation base for the wait gate and the acknowledgment:
-          # whatever dispatch runs appear after this snapshot were created
-          # by this trigger (a racing dispatch serializes behind ours).
+          # Correlation base for the Auto Rebase link in the acknowledgment
+          # (the scan is correlated by its request-id run name instead).
           {
-            echo "scan=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
-              --limit 100 --json databaseId --jq 'map(.databaseId|tostring)|join(",")' || echo 0)"
             echo "rebase=$(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch \
               --limit 100 --json databaseId --jq 'map(.databaseId|tostring)|join(",")' || echo 0)"
           } >> "$GITHUB_OUTPUT"
@@ -139,7 +140,8 @@ jobs:
           gh workflow run cve-scan.yaml --ref oadp-dev \
             "${ARGS[@]}" \
             -f waves="${{ steps.parse.outputs.waves }}" \
-            -f dry_run="${{ steps.parse.outputs.dry_run }}"
+            -f dry_run="${{ steps.parse.outputs.dry_run }}" \
+            -f request_id="${{ steps.parse.outputs.request_id }}"
           echo "CVE scan dispatched."
 
       - name: Wait for the CVE scan (rebase runs after it)
@@ -150,57 +152,61 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          REQUEST_ID: ${{ steps.parse.outputs.request_id }}
         run: |
           # The scan commits dependency bumps the rebase then carries; it
-          # runs first. Correlate by difference, not by recency: snapshot
-          # the dispatch runs that exist, then wait for every NEW dispatch
-          # run to finish. cve-scan's concurrency group serializes runs, so
-          # a dispatch racing ours queues behind it -- requiring all new
-          # runs to succeed never lets a failed scan carry into the rebase,
-          # and never skips ours because a newer run appeared.
-          BEFORE=${{ steps.snap.outputs.scan }}
-          echo "Dispatch runs before this trigger: $BEFORE"
-
+          # runs first. This request's run is identified by its name -- the
+          # request id carried into the dispatch -- so a competing dispatch
+          # (before, during or after ours, however the listing lags) is
+          # never mistaken for ours and never gates ours out.
+          sleep 15
+          TITLE="CVE Scan $REQUEST_ID"
           deadline=$((SECONDS + 7200))
+          RUN=""
           while :; do
-            RUNS=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
-              --limit 100 --json databaseId,status,conclusion)
-            NEW=$(jq --arg b "$BEFORE" \
-              'map(select(((.databaseId|tostring) as $i) | ($b|split(",")) | index($i) | not))' \
-              <<< "$RUNS")
-            COUNT=$(jq length <<< "$NEW")
-            if [ "$COUNT" -eq 0 ]; then
-              echo "Our scan run is not listed yet; waiting."
-            else
-              RUNNING=$(jq '[.[]|select(.status!="completed")]|length' <<< "$NEW")
-              NOT_SUCCESS=$(jq '[.[]|select(.status=="completed" and .conclusion!="success")]|length' <<< "$NEW")
-              if [ "$NOT_SUCCESS" -gt 0 ]; then
-                jq -r '.[]|select(.status=="completed" and .conclusion!="success")|"CVE scan run \(.databaseId) ended \(.conclusion); not dispatching the rebase."' <<< "$NEW" >&2
-                exit 1
-              fi
-              [ "$RUNNING" -eq 0 ] && break
-              echo "$RUNNING new scan run(s) still running; waiting."
-            fi
-            [ "$SECONDS" -gt "$deadline" ] && { echo "Timed out waiting for the CVE scan." >&2; exit 1; }
+            RUN=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
+              --limit 100 --json databaseId,status,conclusion,displayTitle \
+              --jq --arg t "$TITLE" 'map(select(.displayTitle == $t))[0]')
+            [ "$RUN" != "null" ] && [ -n "$RUN" ] && break
+            [ "$SECONDS" -gt "$deadline" ] && { echo "Timed out waiting for our CVE scan run to appear." >&2; exit 1; }
+            echo "Our scan run is not listed yet; waiting."
             sleep 30
           done
 
-          # A green conclusion is not a green scan: scan-repo.sh swallows
-          # clone and Trivy failures (ScanFailed:true, exit 0). The runs'
-          # own warning lines are the failure marker.
-          for rid in $(jq -r '.[].databaseId' <<< "$NEW"); do
-            if ! logs=$(gh run view "$rid" --log 2>/dev/null); then
-              echo "Cannot read logs for CVE scan run $rid; not dispatching the rebase." >&2
-              exit 1
+          RUN_ID=$(jq -r .databaseId <<< "$RUN")
+          echo "Watching CVE scan run $RUN_ID ($TITLE)"
+          while :; do
+            RUN=$(gh run view "$RUN_ID" --json status,conclusion)
+            STATUS=$(jq -r .status <<< "$RUN")
+            if [ "$STATUS" != "completed" ]; then
+              [ "$SECONDS" -gt "$deadline" ] && { echo "Timed out waiting for the CVE scan." >&2; exit 1; }
+              sleep 30
+              continue
             fi
-            if grep -qE '::warning::(Failed to clone|Trivy scan failed)' <<< "$logs"; then
-              echo "CVE scan run $rid reported a failed repository scan; not dispatching the rebase." >&2
+            CONCLUSION=$(jq -r .conclusion <<< "$RUN")
+            [ "$CONCLUSION" = "success" ] || {
+              echo "CVE scan run $RUN_ID ended $CONCLUSION; not dispatching the rebase." >&2
               exit 1
-            fi
+            }
+            break
           done
 
-          echo "scan_runs=$(jq -r 'map(.databaseId|tostring)|join(",")' <<< "$NEW")" >> "$GITHUB_OUTPUT"
-          echo "All new CVE scan runs succeeded, no repository scan failed."
+          # A green conclusion is not a green scan: scan-repo.sh swallows
+          # clone and Trivy failures (ScanFailed:true, exit 0). The run's
+          # own warning lines are the failure marker; the runner renders
+          # ::warning:: commands as ##[warning] in logs, so both forms are
+          # matched.
+          if ! logs=$(gh run view "$RUN_ID" --log 2>/dev/null); then
+            echo "Cannot read logs for CVE scan run $RUN_ID; not dispatching the rebase." >&2
+            exit 1
+          fi
+          if grep -qE '(::warning::|##\[warning\])(Failed to clone|Trivy scan failed)' <<< "$logs"; then
+            echo "CVE scan run $RUN_ID reported a failed repository scan; not dispatching the rebase." >&2
+            exit 1
+          fi
+
+          echo "scan_runs=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "Our CVE scan run succeeded, no repository scan failed."
 
       - name: Dispatch Auto Rebase
         if: >-
@@ -220,7 +226,8 @@ jobs:
           gh workflow run auto-rebase-v2.yaml --ref oadp-dev \
             "${ARGS[@]}" \
             -f waves="${{ steps.parse.outputs.waves }}" \
-            -f dry_run="${{ steps.parse.outputs.dry_run }}"
+            -f dry_run="${{ steps.parse.outputs.dry_run }}" \
+            -f request_id="${{ steps.parse.outputs.request_id }}"
           echo "Auto Rebase dispatched."
 
       - name: Acknowledge (dispatched)
@@ -233,7 +240,7 @@ jobs:
           WAVES: ${{ steps.parse.outputs.waves }}
           DRY_RUN: ${{ steps.parse.outputs.dry_run }}
           SCAN_RUNS: ${{ steps.wait.outputs.scan_runs }}
-          SNAP_SCAN: ${{ steps.snap.outputs.scan }}
+          REQUEST_ID: ${{ steps.parse.outputs.request_id }}
           SNAP_REBASE: ${{ steps.snap.outputs.rebase }}
         run: |
           sleep 15
@@ -254,8 +261,11 @@ jobs:
                 echo "- CVE scan: $(gh run view "$rid" --json url --jq .url)"
               done
             else
-              while IFS= read -r u; do echo "- CVE scan: $u"; done \
-                < <(new_urls cve-scan.yaml "$SNAP_SCAN")
+              # This request's scan run, by its name.
+              u=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
+                --limit 100 --json url,displayTitle \
+                --jq --arg t "CVE Scan $REQUEST_ID" 'map(select(.displayTitle == $t))[0].url')
+              [ -n "$u" ] && [ "$u" != "null" ] && echo "- CVE scan: $u"
             fi
             while IFS= read -r u; do echo "- Auto Rebase: $u"; done \
               < <(new_urls auto-rebase-v2.yaml "$SNAP_REBASE")
