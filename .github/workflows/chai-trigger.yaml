@@ -31,6 +31,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MARKER: chai:workflow-trigger:v1
+      # The one list of streams this trigger accepts (see the comment at the
+      # schema for the lockstep-update rule).
+      ALLOWED_BRANCHES: '["oadp-1.3","oadp-1.4","oadp-1.5","oadp-1.6","oadp-dev"]'
     steps:
       - name: Parse the trigger comment
         id: parse
@@ -68,14 +71,21 @@ jobs:
           # grows a second selected stream -- but this comment path is capped
           # to ONE release at a time (length == 1): chai walks one stream,
           # one wave, before anything else starts.
-          echo "$PAYLOAD" | jq -e '
+          #
+          # ALLOWED_BRANCHES is the one place this workflow lists the streams.
+          # Adding oadp-1.7 means: this list, a boolean input named oadp_1_7
+          # in BOTH cve-scan.yaml and auto-rebase-v2.yaml, and the persona
+          # config in ship-help-bot -- four files, in lockstep; there is no
+          # shared source of truth because the workflows' boolean inputs are
+          # GitHub-schema, not runtime, data.
+          echo "$PAYLOAD" | jq -e --argjson allowed "$ALLOWED_BRANCHES" '
             type == "object"
             and (.trigger == "cve_scan" or .trigger == "rebase" or .trigger == "rebase_then_cve")
             and ((.waves // "") | test("^[1-5]$"))
             and (.dry_run == true or .dry_run == false)
             and (.branches | type == "array" and length == 1)
-            and (.branches | all(. == "oadp-1.3" or . == "oadp-1.4" or . == "oadp-1.5"
-                                  or . == "oadp-1.6" or . == "oadp-dev"))
+            and (.branches | all(. as $b | $allowed | index($b)))
+            and ((.timeout_minutes // 120) | (type == "number" and . >= 10 and . <= 360))
           ' > /dev/null || {
             echo "Comment did not parse as a valid trigger." >&2
             echo "valid=false" >> "$GITHUB_OUTPUT"
@@ -87,11 +97,15 @@ jobs:
             echo "trigger=$(jq -r .trigger <<< "$PAYLOAD")"
             echo "waves=$(jq -r .waves <<< "$PAYLOAD")"
             echo "dry_run=$(jq -r .dry_run <<< "$PAYLOAD")"
+            echo "timeout_minutes=$(jq -r '.timeout_minutes // 120' <<< "$PAYLOAD")"
             echo "branches=$(jq -c .branches <<< "$PAYLOAD")"
             # Correlation id: carried into the dispatched runs' names, so
             # the wait gate and the ack match THIS request's runs, never a
-            # competitor's, however the listing lags.
-            echo "request_id=chai-$(date +%s)-$$"
+            # competitor's, however the listing lags. Entropy beyond
+            # time+pid: a re-run from the Actions UI mints its own ids and
+            # never matches the original ack -- a re-run is a new request,
+            # re-trigger through chai instead.
+            echo "request_id=chai-$(date +%s)-$$-$(od -An -N4 -tx4 /dev/urandom | tr -d ' ')"
           } >> "$GITHUB_OUTPUT"
 
       - name: Acknowledge (invalid)
@@ -163,7 +177,16 @@ jobs:
           # mistaken for ours, however the listing lags.
           sleep 15
           TITLE="Auto Rebase $REQUEST_ID"
-          deadline=$((SECONDS + 7200))
+          # The wait budget is the payload's timeout_minutes (default 120,
+          # capped at 360): a slow wave can ask for more without a workflow
+          # edit, and nothing can ask for an unbounded wait.
+          WAIT_MINUTES="${{ steps.parse.outputs.timeout_minutes }}"
+          case "$WAIT_MINUTES" in
+            ''|*[!0-9]*) WAIT_MINUTES=120 ;;
+          esac
+          [ "$WAIT_MINUTES" -gt 360 ] && WAIT_MINUTES=360
+          [ "$WAIT_MINUTES" -lt 10 ] && WAIT_MINUTES=10
+          deadline=$((SECONDS + WAIT_MINUTES * 60))
           RUN=""
           while :; do
             if ! RUNS=$(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch \
