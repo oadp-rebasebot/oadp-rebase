@@ -78,15 +78,19 @@ jobs:
           # config in ship-help-bot -- four files, in lockstep; there is no
           # shared source of truth because the workflows' boolean inputs are
           # GitHub-schema, not runtime, data.
-          echo "$PAYLOAD" | jq -e --argjson allowed "$ALLOWED_BRANCHES" '
-            type == "object"
-            and (.trigger == "cve_scan" or .trigger == "rebase" or .trigger == "rebase_then_cve")
-            and ((.waves // "") | test("^[1-5]$"))
-            and (.dry_run == true or .dry_run == false)
-            and (.branches | type == "array" and length == 1)
-            and (.branches | all(. as $b | $allowed | index($b)))
-            and ((.timeout_minutes // 120) | (type == "number" and . >= 10 and . <= 360))
-          ' > /dev/null || {
+          # The schema is tools/chai-trigger/validate-payload.sh -- the
+          # same script chai validates against before posting, fetched from
+          # the default branch so a PR to this file governs both sides in
+          # one place once merged.
+          if ! curl -sfL --max-time 30 \
+              "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/oadp-dev/tools/chai-trigger/validate-payload.sh" \
+              -o /tmp/validate-payload.sh; then
+            echo "Could not fetch validate-payload.sh; ignoring comment." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          chmod +x /tmp/validate-payload.sh
+          /tmp/validate-payload.sh "$PAYLOAD" "$ALLOWED_BRANCHES" || {
             echo "Comment did not parse as a valid trigger." >&2
             echo "valid=false" >> "$GITHUB_OUTPUT"
             exit 0
