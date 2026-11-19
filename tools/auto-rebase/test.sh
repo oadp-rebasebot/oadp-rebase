@@ -408,6 +408,34 @@ summary=$(bash "$SCRIPT_DIR/decide-summary.sh" --targets '[]' "$FIXTURES/decisio
 assert_contains "decide-summary: object format detects branch" "$summary" "oadp-dev"
 assert_contains "decide-summary: object format lists skipped repos" "$summary" "skip=true"
 
+# --- decide-summary.sh renders run parameters ---
+
+summary=$(bash "$SCRIPT_DIR/decide-summary.sh" \
+    --branches "oadp-1.6 oadp-dev" \
+    --waves "1" \
+    --dry-run "true" \
+    --targets '[]' "$FIXTURES/decision/mixed-object.json")
+assert_contains "decide-summary: run parameters show branches" "$summary" "\`oadp-1.6 oadp-dev\`"
+assert_contains "decide-summary: run parameters show waves" "$summary" "| Waves | 1 |"
+assert_contains "decide-summary: run parameters flag dry run" "$summary" "no PRs will be created"
+
+summary=$(bash "$SCRIPT_DIR/decide-summary.sh" \
+    --branches "oadp-1.6" \
+    --waves "2" \
+    --dry-run "false" \
+    --targets '[]' "$FIXTURES/decision/mixed-object.json")
+assert_contains "decide-summary: dry run false shows no" "$summary" "| Dry run | no |"
+
+# No parameter flags: no run-parameters table (back-compat local usage)
+summary=$(bash "$SCRIPT_DIR/decide-summary.sh" --targets '[]' "$FIXTURES/decision/mixed-object.json")
+if echo "$summary" | grep -q "Run parameters"; then
+    printf "  FAIL  decide-summary: no params means no run-parameters table\n"
+    failed=$((failed + 1))
+else
+    printf "  PASS  decide-summary: no params means no run-parameters table\n"
+    passed=$((passed + 1))
+fi
+
 # --- jq merge pattern works with object format ---
 
 merged=$(echo '[]' "$(cat "$FIXTURES/decision/mixed-object.json")" | jq -s '[ .[] | if type == "object" then .repos else . end ] | add')

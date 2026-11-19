@@ -4,18 +4,25 @@
 # Outputs to stdout — caller redirects to $GITHUB_STEP_SUMMARY or a file.
 #
 # Usage:
-#   decide-summary.sh --targets '<json>' /tmp/status-oadp-1.6.json [...]
+#   decide-summary.sh --targets '<json>' [--branches '<space-separated>'] \
+#     [--waves '<n>'] [--dry-run <true|false>] /tmp/status-oadp-1.6.json [...]
 
 set -eu
 
 TARGETS='[]'
 FILES=""
+BRANCHES=""
+WAVES=""
+DRY_RUN=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --targets) TARGETS="$2"; shift 2 ;;
+        --branches) BRANCHES="$2"; shift 2 ;;
+        --waves) WAVES="$2"; shift 2 ;;
+        --dry-run) DRY_RUN="$2"; shift 2 ;;
         -h|--help)
-            echo "Usage: decide-summary.sh --targets '<json>' <status-json-file> [...]"
+            echo "Usage: decide-summary.sh --targets '<json>' [--branches '<space-separated>'] [--waves '<n>'] [--dry-run <true|false>] <status-json-file> [...]"
             exit 0
             ;;
         -*) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -27,6 +34,27 @@ done
 
 echo "## Rebase Decision Summary"
 echo ""
+
+# Run parameters section: shows the configured workflow_dispatch inputs
+# so a running or finished run's summary shows how it was configured.
+if [ -n "$BRANCHES" ] || [ -n "$WAVES" ] || [ -n "$DRY_RUN" ]; then
+    echo "**Run parameters:**"
+    echo ""
+    echo "| Parameter | Value |"
+    echo "|-----------|-------|"
+    if [ -n "$BRANCHES" ]; then
+        echo "| Branches | \`${BRANCHES}\` |"
+    fi
+    if [ -n "$WAVES" ]; then
+        echo "| Waves | ${WAVES} |"
+    fi
+    if [ "$DRY_RUN" = "true" ]; then
+        echo "| Dry run | 🧪 yes — no PRs will be created |"
+    elif [ -n "$DRY_RUN" ]; then
+        echo "| Dry run | no |"
+    fi
+    echo ""
+fi
 
 for json_file in $FILES; do
     [ -f "$json_file" ] || continue
