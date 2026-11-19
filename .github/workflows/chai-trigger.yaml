@@ -64,23 +64,20 @@ jobs:
             exit 0
           }
 
+          # branches is an array so the shape never changes when a release
+          # grows a second selected stream -- but this comment path is capped
+          # to ONE release at a time (length == 1): chai walks one stream,
+          # one wave, before anything else starts.
           echo "$PAYLOAD" | jq -e '
             type == "object"
             and (.trigger == "cve_scan" or .trigger == "rebase" or .trigger == "cve_scan_then_rebase")
             and ((.waves // "") | test("^[1-5]$"))
             and .dry_run == true
-            and ([.oadp_1_4, .oadp_1_5, .oadp_1_6, .oadp_dev]
-                 | all(. == null or . == true or . == false))
+            and (.branches | type == "array" and length == 1)
+            and (.branches | all(. == "oadp-1.3" or . == "oadp-1.4" or . == "oadp-1.5"
+                                  or . == "oadp-1.6" or . == "oadp-dev"))
           ' > /dev/null || {
             echo "Comment did not parse as a valid trigger." >&2
-            echo "valid=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          }
-
-          SELECTED=$(jq -r '[.oadp_1_4, .oadp_1_5, .oadp_1_6, .oadp_dev]
-            | map(select(. == true)) | length' <<< "$PAYLOAD")
-          [ "$SELECTED" -gt 0 ] || {
-            echo "No branch selected." >&2
             echo "valid=false" >> "$GITHUB_OUTPUT"
             exit 0
           }
@@ -90,10 +87,7 @@ jobs:
             echo "trigger=$(jq -r .trigger <<< "$PAYLOAD")"
             echo "waves=$(jq -r .waves <<< "$PAYLOAD")"
             echo "dry_run=$(jq -r .dry_run <<< "$PAYLOAD")"
-            for b in oadp_1_4 oadp_1_5 oadp_1_6 oadp_dev; do
-              v=$(jq -r --arg b "$b" '.[$b] // false' <<< "$PAYLOAD")
-              echo "$b=$v"
-            done
+            echo "branches=$(jq -c .branches <<< "$PAYLOAD")"
           } >> "$GITHUB_OUTPUT"
 
       - name: Acknowledge (invalid)
@@ -131,13 +125,19 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          BRANCHES: ${{ steps.parse.outputs.branches }}
         run: |
-          # GH_REPO is set: gh needs it when no checkout ran.
+          # GH_REPO is set: gh needs it when no checkout ran. Each selected
+          # branch maps to the workflow's boolean input (oadp-1.5 ->
+          # oadp_1_5, oadp-dev -> oadp_dev); adding a stream is one set
+          # entry in the schema and nothing here.
+          ARGS=()
+          for br in $(jq -r '.[]' <<< "$BRANCHES"); do
+            key=$(tr '.-' '__' <<< "$br")
+            ARGS+=(-f "$key=true")
+          done
           gh workflow run cve-scan.yaml --ref oadp-dev \
-            -f oadp_1_4="${{ steps.parse.outputs.oadp_1_4 }}" \
-            -f oadp_1_5="${{ steps.parse.outputs.oadp_1_5 }}" \
-            -f oadp_1_6="${{ steps.parse.outputs.oadp_1_6 }}" \
-            -f oadp_dev="${{ steps.parse.outputs.oadp_dev }}" \
+            "${ARGS[@]}" \
             -f waves="${{ steps.parse.outputs.waves }}" \
             -f dry_run="${{ steps.parse.outputs.dry_run }}"
           echo "CVE scan dispatched."
@@ -206,12 +206,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          BRANCHES: ${{ steps.parse.outputs.branches }}
         run: |
+          ARGS=()
+          for br in $(jq -r '.[]' <<< "$BRANCHES"); do
+            key=$(tr '.-' '__' <<< "$br")
+            ARGS+=(-f "$key=true")
+          done
           gh workflow run auto-rebase-v2.yaml --ref oadp-dev \
-            -f oadp_1_4="${{ steps.parse.outputs.oadp_1_4 }}" \
-            -f oadp_1_5="${{ steps.parse.outputs.oadp_1_5 }}" \
-            -f oadp_1_6="${{ steps.parse.outputs.oadp_1_6 }}" \
-            -f oadp_dev="${{ steps.parse.outputs.oadp_dev }}" \
+            "${ARGS[@]}" \
             -f waves="${{ steps.parse.outputs.waves }}" \
             -f dry_run="${{ steps.parse.outputs.dry_run }}"
           echo "Auto Rebase dispatched."
