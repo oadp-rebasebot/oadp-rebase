@@ -1,0 +1,178 @@
+name: Chai Trigger
+
+# A comment in structured JSON on an issue labeled `chai-trigger`, posted by
+# redhat-chai-bot, starts the CVE scan and/or the Auto Rebase workflow.
+# This is chai's trigger path (migtools/oadp-agentic T36): chai holds no
+# dispatch credential -- it comments with the GitHub account it already
+# has, and this workflow dispatches its siblings with the builtin
+# GITHUB_TOKEN (same-repo workflow_dispatch needs no PAT).
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  # workflow_dispatch of sibling workflows in this repository.
+  actions: write
+  # The acknowledgment comment on the trigger issue.
+  issues: write
+
+concurrency:
+  group: chai-trigger
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    # Only chai's account, only on an issue a maintainer labeled as a
+    # trigger (the label is the opt-in; an unlabeled issue never fires).
+    if: >-
+      github.event.comment.user.login == 'redhat-chai-bot' &&
+      contains(github.event.issue.labels.*.name, 'chai-trigger')
+    runs-on: ubuntu-latest
+    env:
+      MARKER: chai:workflow-trigger:v1
+    steps:
+      - name: Parse the trigger comment
+        id: parse
+        env:
+          COMMENT: ${{ github.event.comment.body }}
+        run: |
+          # The jq programs below are single-quoted on purpose: their $ are
+          # jq syntax (regex anchors, --arg references), not shell expansion.
+          # shellcheck disable=SC2016
+          set -euo pipefail
+
+          # The marker must be present: anyone can write JSON, only chai's
+          # comments carry this hidden marker line.
+          grep -q "<!-- $MARKER -->" <<< "$COMMENT" || {
+            echo "No trigger marker; ignoring." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          # The JSON is the fenced block after the marker (a comment may
+          # carry prose around it).
+          PAYLOAD=$(sed -n '/<!-- '"$MARKER"' -->/,/^```$/p' <<< "$COMMENT" \
+            | sed -n '/^```json\{0,1\}$/,/^```$/p' | sed '1d;$d')
+          [ -n "$PAYLOAD" ] || PAYLOAD=$(grep -o '{.*}' <<< "$COMMENT" | head -1)
+
+          echo "$PAYLOAD" | jq -e '
+            type == "object"
+            and (.trigger == "cve_scan" or .trigger == "rebase" or .trigger == "cve_scan_then_rebase")
+            and ((.waves // "") | test("^[1-5]$"))
+            and (.dry_run == true or .dry_run == false)
+            and ([.oadp_1_4, .oadp_1_5, .oadp_1_6, .oadp_dev]
+                 | all(. == null or . == true or . == false))
+          ' > /dev/null || {
+            echo "Comment did not parse as a valid trigger." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          SELECTED=$(jq -r '[.oadp_1_4, .oadp_1_5, .oadp_1_6, .oadp_dev]
+            | map(select(. == true)) | length' <<< "$PAYLOAD")
+          [ "$SELECTED" -gt 0 ] || {
+            echo "No branch selected." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          {
+            echo "valid=true"
+            echo "trigger=$(jq -r .trigger <<< "$PAYLOAD")"
+            echo "waves=$(jq -r .waves <<< "$PAYLOAD")"
+            echo "dry_run=$(jq -r .dry_run <<< "$PAYLOAD")"
+            for b in oadp_1_4 oadp_1_5 oadp_1_6 oadp_dev; do
+              v=$(jq -r --arg b "$b" '.[$b] // false' <<< "$PAYLOAD")
+              echo "$b=$v"
+            done
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Acknowledge (invalid)
+        if: steps.parse.outputs.valid != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          gh api "repos/${GH_REPO}/issues/comments/${COMMENT_ID}/reactions" \
+            -f content='confused' > /dev/null || true
+
+      - name: Dispatch CVE scan
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          (steps.parse.outputs.trigger == 'cve_scan' ||
+           steps.parse.outputs.trigger == 'cve_scan_then_rebase')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # GH_REPO is set: gh needs it when no checkout ran.
+          gh workflow run cve-scan.yaml --ref oadp-dev \
+            -f oadp_1_4="${{ steps.parse.outputs.oadp_1_4 }}" \
+            -f oadp_1_5="${{ steps.parse.outputs.oadp_1_5 }}" \
+            -f oadp_1_6="${{ steps.parse.outputs.oadp_1_6 }}" \
+            -f oadp_dev="${{ steps.parse.outputs.oadp_dev }}" \
+            -f waves="${{ steps.parse.outputs.waves }}" \
+            -f dry_run="${{ steps.parse.outputs.dry_run }}"
+          echo "CVE scan dispatched."
+
+      - name: Wait for the CVE scan (rebase runs after it)
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          steps.parse.outputs.trigger == 'cve_scan_then_rebase'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # The scan commits dependency bumps the rebase then carries; it
+          # runs first. Find our run (newest dispatch of cve-scan since this
+          # comment) and wait for it.
+          sleep 10
+          RUN_ID=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
+            --limit 1 --json databaseId --jq '.[0].databaseId')
+          echo "Watching CVE scan run $RUN_ID"
+          gh run watch "$RUN_ID" --exit-status || {
+            echo "CVE scan run $RUN_ID did not succeed; not dispatching the rebase." >&2
+            exit 1
+          }
+
+      - name: Dispatch Auto Rebase
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          (steps.parse.outputs.trigger == 'rebase' ||
+           steps.parse.outputs.trigger == 'cve_scan_then_rebase')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh workflow run auto-rebase-v2.yaml --ref oadp-dev \
+            -f oadp_1_4="${{ steps.parse.outputs.oadp_1_4 }}" \
+            -f oadp_1_5="${{ steps.parse.outputs.oadp_1_5 }}" \
+            -f oadp_1_6="${{ steps.parse.outputs.oadp_1_6 }}" \
+            -f oadp_dev="${{ steps.parse.outputs.oadp_dev }}" \
+            -f waves="${{ steps.parse.outputs.waves }}" \
+            -f dry_run="${{ steps.parse.outputs.dry_run }}"
+          echo "Auto Rebase dispatched."
+
+      - name: Acknowledge (dispatched)
+        if: steps.parse.outputs.valid == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE: ${{ github.event.issue.number }}
+          TRIGGER: ${{ steps.parse.outputs.trigger }}
+          WAVES: ${{ steps.parse.outputs.waves }}
+          DRY_RUN: ${{ steps.parse.outputs.dry_run }}
+        run: |
+          sleep 10
+          SCAN_URL=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
+            --limit 1 --json url --jq '.[0].url')
+          REBASE_URL=$(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch \
+            --limit 1 --json url --jq '.[0].url')
+          {
+            echo "Triggered \`$TRIGGER\` (wave $WAVES, dry_run=$DRY_RUN)."
+            [ -n "$SCAN_URL" ] && echo "- CVE scan: $SCAN_URL"
+            [ -n "$REBASE_URL" ] && echo "- Auto Rebase: $REBASE_URL"
+          } > /tmp/ack.md
+          gh issue comment "$ISSUE" --body-file /tmp/ack.md
