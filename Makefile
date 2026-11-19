@@ -1,4 +1,4 @@
-.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-repos-yaml go-test auto-rebase-test cve-scan-test shellcheck
+.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-crd-regen verify-repos-yaml go-test auto-rebase-test cve-scan-test shellcheck
 
 generate:
 	@bash tools/generate-go-replace-velero.sh
@@ -87,6 +87,25 @@ verify-kopia-alignment:
 	done; \
 	[ $$fail -eq 0 ] && echo "Kopia alignment OK" || exit 1
 
+verify-crd-regen:
+	@echo "=== CRD regen — configs of generates_crds repos run make-manifests-and-commit.sh after go-mod hooks ==="
+	@prefixes=$$(yq -r '.repos[] | select(.generates_crds == true) | .config_prefix' repos.yaml) || { echo "ERROR: yq failed to read repos.yaml"; exit 1; }; \
+	fail=0; \
+	for prefix in $$prefixes; do \
+		for config in rebase-configs/$${prefix}_*.env.sh; do \
+			[ -f "$$config" ] || continue; \
+			grep -q 'SOURCE_UPSTREAM_REPO' "$$config" || continue; \
+			hooks=$$(bash -c '. "$$1" >/dev/null 2>&1; printf "%s\n" $$HOOK_SCRIPTS' _ "$$config" | grep '\.sh$$' | sed 's|.*/||' | grep -n .) || { echo "  UNRESOLVED HOOK_SCRIPTS: $$config"; fail=1; continue; }; \
+			mm=$$(echo "$$hooks" | grep 'make-manifests-and-commit.sh$$' | head -1 | cut -d: -f1); \
+			if [ -z "$$mm" ]; then \
+				echo "  MISSING make-manifests-and-commit.sh: $$config"; fail=1; continue; \
+			fi; \
+			last_go=$$(echo "$$hooks" | grep 'go-mod-tidy-and-commit.sh$$\|:go-replace_\|:go-use-tag_' | tail -1 | cut -d: -f1); \
+			if [ "$$mm" -le "$${last_go:-0}" ]; then echo "  ORDER: make-manifests must follow go-mod hooks: $$config"; fail=1; fi; \
+		done; \
+	done; \
+	[ $$fail -eq 0 ] && echo "CRD regen hooks OK" || { echo "ERROR: generated CRDs would drift after dependency bumps"; exit 1; }
+
 verify-repos-yaml:
 	@echo "=== repos.yaml — valid YAML and every config_prefix has matching config files ==="
 	@yq eval 'true' repos.yaml > /dev/null || { echo "FAIL: repos.yaml is not valid YAML"; exit 1; }
@@ -151,6 +170,6 @@ shellcheck:
 	done; \
 	[ $$fail -eq 0 ] && echo "All files passed ShellCheck" || exit 1
 
-test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks go-test auto-rebase-test cve-scan-test
+test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks verify-crd-regen go-test auto-rebase-test cve-scan-test
 	@echo ""
 	@echo "All checks passed."
