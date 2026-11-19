@@ -164,9 +164,12 @@ jobs:
           deadline=$((SECONDS + 7200))
           RUN=""
           while :; do
-            RUN=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
-              --limit 100 --json databaseId,status,conclusion,displayTitle \
-              --jq --arg t "$TITLE" 'map(select(.displayTitle == $t))[0]')
+            if ! RUNS=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
+              --limit 100 --json databaseId,status,conclusion,displayTitle); then
+              echo "Cannot list CVE scan runs; not dispatching the rebase." >&2
+              exit 1
+            fi
+            RUN=$(jq -c --arg t "$TITLE" 'map(select(.displayTitle == $t))[0]' <<< "$RUNS")
             [ "$RUN" != "null" ] && [ -n "$RUN" ] && break
             [ "$SECONDS" -gt "$deadline" ] && { echo "Timed out waiting for our CVE scan run to appear." >&2; exit 1; }
             echo "Our scan run is not listed yet; waiting."
@@ -264,7 +267,7 @@ jobs:
               # This request's scan run, by its name.
               u=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
                 --limit 100 --json url,displayTitle \
-                --jq --arg t "CVE Scan $REQUEST_ID" 'map(select(.displayTitle == $t))[0].url')
+                | jq -r --arg t "CVE Scan $REQUEST_ID" 'map(select(.displayTitle == $t))[0].url')
               [ -n "$u" ] && [ "$u" != "null" ] && echo "- CVE scan: $u"
             fi
             while IFS= read -r u; do echo "- Auto Rebase: $u"; done \
