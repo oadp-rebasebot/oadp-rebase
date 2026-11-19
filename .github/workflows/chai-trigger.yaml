@@ -172,10 +172,10 @@ jobs:
             if [ "$COUNT" -eq 0 ]; then
               echo "Our scan run is not listed yet; waiting."
             else
-              FAILED=$(jq '[.[]|select(.conclusion=="failure")]|length' <<< "$NEW")
               RUNNING=$(jq '[.[]|select(.status!="completed")]|length' <<< "$NEW")
-              if [ "$FAILED" -gt 0 ]; then
-                jq -r '.[]|select(.conclusion=="failure")|"CVE scan run \(.databaseId) failed; not dispatching the rebase."' <<< "$NEW" >&2
+              NOT_SUCCESS=$(jq '[.[]|select(.status=="completed" and .conclusion!="success")]|length' <<< "$NEW")
+              if [ "$NOT_SUCCESS" -gt 0 ]; then
+                jq -r '.[]|select(.status=="completed" and .conclusion!="success")|"CVE scan run \(.databaseId) ended \(.conclusion); not dispatching the rebase."' <<< "$NEW" >&2
                 exit 1
               fi
               [ "$RUNNING" -eq 0 ] && break
@@ -189,7 +189,11 @@ jobs:
           # clone and Trivy failures (ScanFailed:true, exit 0). The runs'
           # own warning lines are the failure marker.
           for rid in $(jq -r '.[].databaseId' <<< "$NEW"); do
-            if gh run view "$rid" --log 2>/dev/null | grep -qE '::warning::(Failed to clone|Trivy scan failed)'; then
+            if ! logs=$(gh run view "$rid" --log 2>/dev/null); then
+              echo "Cannot read logs for CVE scan run $rid; not dispatching the rebase." >&2
+              exit 1
+            fi
+            if grep -qE '::warning::(Failed to clone|Trivy scan failed)' <<< "$logs"; then
               echo "CVE scan run $rid reported a failed repository scan; not dispatching the rebase." >&2
               exit 1
             fi
