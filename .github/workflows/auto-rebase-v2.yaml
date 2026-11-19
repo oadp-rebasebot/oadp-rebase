@@ -42,12 +42,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  decide:
+  notice:
+    # GitHub only renders a job's summary on the run summary page once that
+    # job finishes, so the banner lives in its own fast job instead of inside
+    # decide — it appears while checkout/build/scan are still running.
     runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.build-matrix.outputs.matrix }}
-      has_targets: ${{ steps.build-matrix.outputs.has_targets }}
-      branches: ${{ steps.build-matrix.outputs.branches }}
     steps:
       - name: Dry-run notice
         if: ${{ inputs.dry_run }}
@@ -58,6 +57,13 @@ jobs:
             echo "_This run was started with **dry_run** checked. No pull requests will be opened._"
           } >> "$GITHUB_STEP_SUMMARY"
 
+  decide:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+      has_targets: ${{ steps.build-matrix.outputs.has_targets }}
+      branches: ${{ steps.build-matrix.outputs.branches }}
+    steps:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
