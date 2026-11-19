@@ -118,6 +118,7 @@ jobs:
           echo "CVE scan dispatched."
 
       - name: Wait for the CVE scan (rebase runs after it)
+        id: wait
         if: >-
           steps.parse.outputs.valid == 'true' &&
           steps.parse.outputs.trigger == 'cve_scan_then_rebase'
@@ -126,16 +127,44 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           # The scan commits dependency bumps the rebase then carries; it
-          # runs first. Find our run (newest dispatch of cve-scan since this
-          # comment) and wait for it.
-          sleep 10
-          RUN_ID=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
-            --limit 1 --json databaseId --jq '.[0].databaseId')
-          echo "Watching CVE scan run $RUN_ID"
-          gh run watch "$RUN_ID" --exit-status || {
-            echo "CVE scan run $RUN_ID did not succeed; not dispatching the rebase." >&2
-            exit 1
-          }
+          # runs first. Correlate by difference, not by recency: snapshot
+          # the dispatch runs that exist, then wait for every NEW dispatch
+          # run to finish. cve-scan's concurrency group serializes runs, so
+          # a dispatch racing ours queues behind it -- requiring all new
+          # runs to succeed never lets a failed scan carry into the rebase,
+          # and never skips ours because a newer run appeared.
+          sleep 15
+          BEFORE=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
+            --limit 100 --json databaseId --jq 'map(.databaseId|tostring)|join(",")')
+          [ -n "$BEFORE" ] || BEFORE=0
+          echo "Dispatch runs before this trigger: $BEFORE"
+
+          deadline=$((SECONDS + 7200))
+          while :; do
+            RUNS=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
+              --limit 100 --json databaseId,status,conclusion)
+            NEW=$(jq --arg b "$BEFORE" \
+              'map(select(((.databaseId|tostring) as $i) | ($b|split(",")) | index($i) | not))' \
+              <<< "$RUNS")
+            COUNT=$(jq length <<< "$NEW")
+            if [ "$COUNT" -eq 0 ]; then
+              echo "Our scan run is not listed yet; waiting."
+            else
+              FAILED=$(jq '[.[]|select(.conclusion=="failure")]|length' <<< "$NEW")
+              RUNNING=$(jq '[.[]|select(.status!="completed")]|length' <<< "$NEW")
+              if [ "$FAILED" -gt 0 ]; then
+                jq -r '.[]|select(.conclusion=="failure")|"CVE scan run \(.databaseId) failed; not dispatching the rebase."' <<< "$NEW" >&2
+                exit 1
+              fi
+              [ "$RUNNING" -eq 0 ] && break
+              echo "$RUNNING new scan run(s) still running; waiting."
+            fi
+            [ "$SECONDS" -gt "$deadline" ] && { echo "Timed out waiting for the CVE scan." >&2; exit 1; }
+            sleep 30
+          done
+
+          echo "scan_runs=$(jq -r 'map(.databaseId|tostring)|join(",")' <<< "$NEW")" >> "$GITHUB_OUTPUT"
+          echo "All new CVE scan runs succeeded."
 
       - name: Dispatch Auto Rebase
         if: >-
@@ -164,15 +193,19 @@ jobs:
           TRIGGER: ${{ steps.parse.outputs.trigger }}
           WAVES: ${{ steps.parse.outputs.waves }}
           DRY_RUN: ${{ steps.parse.outputs.dry_run }}
+          SCAN_RUNS: ${{ steps.wait.outputs.scan_runs }}
         run: |
           sleep 10
-          SCAN_URL=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
-            --limit 1 --json url --jq '.[0].url')
-          REBASE_URL=$(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch \
-            --limit 1 --json url --jq '.[0].url')
           {
             echo "Triggered \`$TRIGGER\` (wave $WAVES, dry_run=$DRY_RUN)."
-            [ -n "$SCAN_URL" ] && echo "- CVE scan: $SCAN_URL"
-            [ -n "$REBASE_URL" ] && echo "- Auto Rebase: $REBASE_URL"
+            # The exact scan runs this trigger waited on, when it waited.
+            if [ -n "$SCAN_RUNS" ] && [ "$SCAN_RUNS" != "0" ]; then
+              for rid in ${SCAN_RUNS//,/ }; do
+                echo "- CVE scan: $(gh run view "$rid" --json url --jq .url)"
+              done
+            else
+              echo "- CVE scan: $(gh run list --workflow cve-scan.yaml --event workflow_dispatch --limit 1 --json url --jq '.[0].url')"
+            fi
+            echo "- Auto Rebase: $(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch --limit 1 --json url --jq '.[0].url')"
           } > /tmp/ack.md
           gh issue comment "$ISSUE" --body-file /tmp/ack.md
