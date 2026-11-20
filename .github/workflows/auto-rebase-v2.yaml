@@ -1,5 +1,9 @@
 name: Auto Rebase
 
+# Run-name preference, first match wins: chai's plan_id (chai's own lookup
+# key) -> the repo's request id -> #220's rich display (dry-run marker, wave,
+# selected branches) for humans and the cron. A new field belongs in the
+# rich branch only; never between plan_id and request_id.
 run-name: "${{ inputs.plan_id && format('Auto Rebase {0}', inputs.plan_id) || inputs.request_id && format('Auto Rebase {0}', inputs.request_id) || '' }}${{ !(inputs.plan_id || inputs.request_id) && inputs.dry_run && '[DRY RUN] ' || '' }}${{ !(inputs.plan_id || inputs.request_id) && format('Auto Rebase — wave {0}', inputs.waves) || '' }}${{ !(inputs.plan_id || inputs.request_id) && inputs.oadp_1_3 && ' · oadp-1.3' || '' }}${{ !(inputs.plan_id || inputs.request_id) && inputs.oadp_1_4 && ' · oadp-1.4' || '' }}${{ !(inputs.plan_id || inputs.request_id) && inputs.oadp_1_5 && ' · oadp-1.5' || '' }}${{ !(inputs.plan_id || inputs.request_id) && inputs.oadp_1_6 && ' · oadp-1.6' || '' }}${{ !(inputs.plan_id || inputs.request_id) && inputs.oadp_dev && ' · oadp-dev' || '' }}"
 
 on:
