@@ -168,6 +168,42 @@ jobs:
             -f request_id="${{ steps.parse.outputs.request_id }}"
           echo "Auto Rebase dispatched."
 
+      - name: Mark started (rebase dispatched)
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          (steps.parse.outputs.trigger == 'rebase' ||
+           steps.parse.outputs.trigger == 'rebase_then_cve')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          ISSUE: ${{ github.event.issue.number }}
+          TRIGGER: ${{ steps.parse.outputs.trigger }}
+          WAVES: ${{ steps.parse.outputs.waves }}
+          DRY_RUN: ${{ steps.parse.outputs.dry_run }}
+          REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+        run: |
+          # Rocket on the trigger comment: work started for THIS trigger --
+          # visible to a human skimming the thread and to chai reading it
+          # back. (confused = rejected; rocket = running.)
+          gh api "repos/${GH_REPO}/issues/comments/${COMMENT_ID}/reactions" \
+            -f content='rocket' > /dev/null || true
+          # Early run link, as soon as this request's run is listed: a
+          # person can watch it live instead of waiting for the final ack.
+          sleep 15
+          u=$(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch \
+            --limit 100 --json url,displayTitle \
+            | jq -r --arg t "Auto Rebase $REQUEST_ID" 'map(select(.displayTitle == $t))[0].url')
+          {
+            echo "Started \`$TRIGGER\` (wave $WAVES, dry_run=$DRY_RUN) -- request \`$REQUEST_ID\`."
+            if [ -n "$u" ] && [ "$u" != "null" ]; then
+              echo "- Auto Rebase: $u"
+            else
+              echo "- Auto Rebase: run is starting; the final summary below will link it."
+            fi
+          } > /tmp/started.md
+          gh issue comment "$ISSUE" --body-file /tmp/started.md
+
       - name: Wait for the Auto Rebase (the scan runs after it)
         id: wait
         if: >-
@@ -259,6 +295,39 @@ jobs:
             -f dry_run="${{ steps.parse.outputs.dry_run }}" \
             -f request_id="${{ steps.parse.outputs.request_id }}"
           echo "CVE scan dispatched."
+
+      - name: Mark started (scan dispatched)
+        # cve_scan dispatches immediately; rebase_then_cve already marked
+        # started at its rebase dispatch and its scan link lands in the
+        # final ack after the wait.
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          steps.parse.outputs.trigger == 'cve_scan'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          ISSUE: ${{ github.event.issue.number }}
+          TRIGGER: ${{ steps.parse.outputs.trigger }}
+          WAVES: ${{ steps.parse.outputs.waves }}
+          DRY_RUN: ${{ steps.parse.outputs.dry_run }}
+          REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+        run: |
+          gh api "repos/${GH_REPO}/issues/comments/${COMMENT_ID}/reactions" \
+            -f content='rocket' > /dev/null || true
+          sleep 15
+          u=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
+            --limit 100 --json url,displayTitle \
+            | jq -r --arg t "CVE Scan $REQUEST_ID" 'map(select(.displayTitle == $t))[0].url')
+          {
+            echo "Started \`$TRIGGER\` (wave $WAVES, dry_run=$DRY_RUN) -- request \`$REQUEST_ID\`."
+            if [ -n "$u" ] && [ "$u" != "null" ]; then
+              echo "- CVE scan: $u"
+            else
+              echo "- CVE scan: run is starting; the final summary below will link it."
+            fi
+          } > /tmp/started.md
+          gh issue comment "$ISSUE" --body-file /tmp/started.md
 
       - name: Acknowledge (dispatched)
         if: steps.parse.outputs.valid == 'true'
