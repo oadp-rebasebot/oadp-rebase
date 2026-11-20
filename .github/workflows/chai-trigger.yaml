@@ -50,11 +50,15 @@ jobs:
 
           # The marker must be present: anyone can write JSON, only chai's
           # comments carry this hidden marker line.
-          grep -q "<!-- $MARKER -->" <<< "$COMMENT" || {
+          if grep -q "<!-- $MARKER -->" <<< "$COMMENT"; then
+            echo "marker_present=true" >> "$GITHUB_OUTPUT"
+          else
+            # No marker: prose, not a trigger attempt. Ignored for dispatch,
+            # and (unlike a failed payload) not reacted to.
             echo "No trigger marker; ignoring." >&2
             echo "valid=false" >> "$GITHUB_OUTPUT"
             exit 0
-          }
+          fi
 
           # The JSON is the fenced block after the marker (a comment may
           # carry prose around it).
@@ -117,7 +121,9 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Acknowledge (invalid)
-        if: steps.parse.outputs.valid != 'true'
+        if: >-
+          steps.parse.outputs.valid != 'true' &&
+          steps.parse.outputs.marker_present == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
