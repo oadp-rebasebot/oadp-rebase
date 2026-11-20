@@ -28,7 +28,7 @@
       "description": "true reports and previews only; false lets the workflows open real pull requests, which a person reviews and merges."
     },
     "timeout_minutes": {
-      "type": "number",
+      "type": "integer",
       "minimum": 10,
       "maximum": 360,
       "default": 120,

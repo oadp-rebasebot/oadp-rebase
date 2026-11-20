@@ -26,7 +26,7 @@ echo "$PAYLOAD" | jq -e --argjson allowed "$ALLOWED" '
   and (.dry_run == true or .dry_run == false)
   and (.branches | type == "array" and length == 1)
   and (.branches | all(. as $b | $allowed | index($b)))
-  and ((.timeout_minutes // 120) | (type == "number" and . >= 10 and . <= 360))
+  and ((.timeout_minutes // 120) | (type == "number" and . == floor and . >= 10 and . <= 360))
   and ((.plan_id // "") | (type == "string" and length <= 64))
 ' > /dev/null 2>&1 || {
   echo "payload does not satisfy the chai-trigger schema" >&2
