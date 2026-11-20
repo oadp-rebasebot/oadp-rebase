@@ -1,0 +1,388 @@
+name: Chai Trigger
+
+# A comment in structured JSON on an issue labeled `chai-trigger`, posted by
+# redhat-chai-bot, starts the CVE scan and/or the Auto Rebase workflow.
+# This is chai's trigger path (migtools/oadp-agentic T36): chai holds no
+# dispatch credential -- it comments with the GitHub account it already
+# has, and this workflow dispatches its siblings with the builtin
+# GITHUB_TOKEN (same-repo workflow_dispatch needs no PAT).
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  # workflow_dispatch of sibling workflows in this repository.
+  actions: write
+  # The acknowledgment comment on the trigger issue.
+  issues: write
+
+concurrency:
+  group: chai-trigger
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    # Only chai's account, only on an issue a maintainer labeled as a
+    # trigger (the label is the opt-in; an unlabeled issue never fires).
+    if: >-
+      github.event.comment.user.login == 'redhat-chai-bot' &&
+      contains(github.event.issue.labels.*.name, 'chai-trigger')
+    runs-on: ubuntu-latest
+    env:
+      MARKER: chai:workflow-trigger:v1
+      # The one list of streams this trigger accepts (see the comment at the
+      # schema for the lockstep-update rule). oadp-1.3 is deliberately absent:
+      # its support ended 2026-10-31 (EUS Term 2, migtools/oadp-agentic T32);
+      # the sibling workflows may still declare its boolean for their own
+      # dispatch UI, the comment path refuses it.
+      ALLOWED_BRANCHES: '["oadp-1.4","oadp-1.5","oadp-1.6","oadp-dev"]'
+    steps:
+      - name: Parse the trigger comment
+        id: parse
+        env:
+          COMMENT: ${{ github.event.comment.body }}
+        run: |
+          # The jq programs below are single-quoted on purpose: their $ are
+          # jq syntax (regex anchors, --arg references), not shell expansion.
+          # shellcheck disable=SC2016
+          set -euo pipefail
+
+          # The marker must be present: anyone can write JSON, only chai's
+          # comments carry this hidden marker line.
+          if grep -q "<!-- $MARKER -->" <<< "$COMMENT"; then
+            echo "marker_present=true" >> "$GITHUB_OUTPUT"
+          else
+            # No marker: prose, not a trigger attempt. Ignored for dispatch,
+            # and (unlike a failed payload) not reacted to.
+            echo "No trigger marker; ignoring." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # The JSON is the fenced block after the marker (a comment may
+          # carry prose around it).
+          # Both extractions are failure-tolerant: a marked comment with no
+          # JSON must reach the schema check and be refused, not kill the
+          # step before valid=false is written (set -euo pipefail).
+          PAYLOAD=$(sed -n '/<!-- '"$MARKER"' -->/,/^```$/p' <<< "$COMMENT" \
+            | sed -n '/^```json\{0,1\}$/,/^```$/p' | sed '1d;$d' || true)
+          [ -n "$PAYLOAD" ] || PAYLOAD=$(grep -o '{.*}' <<< "$COMMENT" | head -1 || true)
+          [ -n "$PAYLOAD" ] || {
+            echo "Marker present but no JSON payload." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          # branches is an array so the shape never changes when a release
+          # grows a second selected stream -- but this comment path is capped
+          # to ONE release at a time (length == 1): chai walks one stream,
+          # one wave, before anything else starts.
+          #
+          # ALLOWED_BRANCHES is the one place this workflow lists the streams.
+          # Adding oadp-1.7 means: this list, a boolean input named oadp_1_7
+          # in BOTH cve-scan.yaml and auto-rebase-v2.yaml, and the persona
+          # config in ship-help-bot -- four files, in lockstep; there is no
+          # shared source of truth because the workflows' boolean inputs are
+          # GitHub-schema, not runtime, data.
+          # The schema is tools/chai-trigger/validate-payload.sh -- the
+          # same script chai validates against before posting, fetched from
+          # the default branch so a PR to this file governs both sides in
+          # one place once merged.
+          if ! curl -sfL --max-time 30 \
+              "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/oadp-dev/tools/chai-trigger/validate-payload.sh" \
+              -o /tmp/validate-payload.sh; then
+            echo "Could not fetch validate-payload.sh; ignoring comment." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          chmod +x /tmp/validate-payload.sh
+          /tmp/validate-payload.sh "$PAYLOAD" "$ALLOWED_BRANCHES" || {
+            echo "Comment did not parse as a valid trigger." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          {
+            echo "valid=true"
+            echo "trigger=$(jq -r .trigger <<< "$PAYLOAD")"
+            echo "waves=$(jq -r .waves <<< "$PAYLOAD")"
+            echo "dry_run=$(jq -r .dry_run <<< "$PAYLOAD")"
+            echo "timeout_minutes=$(jq -r '.timeout_minutes // 120' <<< "$PAYLOAD")"
+            echo "plan_id=$(jq -r '.plan_id // ""' <<< "$PAYLOAD")"
+            echo "branches=$(jq -c .branches <<< "$PAYLOAD")"
+            # Correlation id: carried into the dispatched runs' names, so
+            # the wait gate and the ack match THIS request's runs, never a
+            # competitor's, however the listing lags. Entropy beyond
+            # time+pid: a re-run from the Actions UI mints its own ids and
+            # never matches the original ack -- a re-run is a new request,
+            # re-trigger through chai instead.
+            echo "request_id=chai-$(date +%s)-$$-$(od -An -N4 -tx4 /dev/urandom | tr -d ' ')"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Acknowledge (invalid)
+        if: >-
+          steps.parse.outputs.valid != 'true' &&
+          steps.parse.outputs.marker_present == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          gh api "repos/${GH_REPO}/issues/comments/${COMMENT_ID}/reactions" \
+            -f content='confused' > /dev/null || true
+
+      - name: Snapshot existing runs
+        id: snap
+        if: steps.parse.outputs.valid == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # Correlation base for the Auto Rebase link in the acknowledgment
+          # (the scan is correlated by its request-id run name instead).
+          {
+            echo "rebase=$(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch \
+              --limit 100 --json databaseId --jq 'map(.databaseId|tostring)|join(",")' || echo 0)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch Auto Rebase
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          (steps.parse.outputs.trigger == 'rebase' ||
+           steps.parse.outputs.trigger == 'rebase_then_cve')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BRANCHES: ${{ steps.parse.outputs.branches }}
+        run: |
+          # GH_REPO is set: gh needs it when no checkout ran. Each branch
+          # maps to the workflow's boolean input (oadp-1.5 -> oadp_1_5,
+          # oadp-dev -> oadp_dev). EVERY boolean is passed explicitly:
+          # the sibling workflows' own defaults are not all false (e.g.
+          # oadp_1_6: true), so sending only the selected branch would
+          # silently run streams the payload never chose.
+          ARGS=()
+          for br in $(jq -r '.[]' <<< "$ALLOWED_BRANCHES"); do
+            key=$(tr '.-' '__' <<< "$br")
+            if jq -e --arg b "$br" 'index($b) != null' <<< "$BRANCHES" >/dev/null; then
+              ARGS+=(-f "$key=true")
+            else
+              ARGS+=(-f "$key=false")
+            fi
+          done
+          gh workflow run auto-rebase-v2.yaml --ref oadp-dev \
+            "${ARGS[@]}" \
+            -f waves="${{ steps.parse.outputs.waves }}" \
+            -f dry_run="${{ steps.parse.outputs.dry_run }}" \
+            -f request_id="${{ steps.parse.outputs.request_id }}" \
+            -f plan_id="${{ steps.parse.outputs.plan_id }}"
+          echo "Auto Rebase dispatched."
+
+      - name: Mark started (rebase dispatched)
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          (steps.parse.outputs.trigger == 'rebase' ||
+           steps.parse.outputs.trigger == 'rebase_then_cve')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          ISSUE: ${{ github.event.issue.number }}
+          TRIGGER: ${{ steps.parse.outputs.trigger }}
+          WAVES: ${{ steps.parse.outputs.waves }}
+          DRY_RUN: ${{ steps.parse.outputs.dry_run }}
+          REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
+        run: |
+          # Rocket on the trigger comment: work started for THIS trigger --
+          # visible to a human skimming the thread and to chai reading it
+          # back. (confused = rejected; rocket = running.)
+          gh api "repos/${GH_REPO}/issues/comments/${COMMENT_ID}/reactions" \
+            -f content='rocket' > /dev/null || true
+          # Early run link, as soon as this request's run is listed: a
+          # person can watch it live instead of waiting for the final ack.
+          sleep 15
+          u=$(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch \
+            --limit 100 --json url,displayTitle \
+            | jq -r --arg t "Auto Rebase ${PLAN_ID:-$REQUEST_ID}" 'map(select(.displayTitle == $t))[0].url')
+          {
+            echo "Started \`$TRIGGER\` (wave $WAVES, dry_run=$DRY_RUN) -- request \`$REQUEST_ID\`."
+            if [ -n "$u" ] && [ "$u" != "null" ]; then
+              echo "- Auto Rebase: $u"
+            else
+              echo "- Auto Rebase: run is starting; the final summary below will link it."
+            fi
+          } > /tmp/started.md
+          gh issue comment "$ISSUE" --body-file /tmp/started.md
+
+      - name: Wait for the Auto Rebase (the scan runs after it)
+        id: wait
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          steps.parse.outputs.trigger == 'rebase_then_cve'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
+        run: |
+          # The rebase runs first: its post hooks rewrite the replace
+          # directives to the dependencies' new hashes, which already
+          # resolves some CVEs, so the scan that follows fixes what is
+          # left instead of re-reporting what a rebase would have fixed.
+          # This request's run is identified by its name -- the request id
+          # carried into the dispatch -- so a competing dispatch is never
+          # mistaken for ours, however the listing lags.
+          sleep 15
+          TITLE="Auto Rebase ${PLAN_ID:-$REQUEST_ID}"
+          # The wait budget is the payload's timeout_minutes (default 120,
+          # capped at 360): a slow wave can ask for more without a workflow
+          # edit, and nothing can ask for an unbounded wait.
+          WAIT_MINUTES="${{ steps.parse.outputs.timeout_minutes }}"
+          case "$WAIT_MINUTES" in
+            ''|*[!0-9]*) WAIT_MINUTES=120 ;;
+          esac
+          [ "$WAIT_MINUTES" -gt 360 ] && WAIT_MINUTES=360
+          [ "$WAIT_MINUTES" -lt 10 ] && WAIT_MINUTES=10
+          deadline=$((SECONDS + WAIT_MINUTES * 60))
+          RUN=""
+          while :; do
+            if ! RUNS=$(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch \
+              --limit 100 --json databaseId,status,conclusion,displayTitle); then
+              echo "Cannot list Auto Rebase runs; not dispatching the scan." >&2
+              exit 1
+            fi
+            RUN=$(jq -c --arg t "$TITLE" 'map(select(.displayTitle == $t))[0]' <<< "$RUNS")
+            [ "$RUN" != "null" ] && [ -n "$RUN" ] && break
+            [ "$SECONDS" -gt "$deadline" ] && { echo "Timed out waiting for our Auto Rebase run to appear." >&2; exit 1; }
+            echo "Our rebase run is not listed yet; waiting."
+            sleep 30
+          done
+
+          RUN_ID=$(jq -r .databaseId <<< "$RUN")
+          echo "Watching Auto Rebase run $RUN_ID ($TITLE)"
+          while :; do
+            RUN=$(gh run view "$RUN_ID" --json status,conclusion)
+            STATUS=$(jq -r .status <<< "$RUN")
+            if [ "$STATUS" != "completed" ]; then
+              [ "$SECONDS" -gt "$deadline" ] && { echo "Timed out waiting for the Auto Rebase." >&2; exit 1; }
+              sleep 30
+              continue
+            fi
+            CONCLUSION=$(jq -r .conclusion <<< "$RUN")
+            [ "$CONCLUSION" = "success" ] || {
+              echo "Auto Rebase run $RUN_ID ended $CONCLUSION; not dispatching the scan." >&2
+              exit 1
+            }
+            break
+          done
+
+          echo "rebase_runs=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "Our Auto Rebase run succeeded."
+
+      - name: Dispatch CVE scan
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          (steps.parse.outputs.trigger == 'cve_scan' ||
+           steps.parse.outputs.trigger == 'rebase_then_cve')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BRANCHES: ${{ steps.parse.outputs.branches }}
+        run: |
+          # Same explicit-boolean rule as the rebase dispatch: cve-scan's
+          # own defaults include true values, so every stream is stated.
+          ARGS=()
+          for br in $(jq -r '.[]' <<< "$ALLOWED_BRANCHES"); do
+            key=$(tr '.-' '__' <<< "$br")
+            if jq -e --arg b "$br" 'index($b) != null' <<< "$BRANCHES" >/dev/null; then
+              ARGS+=(-f "$key=true")
+            else
+              ARGS+=(-f "$key=false")
+            fi
+          done
+          gh workflow run cve-scan.yaml --ref oadp-dev \
+            "${ARGS[@]}" \
+            -f waves="${{ steps.parse.outputs.waves }}" \
+            -f dry_run="${{ steps.parse.outputs.dry_run }}" \
+            -f request_id="${{ steps.parse.outputs.request_id }}" \
+            -f plan_id="${{ steps.parse.outputs.plan_id }}"
+          echo "CVE scan dispatched."
+
+      - name: Mark started (scan dispatched)
+        # cve_scan dispatches immediately; rebase_then_cve already marked
+        # started at its rebase dispatch and its scan link lands in the
+        # final ack after the wait.
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          steps.parse.outputs.trigger == 'cve_scan'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          ISSUE: ${{ github.event.issue.number }}
+          TRIGGER: ${{ steps.parse.outputs.trigger }}
+          WAVES: ${{ steps.parse.outputs.waves }}
+          DRY_RUN: ${{ steps.parse.outputs.dry_run }}
+          REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
+        run: |
+          gh api "repos/${GH_REPO}/issues/comments/${COMMENT_ID}/reactions" \
+            -f content='rocket' > /dev/null || true
+          sleep 15
+          u=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
+            --limit 100 --json url,displayTitle \
+            | jq -r --arg t "CVE Scan ${PLAN_ID:-$REQUEST_ID}" 'map(select(.displayTitle == $t))[0].url')
+          {
+            echo "Started \`$TRIGGER\` (wave $WAVES, dry_run=$DRY_RUN) -- request \`$REQUEST_ID\`."
+            if [ -n "$u" ] && [ "$u" != "null" ]; then
+              echo "- CVE scan: $u"
+            else
+              echo "- CVE scan: run is starting; the final summary below will link it."
+            fi
+          } > /tmp/started.md
+          gh issue comment "$ISSUE" --body-file /tmp/started.md
+
+      - name: Acknowledge (dispatched)
+        if: steps.parse.outputs.valid == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE: ${{ github.event.issue.number }}
+          TRIGGER: ${{ steps.parse.outputs.trigger }}
+          WAVES: ${{ steps.parse.outputs.waves }}
+          DRY_RUN: ${{ steps.parse.outputs.dry_run }}
+          REBASE_RUNS: ${{ steps.wait.outputs.rebase_runs }}
+          REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
+          SNAP_REBASE: ${{ steps.snap.outputs.rebase }}
+        run: |
+          sleep 15
+          # Link the runs this trigger created (snapshot diff), never a
+          # re-queried newest run that may belong to a manual or
+          # merge-watch dispatch.
+          new_urls() {
+            local workflow="$1" before="$2"
+            gh run list --workflow "$workflow" --event workflow_dispatch \
+              --limit 100 --json databaseId,url \
+              | jq -r --arg b "$before" \
+                'map(select(((.databaseId|tostring) as $i) | ($b|split(",")) | index($i) | not)) | .[].url'
+          }
+          {
+            echo "Triggered \`$TRIGGER\` (wave $WAVES, dry_run=$DRY_RUN)."
+            if [ -n "$REBASE_RUNS" ] && [ "$REBASE_RUNS" != "0" ]; then
+              for rid in ${REBASE_RUNS//,/ }; do
+                echo "- Auto Rebase: $(gh run view "$rid" --json url --jq .url)"
+              done
+            else
+              while IFS= read -r u; do echo "- Auto Rebase: $u"; done \
+                < <(new_urls auto-rebase-v2.yaml "$SNAP_REBASE")
+            fi
+            # This request's scan run, by its name.
+            u=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
+              --limit 100 --json url,displayTitle \
+              | jq -r --arg t "CVE Scan ${PLAN_ID:-$REQUEST_ID}" 'map(select(.displayTitle == $t))[0].url')
+            [ -n "$u" ] && [ "$u" != "null" ] && echo "- CVE scan: $u"
+          } > /tmp/ack.md
+          gh issue comment "$ISSUE" --body-file /tmp/ack.md
