@@ -18,6 +18,9 @@ ALLOWED="${2:?allowed branches json required}"
 
 echo "$PAYLOAD" | jq -e --argjson allowed "$ALLOWED" '
   type == "object"
+  # schema.json sets additionalProperties: false; enforce it here too so
+  # the executable form and the declarative form refuse the same payloads.
+  and ((keys | sort) - ["branches","dry_run","plan_id","timeout_minutes","trigger","waves"] == [])
   and (.trigger == "cve_scan" or .trigger == "rebase" or .trigger == "rebase_then_cve")
   and ((.waves // "") | test("^[1-5]$"))
   and (.dry_run == true or .dry_run == false)

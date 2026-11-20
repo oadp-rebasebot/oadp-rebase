@@ -48,6 +48,7 @@ invalid_samples=(
   '{"trigger":"rebase_then_cve","branches":["oadp-1.5"],"waves":"1","dry_run":"yes"}'
   '{"trigger":"rebase_then_cve","branches":["oadp-1.5"],"waves":"1","dry_run":true,"timeout_minutes":5}'
   '{"trigger":"rebase_then_cve","branches":["oadp-1.5"],"waves":"1","dry_run":true,"timeout_minutes":9999}'
+  '{"trigger":"cve_scan","branches":["oadp-1.5"],"waves":"1","dry_run":true,"foo":"bar"}'
   'not json at all'
 )
 for sample in "${invalid_samples[@]}"; do
