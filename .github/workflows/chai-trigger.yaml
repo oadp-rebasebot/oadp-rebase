@@ -32,8 +32,11 @@ jobs:
     env:
       MARKER: chai:workflow-trigger:v1
       # The one list of streams this trigger accepts (see the comment at the
-      # schema for the lockstep-update rule).
-      ALLOWED_BRANCHES: '["oadp-1.3","oadp-1.4","oadp-1.5","oadp-1.6","oadp-dev"]'
+      # schema for the lockstep-update rule). oadp-1.3 is deliberately absent:
+      # its support ended 2026-10-31 (EUS Term 2, migtools/oadp-agentic T32);
+      # the sibling workflows may still declare its boolean for their own
+      # dispatch UI, the comment path refuses it.
+      ALLOWED_BRANCHES: '["oadp-1.4","oadp-1.5","oadp-1.6","oadp-dev"]'
     steps:
       - name: Parse the trigger comment
         id: parse

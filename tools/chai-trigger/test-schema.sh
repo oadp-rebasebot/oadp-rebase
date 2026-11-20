@@ -20,7 +20,7 @@ FAILURES=0
 
 fail() { echo "FAIL: $*" >&2; FAILURES=$((FAILURES + 1)); }
 
-ALLOWED='["oadp-1.3","oadp-1.4","oadp-1.5","oadp-1.6","oadp-dev"]'
+ALLOWED='["oadp-1.4","oadp-1.5","oadp-1.6","oadp-dev"]'
 
 # --- 1. schema.json is well-formed ---
 jq -e 'type == "object" and has("properties") and has("required")' schema.json > /dev/null \
@@ -42,6 +42,7 @@ invalid_samples=(
   '{"trigger":"deploy_prod","branches":["oadp-1.5"],"waves":"1","dry_run":true}'
   '{"trigger":"rebase_then_cve","branches":["oadp-1.5","oadp-1.6"],"waves":"1","dry_run":true}'
   '{"trigger":"rebase_then_cve","branches":["main"],"waves":"1","dry_run":true}'
+  '{"trigger":"rebase_then_cve","branches":["oadp-1.3"],"waves":"1","dry_run":true}'
   '{"trigger":"rebase_then_cve","branches":["oadp-1.5"],"waves":"6","dry_run":true}'
   '{"trigger":"rebase_then_cve","branches":["oadp-1.5"],"waves":"1"}'
   '{"trigger":"rebase_then_cve","branches":["oadp-1.5"],"waves":"1","dry_run":"yes"}'
@@ -59,13 +60,14 @@ done
 for wf in cve-scan auto-rebase-v2; do
   yaml="$ROOT/.github/workflows/$wf.yaml"
   [ -f "$yaml" ] || { fail "workflow $wf.yaml not found"; continue; }
-  # every branch boolean the workflow declares is in the allowed list
-  for input_name in $(sed -n '/^  workflow_dispatch:/,/^run-name\|^permissions:/p' "$yaml" \
-      | sed -n 's/^      \(oadp_[a-z0-9_]*\):$/\1/p'); do
-    branch=$(echo "$input_name" | sed 's/^oadp_//; s/_/./g; s/\.dev$/-dev/')  # oadp_1_5 -> 1.5, oadp_dev -> dev
-    [ "$branch" = "dev" ] || branch="$branch"
-    echo "$ALLOWED" | jq -e --arg b "${branch/#/oadp-}" 'index($b) != null' > /dev/null \
-      || fail "$wf declares input $input_name but ${branch/#/oadp-} is not in the allowed branch list"
+  # every allowed branch is dispatchable: the workflow declares its boolean.
+  # The reverse need not hold: a workflow may declare a boolean for a stream
+  # the comment path refuses (oadp-1.3 left support 2026-10-31) -- its own
+  # dispatch UI can still use it.
+  for b in $(echo "$ALLOWED" | jq -r '.[]'); do
+    key=$(tr '.-' '__' <<< "$b")
+    grep -qE "^      $key:" "$yaml" \
+      || fail "$wf does not declare the $key input the allowed branch $b needs"
   done
   # waves and dry_run exist as inputs
   for expected in waves dry_run; do
