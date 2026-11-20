@@ -71,18 +71,26 @@ for wf in cve-scan auto-rebase-v2; do
     grep -qE "^      $key:" "$yaml" \
       || fail "$wf does not declare the $key input the allowed branch $b needs"
   done
-  # waves and dry_run exist as inputs
-  for expected in waves dry_run; do
+  # waves, dry_run and plan_id exist as inputs
+  for expected in waves dry_run plan_id; do
     grep -qE "^      $expected:" "$yaml" \
       || fail "$wf.yaml does not declare the $expected input the schema requires"
   done
 done
 
-# the schema's branches pattern covers every allowed branch
+# the schema's branches pattern (read from schema.json, never restated here)
+# covers every allowed branch
+PATTERN=$(jq -r '.properties.branches.items.pattern' schema.json)
 for b in $(echo "$ALLOWED" | jq -r '.[]'); do
-  echo "\"$b\"" | jq -e 'test("^oadp-(1\\.[3-6]|dev)$")' > /dev/null 2>&1 \
-    || fail "allowed branch $b does not match the schema pattern"
+  jq -rn --arg b "$b" --arg p "$PATTERN" '$b | test($p)' > /dev/null 2>&1 \
+    || fail "allowed branch $b does not match the schema pattern $PATTERN"
 done
+
+# the test's allowed list is the workflow's ALLOWED_BRANCHES, verbatim
+WF_ALLOWED=$(sed -n "s/^      ALLOWED_BRANCHES: '\\(.*\\)'$/\\1/p" "$ROOT/.github/workflows/chai-trigger.yaml")
+[ -n "$WF_ALLOWED" ] || fail "could not read ALLOWED_BRANCHES from chai-trigger.yaml"
+[ "$WF_ALLOWED" = "$ALLOWED" ] \
+  || fail "test ALLOWED ($ALLOWED) != chai-trigger.yaml ALLOWED_BRANCHES ($WF_ALLOWED)"
 
 if [ "$FAILURES" -gt 0 ]; then
   echo "$FAILURES schema check(s) failed" >&2

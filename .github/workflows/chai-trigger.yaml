@@ -105,6 +105,7 @@ jobs:
             echo "waves=$(jq -r .waves <<< "$PAYLOAD")"
             echo "dry_run=$(jq -r .dry_run <<< "$PAYLOAD")"
             echo "timeout_minutes=$(jq -r '.timeout_minutes // 120' <<< "$PAYLOAD")"
+            echo "plan_id=$(jq -r '.plan_id // ""' <<< "$PAYLOAD")"
             echo "branches=$(jq -c .branches <<< "$PAYLOAD")"
             # Correlation id: carried into the dispatched runs' names, so
             # the wait gate and the ack match THIS request's runs, never a
@@ -168,7 +169,8 @@ jobs:
             "${ARGS[@]}" \
             -f waves="${{ steps.parse.outputs.waves }}" \
             -f dry_run="${{ steps.parse.outputs.dry_run }}" \
-            -f request_id="${{ steps.parse.outputs.request_id }}"
+            -f request_id="${{ steps.parse.outputs.request_id }}" \
+            -f plan_id="${{ steps.parse.outputs.plan_id }}"
           echo "Auto Rebase dispatched."
 
       - name: Mark started (rebase dispatched)
@@ -185,6 +187,7 @@ jobs:
           WAVES: ${{ steps.parse.outputs.waves }}
           DRY_RUN: ${{ steps.parse.outputs.dry_run }}
           REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
         run: |
           # Rocket on the trigger comment: work started for THIS trigger --
           # visible to a human skimming the thread and to chai reading it
@@ -196,7 +199,7 @@ jobs:
           sleep 15
           u=$(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch \
             --limit 100 --json url,displayTitle \
-            | jq -r --arg t "Auto Rebase $REQUEST_ID" 'map(select(.displayTitle == $t))[0].url')
+            | jq -r --arg t "Auto Rebase ${PLAN_ID:-$REQUEST_ID}" 'map(select(.displayTitle == $t))[0].url')
           {
             echo "Started \`$TRIGGER\` (wave $WAVES, dry_run=$DRY_RUN) -- request \`$REQUEST_ID\`."
             if [ -n "$u" ] && [ "$u" != "null" ]; then
@@ -216,6 +219,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
         run: |
           # The rebase runs first: its post hooks rewrite the replace
           # directives to the dependencies' new hashes, which already
@@ -225,7 +229,7 @@ jobs:
           # carried into the dispatch -- so a competing dispatch is never
           # mistaken for ours, however the listing lags.
           sleep 15
-          TITLE="Auto Rebase $REQUEST_ID"
+          TITLE="Auto Rebase ${PLAN_ID:-$REQUEST_ID}"
           # The wait budget is the payload's timeout_minutes (default 120,
           # capped at 360): a slow wave can ask for more without a workflow
           # edit, and nothing can ask for an unbounded wait.
@@ -296,7 +300,8 @@ jobs:
             "${ARGS[@]}" \
             -f waves="${{ steps.parse.outputs.waves }}" \
             -f dry_run="${{ steps.parse.outputs.dry_run }}" \
-            -f request_id="${{ steps.parse.outputs.request_id }}"
+            -f request_id="${{ steps.parse.outputs.request_id }}" \
+            -f plan_id="${{ steps.parse.outputs.plan_id }}"
           echo "CVE scan dispatched."
 
       - name: Mark started (scan dispatched)
@@ -315,13 +320,14 @@ jobs:
           WAVES: ${{ steps.parse.outputs.waves }}
           DRY_RUN: ${{ steps.parse.outputs.dry_run }}
           REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
         run: |
           gh api "repos/${GH_REPO}/issues/comments/${COMMENT_ID}/reactions" \
             -f content='rocket' > /dev/null || true
           sleep 15
           u=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
             --limit 100 --json url,displayTitle \
-            | jq -r --arg t "CVE Scan $REQUEST_ID" 'map(select(.displayTitle == $t))[0].url')
+            | jq -r --arg t "CVE Scan ${PLAN_ID:-$REQUEST_ID}" 'map(select(.displayTitle == $t))[0].url')
           {
             echo "Started \`$TRIGGER\` (wave $WAVES, dry_run=$DRY_RUN) -- request \`$REQUEST_ID\`."
             if [ -n "$u" ] && [ "$u" != "null" ]; then
@@ -343,6 +349,7 @@ jobs:
           DRY_RUN: ${{ steps.parse.outputs.dry_run }}
           REBASE_RUNS: ${{ steps.wait.outputs.rebase_runs }}
           REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
           SNAP_REBASE: ${{ steps.snap.outputs.rebase }}
         run: |
           sleep 15
@@ -369,7 +376,7 @@ jobs:
             # This request's scan run, by its name.
             u=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
               --limit 100 --json url,displayTitle \
-              | jq -r --arg t "CVE Scan $REQUEST_ID" 'map(select(.displayTitle == $t))[0].url')
+              | jq -r --arg t "CVE Scan ${PLAN_ID:-$REQUEST_ID}" 'map(select(.displayTitle == $t))[0].url')
             [ -n "$u" ] && [ "$u" != "null" ] && echo "- CVE scan: $u"
           } > /tmp/ack.md
           gh issue comment "$ISSUE" --body-file /tmp/ack.md
