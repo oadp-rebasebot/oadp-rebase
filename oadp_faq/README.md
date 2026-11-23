@@ -3,7 +3,7 @@
 Common questions and answers collected from recurring OADP support discussions.
 
 <!-- BEGIN AUTO-MAINTAINED: forum-oadp -->
-Last content update: 2026-11-16
+Last content update: 2026-11-23
 
 ## Installation and configuration
 
@@ -184,6 +184,10 @@ spec:
     - velero:
         accessMode: ReadOnly
 ```
+
+### Why do restored pods fail with ImagePullBackOff when they reference images from other namespaces?
+
+The openshift-velero-plugin skips the `system:image-pullers`, `system:image-builders`, and `system:deployers` RoleBindings during restore because OpenShift re-creates them automatically in every project. The default bindings are restored correctly, but any custom entries you added to grant cross-namespace image pull access are lost. After the restore, re-create the cross-namespace RoleBinding entries that your workloads require.
 
 ### Why do restored PVCs stay unbound when the storage class uses WaitForFirstConsumer binding?
 
@@ -395,5 +399,15 @@ oc get dpa -n openshift-adp <dpa-name> -o jsonpath='{.spec.backupLocations[0].ve
 ```
 
 Then run `velero backup describe <backup-name> --details --cacert /tmp/ca-bundle.pem`.
+
+### Why does `velero restore logs` return "file not found"?
+
+Velero uploads restore logs to object storage only after the restore finishes. If the restore did not complete or the log upload failed, the log file does not exist in the backup storage location. To view restore output in this situation, read the Velero pod logs directly:
+
+```sh
+oc logs deployment/velero -n openshift-adp -c velero
+```
+
+Velero may also run data movement work in separate pods in the `openshift-adp` namespace, so check all pod logs there for the complete picture.
 
 <!-- END AUTO-MAINTAINED: forum-oadp -->
