@@ -1,4 +1,4 @@
-.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-repos-yaml go-test auto-rebase-test cve-scan-test shellcheck
+.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-repos-yaml go-test auto-rebase-test cve-scan-test chai-trigger-test declared-branches-test tide-sync-test shellcheck
 
 generate:
 	@bash tools/generate-go-replace-velero.sh
@@ -136,6 +136,20 @@ auto-rebase-test:
 	@echo "=== Auto-rebase tests — decision, triage, and notification logic ==="
 	@bash tools/auto-rebase/test.sh
 
+chai-trigger-test:
+	@tools/chai-trigger/test-schema.sh
+
+declared-branches-test:
+	@echo "=== Declared streams — dashboard branch list derives from the pipeline inputs ==="
+	@bash tools/stream-sync/test-declared-branches.sh
+
+# NOT part of `test`: it clones openshift/release live, so unrelated PRs
+# would go red on an external repo's state or a network blip. CI runs it
+# as a separate non-blocking job (see .github/workflows/config-tests.yaml).
+tide-sync-test:
+	@echo "=== Tide-sync tests — release queries carry every declared stream ==="
+	@bash tools/stream-sync/test-tide-sync.sh
+
 cve-scan-test:
 	@echo "=== CVE scan tests — remediation selection and dashboard summary ==="
 	@bash tools/cve-scan/test-remediate.sh
@@ -151,6 +165,6 @@ shellcheck:
 	done; \
 	[ $$fail -eq 0 ] && echo "All files passed ShellCheck" || exit 1
 
-test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks go-test auto-rebase-test cve-scan-test
+test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks go-test auto-rebase-test cve-scan-test chai-trigger-test declared-branches-test
 	@echo ""
 	@echo "All checks passed."

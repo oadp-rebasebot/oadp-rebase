@@ -1,0 +1,662 @@
+name: Chai Trigger
+
+# A comment in structured JSON on an issue labeled `chai-trigger`, posted by
+# redhat-chai-bot, starts the CVE scan and/or the Auto Rebase workflow.
+# This is chai's trigger path (migtools/oadp-agentic T36): chai holds no
+# dispatch credential -- it comments with the GitHub account it already
+# has, and this workflow dispatches its siblings with the builtin
+# GITHUB_TOKEN (same-repo workflow_dispatch needs no PAT).
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  # workflow_dispatch of sibling workflows in this repository.
+  actions: write
+  # The acknowledgment comment on the trigger issue.
+  issues: write
+
+jobs:
+  trigger:
+    # Concurrency lives on the JOB, keyed to the trigger issue: a
+    # workflow-level group would pool every issue_comment in the repo
+    # (humans, CodeRabbit, CI bots) and let a stray comment cancel a
+    # pending hours-long rebase_then_cve. The `if` below must ALSO keep
+    # chai's prose (no marker) out of the group: GitHub keeps one running
+    # and one pending job per group, and a newly queued job silently
+    # cancels the pending one -- prose between two triggers would eat the
+    # second trigger with no reaction and no ack.
+    # ACCEPTED LOSS (GitHub Actions has no queueing): a THIRD valid
+    # trigger arriving while one runs and one pends silently replaces the
+    # pending one -- it is cancelled before starting, so it gets no ack.
+    # Requires three rapid valid triggers on one issue; chai re-triggering
+    # a third time while two are in flight is operator error, and the
+    # failure mode is a missing ack, not a wrong action. Dropping the
+    # group would trade mutual exclusion (overlapping waves) for
+    # queueing -- not worth it.
+    concurrency:
+      group: chai-trigger-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    # Only chai's account (matched by user id -- logins can be renamed
+    # and re-registered), only on an issue a maintainer labeled as a
+    # trigger (the label is the opt-in; an unlabeled issue never fires),
+    # and only comments carrying the trigger marker (prose never fires,
+    # never joins the concurrency group).
+    if: >-
+      github.event.comment.user.id == 273475629 &&
+      !github.event.issue.pull_request &&
+      contains(github.event.issue.labels.*.name, 'chai-trigger') &&
+      contains(github.event.comment.body, '<!-- chai:workflow-trigger:v1 -->')
+    runs-on: ubuntu-latest
+    # GitHub-hosted runners hard-kill a job at 360 minutes whatever this
+    # value says, and a cancel does not trip failure() -- so the budget
+    # cap (330) plus this headroom must stay under 360, or the rocket
+    # stays up with no verdict.
+    timeout-minutes: 355
+    env:
+      MARKER: chai:workflow-trigger:v1
+      # Streams the sibling workflows retired from their dispatch UI (T32:
+      # oadp-1.3 left support 2026-10-31). The accepted set itself is DERIVED
+      # at run time from the booleans both siblings declare, so adding
+      # oadp-1.7 there (see stream-sync.yaml) needs no edit here.
+      RETIRED_STREAMS: '["oadp-1.3"]'
+    steps:
+      - name: Parse the trigger comment
+        id: parse
+        env:
+          COMMENT: ${{ github.event.comment.body }}
+        run: |
+          # The jq programs below are single-quoted on purpose: their $ are
+          # jq syntax (regex anchors, --arg references), not shell expansion.
+          # shellcheck disable=SC2016
+          set -euo pipefail
+
+          # The marker must be present: anyone can write JSON, only chai's
+          # comments carry this hidden marker line.
+          if grep -q "<!-- $MARKER -->" <<< "$COMMENT"; then
+            echo "marker_present=true" >> "$GITHUB_OUTPUT"
+          else
+            # No marker: prose, not a trigger attempt. Ignored for dispatch,
+            # and (unlike a failed payload) not reacted to.
+            echo "No trigger marker; ignoring." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # The JSON is the fenced block after the marker (a comment may
+          # carry prose around it). Marker to end-of-comment, then the
+          # first fence-open (```json or bare ```) starts capture and the
+          # next fence line ends it -- works for both fence spellings.
+          # Failure-tolerant: a marked comment with no JSON must reach the
+          # schema check and be refused, not kill the step before
+          # valid=false is written (set -euo pipefail).
+          # CRLF-safe (strip trailing carriage returns per line) and
+          # closed-fence-only: awk buffers the body and prints it ONLY
+          # when the closing fence is seen -- an unclosed fence delivers
+          # nothing (no cross-language flag: an awk variable is invisible
+          # to the surrounding shell).
+          PAYLOAD=$(sed -n "/<!-- $MARKER -->/,\$p" <<< "$COMMENT" \
+            | sed 's/\r$//' \
+            | awk '
+              /^```(json)?[ \t]*$/ && !f {f=1; next}
+              /^```[ \t]*$/ && f {printf "%s", body; exit}
+              f {body = body $0 "\n"}
+            ' || true)
+          [ -n "$PAYLOAD" ] || {
+            echo "No complete fenced JSON payload (unclosed fence or empty body)." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+          # No whole-comment fallback: chai always emits a fenced block, and a
+          # bare grep could pick up JSON quoted in prose BEFORE the marker.
+          [ -n "$PAYLOAD" ] || {
+            echo "Marker present but no complete fenced JSON payload." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          # branches is an array so the shape never changes when a release
+          # grows a second selected stream -- but this comment path is capped
+          # to ONE release at a time (length == 1): chai walks one stream,
+          # one wave, before anything else starts.
+          # The accepted set is derived above from the siblings' inputs;
+          # stream-sync.yaml regenerates those, so a new release needs no
+          # manual edit to this workflow.
+          # The accepted branch set is derived from the sibling workflows'
+          # declared boolean inputs (the same source stream-sync.yaml
+          # regenerates): a stream is triggerable when BOTH siblings can
+          # dispatch it and it is not retired. Adding oadp-1.7 upstream needs
+          # no edit to this file.
+          derive_allowed() {
+            # Fail closed on any incomplete download: a silently empty input
+            # list would narrow the allowlist or drop keys from the dispatch.
+            for wf in cve-scan auto-rebase-v2; do
+              curl -sfL --max-time 30 \
+                "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/oadp-dev/.github/workflows/${wf}.yaml" \
+                > "/tmp/${wf}.yaml.raw" || return 1
+              [ -s "/tmp/${wf}.yaml.raw" ] || return 1
+              sed -n '/^  workflow_dispatch:/,/^run-name\|^permissions:/p' "/tmp/${wf}.yaml.raw" \
+                | sed -n 's/^      \(oadp_[a-z0-9_]*\):$/\1/p' | sort > "/tmp/${wf}.inputs"
+              [ -s "/tmp/${wf}.inputs" ] || return 1
+            done
+            # Every sibling-declared boolean, retired included: the dispatch
+            # steps pass ALL of them explicitly, so a retired stream whose
+            # sibling default is true can never silently run.
+            # The ALLOWLIST stays the intersection (a stream is triggerable
+            # only when BOTH siblings can dispatch it), but each dispatch
+            # step iterates ITS OWN workflow's full key list below -- a key
+            # only one sibling declares (with a non-false default) must
+            # still be passed an explicit false by that sibling's dispatch.
+            comm -12 /tmp/cve-scan.inputs /tmp/auto-rebase-v2.inputs > /tmp/declared.inputs
+            while IFS= read -r input_name; do
+              branch=$(sed 's/^oadp_//; s/_/./g' <<< "$input_name")
+              if ! echo "$RETIRED_STREAMS" | jq -e --arg b "oadp-${branch}" 'index($b) != null' > /dev/null; then
+                echo "oadp-${branch}"
+              fi
+            done < /tmp/declared.inputs | jq -R -s -c 'split("\n") | map(select(length > 0))'
+          }
+          if ! ALLOWED_BRANCHES=$(derive_allowed); then
+            echo "Could not derive the allowed branch set from the sibling workflows." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          [ "$ALLOWED_BRANCHES" != "[]" ] || {
+            echo "Could not derive the allowed branch set from the sibling workflows." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+          {
+            echo "ALLOWED_BRANCHES=$ALLOWED_BRANCHES"
+            echo "DECLARED_KEYS_CVE=$(tr '\n' ' ' < /tmp/cve-scan.inputs)"
+            echo "DECLARED_KEYS_REBASE=$(tr '\n' ' ' < /tmp/auto-rebase-v2.inputs)"
+          } >> "$GITHUB_ENV"
+          echo "Derived allowed branches: $ALLOWED_BRANCHES"
+
+          # The schema is tools/chai-trigger/validate-payload.sh -- the
+          # same script chai validates against before posting, fetched from
+          # the default branch so a PR to this file governs both sides in
+          # one place once merged.
+          if ! curl -sfL --max-time 30 \
+              "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/oadp-dev/tools/chai-trigger/validate-payload.sh" \
+              -o /tmp/validate-payload.sh; then
+            echo "Could not fetch validate-payload.sh; ignoring comment." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          chmod +x /tmp/validate-payload.sh
+          /tmp/validate-payload.sh "$PAYLOAD" "$ALLOWED_BRANCHES" || {
+            echo "Comment did not parse as a valid trigger." >&2
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          {
+            echo "valid=true"
+            echo "trigger=$(jq -r .trigger <<< "$PAYLOAD")"
+            echo "waves=$(jq -r .waves <<< "$PAYLOAD")"
+            echo "dry_run=$(jq -r .dry_run <<< "$PAYLOAD")"
+            # Normalize to a decimal integer: jq preserves "10.0" and the
+            # wait step's numeric-case check would reject it and fall back
+            # to the 120 default.
+            echo "timeout_minutes=$(jq -r '(.timeout_minutes // 120) | floor' <<< "$PAYLOAD")"
+            echo "plan_id=$(jq -r '.plan_id // ""' <<< "$PAYLOAD")"
+            echo "branches=$(jq -c .branches <<< "$PAYLOAD")"
+            # Correlation id: carried into the dispatched runs' names, so
+            # the wait gate and the ack match THIS request's runs, never a
+            # competitor's, however the listing lags. Entropy beyond
+            # time+pid: a re-run from the Actions UI mints its own ids and
+            # never matches the original ack -- a re-run is a new request,
+            # re-trigger through chai instead.
+            echo "request_id=chai-$(date +%s)-$$-$(od -An -N4 -tx4 /dev/urandom | tr -d ' ')"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Acknowledge (invalid)
+        if: >-
+          steps.parse.outputs.valid != 'true' &&
+          steps.parse.outputs.marker_present == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          gh api "repos/${GH_REPO}/issues/comments/${COMMENT_ID}/reactions" \
+            -f content='confused' > /dev/null || true
+
+      - name: Snapshot existing runs
+        id: snap
+        if: steps.parse.outputs.valid == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # Correlation base for both siblings: the wait gate and the
+          # title-match links exclude these ids, so a re-triggered plan
+          # (same run title) can never be confused with its earlier run.
+          # Failure is distinguished from "no prior runs" (both would be
+          # an empty list): 3 tries, then ok=false and the wait gate
+          # fails closed -- an unreliable snapshot is exactly when the
+          # run listing lags, which is when the exclusion matters most.
+          snap_one() {
+            gh run list --workflow "$1" --event workflow_dispatch \
+              --limit 100 --json databaseId --jq 'map(.databaseId|tostring)|join(",")'
+          }
+          snap() {
+            local tries=0 out
+            while :; do
+              if out=$(snap_one "$1"); then
+                printf '%s' "$out"
+                return 0
+              fi
+              tries=$((tries + 1))
+              [ "$tries" -ge 3 ] && return 1
+              sleep 20
+            done
+          }
+          ok=true
+          rebase=$(snap auto-rebase-v2.yaml) || ok=false
+          scan=$(snap cve-scan.yaml) || ok=false
+          {
+            echo "rebase=${rebase:-}"
+            echo "scan=${scan:-}"
+            echo "ok=$ok"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch Auto Rebase
+        id: dispatch-rebase
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          (steps.parse.outputs.trigger == 'rebase' ||
+           steps.parse.outputs.trigger == 'rebase_then_cve')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BRANCHES: ${{ steps.parse.outputs.branches }}
+          # Data, not shell source: never ${{ }}-interpolated into run.
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
+        run: |
+          set -euo pipefail
+          # GH_REPO is set: gh needs it when no checkout ran. Each branch
+          # maps to the workflow's boolean input (oadp-1.5 -> oadp_1_5,
+          # oadp-dev -> oadp_dev). EVERY boolean THIS workflow declares is
+          # passed explicitly -- including keys the allowlist intersection
+          # drops (a sibling-unique key with a non-false default must be
+          # forced false here, not left to the default) -- and retired
+          # streams as false.
+          ARGS=()
+          for key in $DECLARED_KEYS_REBASE; do
+            br="oadp-$(sed 's/^oadp_//; s/_/./g' <<< "$key")"
+            if jq -e --arg b "$br" 'index($b) != null' <<< "$BRANCHES" >/dev/null \
+               && jq -e --arg b "$br" 'index($b) != null' <<< "$ALLOWED_BRANCHES" >/dev/null; then
+              ARGS+=(-f "$key=true")
+            else
+              ARGS+=(-f "$key=false")
+            fi
+          done
+          # Dispatch moment, ISO, with 5s of skew allowance (runner clock
+          # vs GitHub, and same-second creation): the wait gate accepts
+          # runs CREATED at-or-after this instant, so a same-plan run
+          # dispatched after the snapshot but before ours can never be
+          # mistaken for ours (the dispatch API returns no run id to
+          # capture directly). The same-plan competitor is already
+          # excluded by the snapshot ids and the title; a few seconds of
+          # window is acceptable.
+          echo "DISPATCHED_AT=$(date -u -d '-5 seconds' +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+          gh workflow run auto-rebase-v2.yaml --ref oadp-dev \
+            "${ARGS[@]}" \
+            -f waves="${{ steps.parse.outputs.waves }}" \
+            -f dry_run="${{ steps.parse.outputs.dry_run }}" \
+            -f request_id="${{ steps.parse.outputs.request_id }}" \
+            -f plan_id="$PLAN_ID"
+          echo "Auto Rebase dispatched."
+
+      - name: Mark started (rebase dispatched)
+        # Cosmetic: a transient failure posting the comment must not fail
+        # the pipeline after a successful dispatch (the failure ack would
+        # then claim a failure that did not happen, and a chai re-trigger
+        # would duplicate the run).
+        continue-on-error: true
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          (steps.parse.outputs.trigger == 'rebase' ||
+           steps.parse.outputs.trigger == 'rebase_then_cve')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          ISSUE: ${{ github.event.issue.number }}
+          TRIGGER: ${{ steps.parse.outputs.trigger }}
+          WAVES: ${{ steps.parse.outputs.waves }}
+          DRY_RUN: ${{ steps.parse.outputs.dry_run }}
+          REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
+          SNAP_REBASE: ${{ steps.snap.outputs.rebase }}
+        run: |
+          # Rocket on the trigger comment: work started for THIS trigger --
+          # visible to a human skimming the thread and to chai reading it
+          # back. (confused = rejected; rocket = running.)
+          gh api "repos/${GH_REPO}/issues/comments/${COMMENT_ID}/reactions" \
+            -f content='rocket' > /dev/null || true
+          # Early run link, as soon as this request's run is listed: a
+          # person can watch it live instead of waiting for the final ack.
+          # Snapshot-filtered: a re-triggered plan shares its title with
+          # the earlier run, so pre-existing ids are excluded here too.
+          sleep 15
+          u=$(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch \
+            --limit 100 --json databaseId,url,displayTitle \
+            | jq -r --arg t "Auto Rebase ${PLAN_ID:+$PLAN_ID · }$REQUEST_ID" --arg b "$SNAP_REBASE" \
+              'map(select(.displayTitle == $t))
+               | map(select((.databaseId|tostring) as $i | ($b|split(",")) | index($i) | not))
+               | .[0].url')
+          {
+            echo "Started \`$TRIGGER\` (wave $WAVES, dry_run=$DRY_RUN) -- request \`$REQUEST_ID\`."
+            if [ -n "$u" ] && [ "$u" != "null" ]; then
+              echo "- Auto Rebase: $u"
+            else
+              echo "- Auto Rebase: run is starting; the final summary below will link it."
+            fi
+          } > /tmp/started.md
+          gh issue comment "$ISSUE" --body-file /tmp/started.md
+
+      - name: Wait for the Auto Rebase (the scan runs after it)
+        id: wait
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          steps.parse.outputs.trigger == 'rebase_then_cve'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
+          # The pre-dispatch snapshot: same-title runs from an earlier
+          # request with the same plan_id must never be mistaken for ours.
+          SNAP_REBASE: ${{ steps.snap.outputs.rebase }}
+          DISPATCHED_AT: ${{ env.DISPATCHED_AT }}
+        run: |
+          # The rebase runs first: its post hooks rewrite the replace
+          # directives to the dependencies' new hashes, which already
+          # resolves some CVEs, so the scan that follows fixes what is
+          # left instead of re-reporting what a rebase would have fixed.
+          # This request's run is identified by its name -- the request id
+          # carried into the dispatch -- so a competing dispatch is never
+          # mistaken for ours, however the listing lags. The snapshot
+          # filter goes further: a RE-RUN of the same plan carries the
+          # same title, so runs that existed before this request fired
+          # are excluded by id, not just matched by name.
+          # A failed snapshot cannot be distinguished from "no prior
+          # runs" by its (empty) content -- fail closed rather than run
+          # the exclusion against an unreliable base.
+          if [ "${{ steps.snap.outputs.ok }}" != "true" ]; then
+            echo "Run snapshot failed; cannot safely correlate this request's runs. Not dispatching the scan." >&2
+            exit 1
+          fi
+          sleep 15
+          # Unique per request: the request_id always rides along (same-plan
+          # competitors have different request_ids), so a competitor can
+          # never satisfy this title even when plan_id is reused.
+          TITLE="Auto Rebase ${PLAN_ID:+$PLAN_ID · }$REQUEST_ID"
+          # The wait budget is the payload's timeout_minutes (default 120,
+          # capped at 330): a slow wave can ask for more without a workflow
+          # edit, nothing can ask for an unbounded wait, and the cap plus
+          # the steps before/after stays under the runner's 360-minute
+          # hard kill (a kill is a cancel -- failure() never fires).
+          WAIT_MINUTES="${{ steps.parse.outputs.timeout_minutes }}"
+          case "$WAIT_MINUTES" in
+            ''|*[!0-9]*) WAIT_MINUTES=120 ;;
+          esac
+          [ "$WAIT_MINUTES" -gt 330 ] && WAIT_MINUTES=330
+          [ "$WAIT_MINUTES" -lt 10 ] && WAIT_MINUTES=10
+          deadline=$((SECONDS + WAIT_MINUTES * 60))
+          RUN=""
+          LIST_FAILS=0
+          while :; do
+            if ! RUNS=$(gh run list --workflow auto-rebase-v2.yaml --event workflow_dispatch \
+              --limit 100 --json databaseId,status,conclusion,displayTitle,createdAt); then
+              # A single transient API failure must not abort the gate
+              # while the rebase is running -- only a persistent outage.
+              LIST_FAILS=$((LIST_FAILS + 1))
+              if [ "$LIST_FAILS" -ge 5 ]; then
+                echo "Cannot list Auto Rebase runs after $LIST_FAILS tries; not dispatching the scan." >&2
+                exit 1
+              fi
+              echo "Run listing failed (try $LIST_FAILS/5); retrying." >&2
+              sleep 30
+              continue
+            fi
+            LIST_FAILS=0
+            # Title + not-in-snapshot + created after our dispatch moment:
+            # a same-plan competitor dispatched between the snapshot and
+            # our dispatch is excluded by the timestamp, not just the ids.
+            RUN=$(jq -c --arg t "$TITLE" --arg b "$SNAP_REBASE" --arg since "$DISPATCHED_AT" \
+              'map(select(.displayTitle == $t))
+               | map(select((.databaseId|tostring) as $i | ($b|split(",")) | index($i) | not))
+               | map(select(.createdAt >= $since))
+               | .[0]' <<< "$RUNS")
+            [ "$RUN" != "null" ] && [ -n "$RUN" ] && break
+            [ "$SECONDS" -gt "$deadline" ] && { echo "Timed out waiting for our Auto Rebase run to appear." >&2; exit 1; }
+            echo "Our rebase run is not listed yet; waiting."
+            sleep 30
+          done
+
+          RUN_ID=$(jq -r .databaseId <<< "$RUN")
+          echo "Watching Auto Rebase run $RUN_ID ($TITLE)"
+          VIEW_FAILS=0
+          while :; do
+            if ! RUN=$(gh run view "$RUN_ID" --json status,conclusion); then
+              VIEW_FAILS=$((VIEW_FAILS + 1))
+              if [ "$VIEW_FAILS" -ge 5 ]; then
+                echo "Cannot read Auto Rebase run $RUN_ID after $VIEW_FAILS tries." >&2
+                exit 1
+              fi
+              sleep 30
+              continue
+            fi
+            VIEW_FAILS=0
+            STATUS=$(jq -r .status <<< "$RUN")
+            if [ "$STATUS" != "completed" ]; then
+              [ "$SECONDS" -gt "$deadline" ] && { echo "Timed out waiting for the Auto Rebase." >&2; exit 1; }
+              sleep 30
+              continue
+            fi
+            CONCLUSION=$(jq -r .conclusion <<< "$RUN")
+            [ "$CONCLUSION" = "success" ] || {
+              echo "Auto Rebase run $RUN_ID ended $CONCLUSION; not dispatching the scan." >&2
+              exit 1
+            }
+            break
+          done
+
+          echo "rebase_runs=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "Our Auto Rebase run succeeded."
+
+      - name: Dispatch CVE scan
+        id: dispatch-scan
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          (steps.parse.outputs.trigger == 'cve_scan' ||
+           steps.parse.outputs.trigger == 'rebase_then_cve')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BRANCHES: ${{ steps.parse.outputs.branches }}
+          # Data, not shell source: never ${{ }}-interpolated into run.
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
+        run: |
+          set -euo pipefail
+          # Same explicit-boolean rule as the rebase dispatch: every boolean
+          # THIS workflow declares is stated, retired and sibling-unique
+          # keys as false.
+          # Re-read the declared keys from the revision this dispatch runs:
+          # a rebase_then_cve request waits up to timeout_minutes first, and
+          # a stream input merged meanwhile (oadp_1_5/1_6 default true) would
+          # otherwise be omitted and silently fall back to its default.
+          # Fail closed on an incomplete read, as at parse time.
+          curl -sfL --max-time 30 \
+            "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/oadp-dev/.github/workflows/cve-scan.yaml" \
+            > /tmp/cve-scan.dispatch.yaml || { echo "Could not re-read cve-scan.yaml; not dispatching the scan." >&2; exit 1; }
+          DECLARED_KEYS_CVE=$(sed -n '/^  workflow_dispatch:/,/^run-name\|^permissions:/p' /tmp/cve-scan.dispatch.yaml \
+            | sed -n 's/^      \(oadp_[a-z0-9_]*\):$/\1/p' | sort | tr '\n' ' ')
+          [ -n "${DECLARED_KEYS_CVE// /}" ] || { echo "cve-scan.yaml declares no oadp_* inputs; not dispatching the scan." >&2; exit 1; }
+          ARGS=()
+          for key in $DECLARED_KEYS_CVE; do
+            br="oadp-$(sed 's/^oadp_//; s/_/./g' <<< "$key")"
+            if jq -e --arg b "$br" 'index($b) != null' <<< "$BRANCHES" >/dev/null \
+               && jq -e --arg b "$br" 'index($b) != null' <<< "$ALLOWED_BRANCHES" >/dev/null; then
+              ARGS+=(-f "$key=true")
+            else
+              ARGS+=(-f "$key=false")
+            fi
+          done
+          gh workflow run cve-scan.yaml --ref oadp-dev \
+            "${ARGS[@]}" \
+            -f waves="${{ steps.parse.outputs.waves }}" \
+            -f dry_run="${{ steps.parse.outputs.dry_run }}" \
+            -f request_id="${{ steps.parse.outputs.request_id }}" \
+            -f plan_id="$PLAN_ID"
+          echo "CVE scan dispatched."
+
+      - name: Mark started (scan dispatched)
+        # Cosmetic: a transient failure posting the comment must not fail
+        # the pipeline after a successful dispatch (the failure ack would
+        # then claim a failure that did not happen, and a chai re-trigger
+        # would duplicate the run).
+        continue-on-error: true
+        # cve_scan dispatches immediately; rebase_then_cve already marked
+        # started at its rebase dispatch and its scan link lands in the
+        # final ack after the wait.
+        if: >-
+          steps.parse.outputs.valid == 'true' &&
+          steps.parse.outputs.trigger == 'cve_scan'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          ISSUE: ${{ github.event.issue.number }}
+          TRIGGER: ${{ steps.parse.outputs.trigger }}
+          WAVES: ${{ steps.parse.outputs.waves }}
+          DRY_RUN: ${{ steps.parse.outputs.dry_run }}
+          REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
+          SNAP_SCAN: ${{ steps.snap.outputs.scan }}
+        run: |
+          gh api "repos/${GH_REPO}/issues/comments/${COMMENT_ID}/reactions" \
+            -f content='rocket' > /dev/null || true
+          # Snapshot-filtered, same as the rebase link above.
+          sleep 15
+          u=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
+            --limit 100 --json databaseId,url,displayTitle \
+            | jq -r --arg t "CVE Scan ${PLAN_ID:+$PLAN_ID · }$REQUEST_ID" --arg b "$SNAP_SCAN" \
+              'map(select(.displayTitle == $t))
+               | map(select((.databaseId|tostring) as $i | ($b|split(",")) | index($i) | not))
+               | .[0].url')
+          {
+            echo "Started \`$TRIGGER\` (wave $WAVES, dry_run=$DRY_RUN) -- request \`$REQUEST_ID\`."
+            if [ -n "$u" ] && [ "$u" != "null" ]; then
+              echo "- CVE scan: $u"
+            else
+              echo "- CVE scan: run is starting; the final summary below will link it."
+            fi
+          } > /tmp/started.md
+          gh issue comment "$ISSUE" --body-file /tmp/started.md
+
+      - name: Acknowledge (dispatched)
+        # Cosmetic: a transient failure posting the comment must not fail
+        # the pipeline after a successful dispatch (the failure ack would
+        # then claim a failure that did not happen, and a chai re-trigger
+        # would duplicate the run).
+        continue-on-error: true
+        if: steps.parse.outputs.valid == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE: ${{ github.event.issue.number }}
+          TRIGGER: ${{ steps.parse.outputs.trigger }}
+          WAVES: ${{ steps.parse.outputs.waves }}
+          DRY_RUN: ${{ steps.parse.outputs.dry_run }}
+          REBASE_RUNS: ${{ steps.wait.outputs.rebase_runs }}
+          REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+          PLAN_ID: ${{ steps.parse.outputs.plan_id }}
+          SNAP_REBASE: ${{ steps.snap.outputs.rebase }}
+          SNAP_SCAN: ${{ steps.snap.outputs.scan }}
+          SNAP_OK: ${{ steps.snap.outputs.ok }}
+        run: |
+          sleep 15
+          # Link the runs this trigger created (snapshot diff), never a
+          # re-queried newest run that may belong to a manual or
+          # merge-watch dispatch. cve_scan dispatches no rebase: the
+          # snapshot diff there would name a competitor's run, so it is
+          # skipped.
+          # Title-filtered on purpose: a manual or merge-watch dispatch
+          # landing between the snapshot and this ack is new but not ours.
+          new_urls() {
+            local workflow="$1" before="$2" title="$3"
+            gh run list --workflow "$workflow" --event workflow_dispatch \
+              --limit 100 --json databaseId,url,displayTitle \
+              | jq -r --arg b "$before" --arg t "$title" \
+                'map(select(.displayTitle == $t))
+                 | map(select((.databaseId|tostring) as $i | ($b|split(",")) | index($i) | not))
+                 | .[].url'
+          }
+          {
+            echo "Triggered \`$TRIGGER\` (wave $WAVES, dry_run=$DRY_RUN)."
+            if [ "$TRIGGER" != "cve_scan" ]; then
+              if [ -n "$REBASE_RUNS" ] && [ "$REBASE_RUNS" != "0" ]; then
+                for rid in ${REBASE_RUNS//,/ }; do
+                  echo "- Auto Rebase: $(gh run view "$rid" --json url --jq .url)"
+                done
+              elif [ "$SNAP_OK" = "true" ]; then
+                # An empty snapshot (no prior runs) works here too: the
+                # before-set splits to [""], matches no id, and the title
+                # filter alone yields this request's run -- a real link,
+                # not a promise of one.
+                while IFS= read -r u; do echo "- Auto Rebase: $u"; done \
+                  < <(new_urls auto-rebase-v2.yaml "$SNAP_REBASE" "Auto Rebase ${PLAN_ID:+$PLAN_ID · }$REQUEST_ID")
+              else
+                echo "- Auto Rebase: links unavailable (the run snapshot failed)."
+              fi
+            fi
+            # This request's scan run, by its name.
+            # Only the scans THIS trigger dispatched: rebase alone
+            # dispatches no scan, and an old same-title scan must not be
+            # linked as if it were ours.
+            if [ "$TRIGGER" != "rebase" ]; then
+              u=$(gh run list --workflow cve-scan.yaml --event workflow_dispatch \
+                --limit 100 --json databaseId,url,displayTitle \
+                | jq -r --arg t "CVE Scan ${PLAN_ID:+$PLAN_ID · }$REQUEST_ID" --arg b "$SNAP_SCAN" \
+                'map(select(.displayTitle == $t))
+                 | map(select((.databaseId|tostring) as $i | ($b|split(",")) | index($i) | not))
+                   | .[0].url')
+              [ -n "$u" ] && [ "$u" != "null" ] && echo "- CVE scan: $u"
+            fi
+          } > /tmp/ack.md
+          gh issue comment "$ISSUE" --body-file /tmp/ack.md
+
+      - name: Acknowledge (failed)
+        # Any failure path -- a failed or cancelled rebase, a wait timeout,
+        # a failed gh call -- must tell the issue, or the rocket stays with
+        # no verdict and chai/humans cannot tell "running" from "dead".
+        if: >-
+          (failure() || cancelled()) &&
+          steps.parse.outputs.valid == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE: ${{ github.event.issue.number }}
+          TRIGGER: ${{ steps.parse.outputs.trigger }}
+          REQUEST_ID: ${{ steps.parse.outputs.request_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REBASE_OUTCOME: ${{ steps.dispatch-rebase.outcome }}
+          SCAN_OUTCOME: ${{ steps.dispatch-scan.outcome }}
+        run: |
+          {
+            echo "Failed \`$TRIGGER\` -- request \`$REQUEST_ID\`."
+            echo "- Trigger run: $RUN_URL (see its logs for the failure)."
+            if [ "$REBASE_OUTCOME" = "success" ]; then
+              echo "- The Auto Rebase WAS dispatched before the failure; do not blindly re-trigger."
+            fi
+            if [ "$SCAN_OUTCOME" = "success" ]; then
+              echo "- The CVE scan WAS dispatched before the failure; do not blindly re-trigger."
+            fi
+            echo "Re-trigger through chai once the cause is addressed."
+          } > /tmp/failed.md
+          gh issue comment "$ISSUE" --body-file /tmp/failed.md

@@ -1,10 +1,25 @@
 name: Auto Rebase
 
-run-name: "${{ inputs.dry_run && '[DRY RUN] ' || '' }}Auto Rebase — wave ${{ inputs.waves }}${{ inputs.oadp_1_3 && ' · oadp-1.3' || '' }}${{ inputs.oadp_1_4 && ' · oadp-1.4' || '' }}${{ inputs.oadp_1_5 && ' · oadp-1.5' || '' }}${{ inputs.oadp_1_6 && ' · oadp-1.6' || '' }}${{ inputs.oadp_dev && ' · oadp-dev' || '' }}"
+# Run-name preference, first match wins: chai's plan_id (chai's own lookup
+# key) -> the repo's request id -> #220's rich display (dry-run marker,
+# wave) for humans and the cron. chai-trigger matches the exact titles
+# "Auto Rebase <plan_id|request_id>", so every fragment here must vanish
+# for the id cases -- no leftover expression may print true/false.
+run-name: "${{ inputs.plan_id && ((inputs.request_id && format('Auto Rebase {0} · {1}', inputs.plan_id, inputs.request_id)) || format('Auto Rebase {0}', inputs.plan_id)) || (inputs.request_id && format('Auto Rebase {0}', inputs.request_id)) || format('{0}Auto Rebase — wave {1}', inputs.dry_run && '[DRY RUN] ' || '', inputs.waves) }}"
 
 on:
   workflow_dispatch:
     inputs:
+      request_id:
+        description: 'Caller correlation id (used by chai-trigger to find this run; empty for humans)'
+        type: string
+        required: false
+        default: ''
+      plan_id:
+        description: 'chai plan identifier (rendered into the run name when present, so chai can find its own runs)'
+        type: string
+        required: false
+        default: ''
       oadp_1_3:
         description: 'oadp-1.3'
         type: boolean
@@ -33,6 +48,7 @@ on:
         description: 'Dry run only (no PRs created)'
         type: boolean
         default: false
+
 
 permissions:
   contents: write
@@ -80,20 +96,18 @@ jobs:
         id: build-matrix
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          INPUT_OADP_1_3: ${{ inputs.oadp_1_3 }}
-          INPUT_OADP_1_4: ${{ inputs.oadp_1_4 }}
-          INPUT_OADP_1_5: ${{ inputs.oadp_1_5 }}
-          INPUT_OADP_1_6: ${{ inputs.oadp_1_6 }}
-          INPUT_OADP_DEV: ${{ inputs.oadp_dev }}
           INPUT_WAVES: ${{ inputs.waves }}
           INPUT_DRY_RUN: ${{ inputs.dry_run }}
+          INPUTS_JSON: ${{ toJSON(inputs) }}
         run: |
+          # Dynamic: every oadp_* boolean input that is true becomes a
+          # branch -- adding oadp_1_7 needs no edit here.
           BRANCHES=""
-          [ "$INPUT_OADP_1_3" = "true" ] && BRANCHES="$BRANCHES oadp-1.3"
-          [ "$INPUT_OADP_1_4" = "true" ] && BRANCHES="$BRANCHES oadp-1.4"
-          [ "$INPUT_OADP_1_5" = "true" ] && BRANCHES="$BRANCHES oadp-1.5"
-          [ "$INPUT_OADP_1_6" = "true" ] && BRANCHES="$BRANCHES oadp-1.6"
-          [ "$INPUT_OADP_DEV" = "true" ] && BRANCHES="$BRANCHES oadp-dev"
+          for key in $(echo "$INPUTS_JSON" \
+                       | jq -r 'to_entries[] | select(.key | startswith("oadp_")) | select(.value == true) | .key'); do
+            branch=$(sed 's/^oadp_//; s/_/./g' <<< "$key")
+            BRANCHES="$BRANCHES oadp-${branch}"
+          done
           BRANCHES="${BRANCHES# }"
           if [ -z "$BRANCHES" ]; then
             echo "::error::No branches selected"
@@ -113,11 +127,24 @@ jobs:
             echo "::group::rebase-status $branch"
 
             json_file="/tmp/status-${branch}.json"
-            tools/rebase-status/rebase-status \
+            # rebase-status exits 1 on StatusFail -- which is DRIFT, with a
+            # valid report written first: exactly the case the decision
+            # consumes. Only a report that was never produced (empty or
+            # malformed JSON) fails here; the exit code does not.
+            if ! tools/rebase-status/rebase-status \
               --config-dir rebase-configs \
               --json \
               --hide-dependency-details \
-              "$branch" > "$json_file" || true
+              "$branch" > "$json_file"; then
+              echo "rebase-status exited nonzero for $branch (drift or partial failure); validating the report" >&2
+            fi
+            # A missing/empty/malformed report is NOT "zero targets": it
+            # is a failure to produce the report, and treating it as a
+            # green skip would release the scan on no evidence.
+            if [ ! -s "$json_file" ] || ! jq -e 'type == "object" and (.repos | type == "array")' "$json_file" > /dev/null 2>&1; then
+              echo "::error::rebase-status produced no valid report for $branch ($json_file)" >&2
+              exit 1
+            fi
 
             targets=$(bash tools/auto-rebase/rebase-decision.sh --reason --waves "$INPUT_WAVES" < "$json_file")
             count=$(echo "$targets" | grep -c . || echo 0)
@@ -137,6 +164,27 @@ jobs:
 
           total=$(echo "$all_targets" | jq length)
           echo "Total targets across all branches: $total"
+
+          # Per-selected-wave determinacy (global counts misjudged both
+          # ways: warnings from unselected waves failed a synced decide,
+          # and targets selected elsewhere released an indeterminate
+          # wave). The decision selects exactly the repos whose
+          # upstream_sync/dep_sync is FAIL; OK means synced. A repo in a
+          # SELECTED wave with WARN status is neither -- its sync state
+          # is unknown, and the wave's scan is not released on that.
+          undetermined=$(cat /tmp/status-*.json 2>/dev/null | jq -rs \
+            --arg waves "$INPUT_WAVES" \
+            '[ .[].repos[]
+               | select(.skip != true)
+               | (.wave | tostring) as $w
+               | select($waves == "" or (("," + $waves + ",") | contains("," + $w + ",")))
+               | select(.checks.upstream_sync.status? == "warn" or .checks.dep_sync.status? == "warn")
+               | .repo + " (wave " + $w + ")"
+             ] | unique')
+          if [ "$(echo "$undetermined" | jq length)" -gt 0 ]; then
+            echo "::error::Selected-wave repos with UNKNOWN sync state (upstream/dep check warned, not failed-ok): $(echo "$undetermined" | jq -c .) -- not releasing the scan." >&2
+            exit 1
+          fi
 
           if [ "$total" -gt 0 ]; then
             echo "has_targets=true" >> "$GITHUB_OUTPUT"
@@ -214,6 +262,181 @@ jobs:
 
           exit $rc
 
+      - name: Parse the rebase PR
+        if: steps.pipeline.outputs.pr_url != '' && inputs.dry_run != true
+        id: pr
+        env:
+          PR_URL: ${{ steps.pipeline.outputs.pr_url }}
+          # Builtin token for the author check below (public-repo read);
+          # the app token cannot be minted yet -- it needs this step's org.
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The PR body comes from the rebasebot container (upstream), so the
+          # trigger identity is stamped as a comment on the PR instead.
+          p="$PR_URL"
+          repo="${p#https://github.com/}"
+          {
+            echo "repo=${repo%/pull/*}"
+            echo "org=$(echo "${repo%/pull/*}" | cut -d/ -f1)"
+            echo "number=${p##*/pull/}"
+          } >> "$GITHUB_OUTPUT"
+          # Guard against a confused deputy: the URL comes from pipeline
+          # logs, so confirm the PR really is a rebasebot PR before any
+          # step writes to it. Bot-app PRs report their author login as
+          # "app/<app-slug>" (verified on live PRs). The read retries: a
+          # transient API failure must not silently blank the outputs and
+          # skip the required label gate -- that fails this step instead.
+          # Only a CONFIRMED foreign author blanks the outputs.
+          author=""
+          tries=0
+          while :; do
+            if author=$(gh pr view "${p##*/pull/}" --repo "${repo%/pull/*}" \
+                --json author --jq '.author.login'); then
+              break
+            fi
+            tries=$((tries + 1))
+            [ "$tries" -ge 3 ] && { echo "cannot read the PR author after $tries tries" >&2; exit 1; }
+            sleep 20
+          done
+          if [ "$author" != "app/oadp-rebasebot-app" ]; then
+            echo "PR author is '$author', not app/oadp-rebasebot-app; refusing to stamp or label." >&2
+            echo "repo=" >> "$GITHUB_OUTPUT"
+            echo "org=" >> "$GITHUB_OUTPUT"
+            echo "number=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate app token (stamp + label gate)
+        if: steps.pr.outputs.repo != ''
+        id: pr-token
+        # Serves the comment AND the required label gate. Still
+        # continue-on-error (a mint outage must not fail the rebase job
+        # itself), but the gate below checks the token and fails
+        # loudly with the real cause instead of retrying empty.
+        continue-on-error: true
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.OADP_REBASEBOT_APP_ID }}
+          private-key: ${{ secrets.OADP_REBASEBOT_APP_KEY }}
+          owner: ${{ steps.pr.outputs.org }}
+
+      - name: Comment the trigger on the rebase PR
+        # Cosmetic: the identity stamp. A transient failure here must not
+        # fail the pipeline after the PR opened.
+        if: steps.pr.outputs.repo != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ steps.pr-token.outputs.token }}
+          PR_REPO: ${{ steps.pr.outputs.repo }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          TRIGGER_ACTOR: ${{ ((inputs.plan_id || inputs.request_id) && github.triggering_actor == 'github-actions[bot]') && 'redhat-chai-bot' || (github.event_name == 'schedule' && 'schedule' || github.actor) }}
+        run: |
+          gh pr comment "$PR_NUMBER" --repo "$PR_REPO" \
+            --body "Triggered by $TRIGGER_ACTOR via the [Auto Rebase pipeline](https://github.com/oadp-rebasebot/oadp-rebase/tree/oadp-dev/tools/auto-rebase)."
+
+      - name: Label gate (oadp-bot, scope- and head-bound)
+        # CVE-only auto-approve (team decision, 2026-11-23): upstream
+        # rebases get a full human review. This gate NEVER adds the
+        # oadp-bot label to a rebase PR -- it strips any stale label
+        # (migration safety for PRs labeled before the decision) and
+        # asserts the PR is left unlabeled. The label is reserved for
+        # CVE fix PRs, added only by the CVE pipeline. The decision is
+        # bound to the head SHA read with the file list and re-verified
+        # after the label write, so a concurrent re-push cannot race a
+        # stale decision onto a moved head.
+        if: steps.pr.outputs.repo != ''
+        env:
+          GH_TOKEN: ${{ steps.pr-token.outputs.token }}
+          PR_REPO: ${{ steps.pr.outputs.repo }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          set -euo pipefail
+          # The token mint is continue-on-error: an empty token here
+          # means the mint failed -- fail with the real cause, not
+          # "cannot read the PR" after three retries.
+          [ -n "${GH_TOKEN:-}" ] || { echo "app token mint failed; label gate cannot run" >&2; exit 1; }
+          # 3 tries on the head SHA read: a transient failure must not
+          # skip the gate.
+          tries=0
+          while :; do
+            if pr_json=$(gh pr view "$PR_NUMBER" --repo "$PR_REPO" \
+                --json headRefOid); then
+              break
+            fi
+            tries=$((tries + 1))
+            [ "$tries" -ge 3 ] && { echo "cannot read the PR for the label gate after $tries tries" >&2; exit 1; }
+            sleep 20
+          done
+          head_before=$(jq -r .headRefOid <<< "$pr_json")
+
+          # The oadp-bot label must EXIST in the dest repo for any of
+          # this to matter, and it is not defined in the repos yet
+          # (rollout prerequisite: create it in the dest repos). A 404 on
+          # the label is a warning + skip -- no label, nothing to gate,
+          # nothing for tide to pool; any other error fails the gate.
+          # Status via gh's exit code and stderr, not a pipeline: under
+          # set -euo pipefail a 404 exits gh with 1 and a 200 SIGPIPEs it
+          # at head -1, so a piped status probe always fails.
+          if out=$(gh api "repos/$PR_REPO/labels/oadp-bot" --jq .name 2>&1); then
+            label_http=200
+          elif grep -q '(HTTP 404)' <<< "$out"; then
+            label_http=404
+          else
+            label_http=other
+          fi
+          if [ "$label_http" = "404" ]; then
+            echo "::warning::oadp-bot label not defined in $PR_REPO; nothing to gate (rollout prerequisite: create the label)" >&2
+            exit 0
+          elif [ "$label_http" != "200" ]; then
+            echo "cannot read the oadp-bot label state in $PR_REPO ($out)" >&2
+            exit 1
+          fi
+
+          # Remove first, strictly: a broadened re-push must never keep a
+          # label an earlier run added. A failed removal is a failed gate
+          # (a stale label on an unscoped diff is the exact hazard).
+          gh pr edit "$PR_NUMBER" --repo "$PR_REPO" --remove-label oadp-bot
+          # Never re-add (team decision 2026-11-23, CVE-only
+          # auto-approve): rebase PRs take the human-review path. The
+          # final assertion below checks the PR is left unlabeled.
+          should_label=false
+
+          # Head still where we decided, and the label state matches the
+          # decision? A moved head invalidates the decision; a mismatched
+          # label state means a write failed silently. The final read
+          # retries; a persistent failure REMOVES the label and fails --
+          # an unverified label must not survive the gate.
+          after=""
+          vtries=0
+          while :; do
+            if after=$(gh pr view "$PR_NUMBER" --repo "$PR_REPO" --json headRefOid,labels); then
+              break
+            fi
+            vtries=$((vtries + 1))
+            if [ "$vtries" -ge 3 ]; then
+              echo "cannot re-verify the PR after the label gate; removing label." >&2
+              if ! gh pr edit "$PR_NUMBER" --repo "$PR_REPO" --remove-label oadp-bot; then
+                echo "::warning::could NOT remove oadp-bot after failed re-verification -- manual removal needed on $PR_REPO#$PR_NUMBER" >&2
+              fi
+              exit 1
+            fi
+            sleep 20
+          done
+          head_after=$(jq -r .headRefOid <<< "$after")
+          has_label=$(jq '[.labels[].name] | index("oadp-bot") != null' <<< "$after")
+          if [ "$head_after" != "$head_before" ]; then
+            echo "PR head moved during the label gate ($head_before -> $head_after); removing label." >&2
+            # Honest removal: a swallowed failure must not be reported as
+            # removed -- a PR whose head moved may keep a stale label.
+            if ! gh pr edit "$PR_NUMBER" --repo "$PR_REPO" --remove-label oadp-bot; then
+              echo "::warning::could NOT remove oadp-bot after head move -- manual removal needed on $PR_REPO#$PR_NUMBER" >&2
+            fi
+            exit 1
+          fi
+          if [ "$has_label" != "$should_label" ]; then
+            echo "label state (oadp-bot present: $has_label) does not match the decision ($should_label)" >&2
+            exit 1
+          fi
+
       - name: Post-push verify
         if: always() && steps.pipeline.outputs.pr_url != ''
         continue-on-error: true
@@ -250,10 +473,10 @@ jobs:
           dry_run_policy=$(jq -r '.dry_run_policy' "$result_file")
           real_run_rc=$(jq -r '.real_run_rc // ""' "$result_file")
 
-          if [ "$exit_code" = "0" ]; then
-            status="✅ Success"
-          elif [ "$is_manual" = "true" ]; then
+          if [ "$is_manual" = "true" ]; then
             status="⚠️ Manual intervention needed"
+          elif [ "$exit_code" = "0" ]; then
+            status="✅ Success"
           else
             status="❌ Failed"
           fi
@@ -292,8 +515,15 @@ jobs:
           exit_code=$(jq -r '.exit_code' "$result_file")
           is_manual=$(jq -r '.is_manual' "$result_file")
 
-          [ "$is_manual" = "true" ] && { echo "::warning::Rebase needs manual intervention"; exit 0; }
+          # A green JOB must mean the real rebase ran: the pipeline step
+          # is continue-on-error, so its exit 75 alone cannot fail this
+          # job -- this check must. is_manual and rc 75 (skipped real
+          # run / manual intervention) both fail: chai's wait gate reads
+          # the run conclusion and must not dispatch the scan on a
+          # rebase that did not happen.
+          [ "$is_manual" = "true" ] && { echo "::error::Rebase needs manual intervention -- not a green run"; exit 1; }
           [ "$exit_code" = "0" ] && exit 0
+          [ "$exit_code" = "75" ] && { echo "::error::Real rebase run skipped (rc=75) -- not a green run"; exit 1; }
 
           echo "::error::Pipeline failed (rc=${exit_code})"
           exit 1
@@ -358,10 +588,10 @@ jobs:
                   pr_url=$(jq -r '.pr_url // ""' "$result_file")
                   pr_info=$(jq -r '.pr_info // ""' "$result_file")
 
-                  if [ "$exit_code" = "0" ]; then
-                    status="✅ Success"
-                  elif [ "$is_manual" = "true" ]; then
+                  if [ "$is_manual" = "true" ]; then
                     status="⚠️ Manual"
+                  elif [ "$exit_code" = "0" ]; then
+                    status="✅ Success"
                   else
                     status="❌ Failed (rc=${exit_code})"
                   fi
