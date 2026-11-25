@@ -9,8 +9,12 @@ on:
   workflow_dispatch:
 
 env:
-  BRANCHES: oadp-dev oadp-1.6 oadp-1.5 oadp-1.4 oadp-1.3
   DATA_BRANCH: dashboard-data
+  # BRANCHES is derived at run time (see "Derive the live streams") from the
+  # oadp_* inputs both pipeline workflows declare, minus retired streams --
+  # the same source stream-sync regenerates, so a new release needs no edit
+  # here and a retired one drops out.
+  RETIRED_STREAMS: '["oadp-1.3"]'
 
 permissions:
   actions: read
@@ -25,6 +29,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
+      - name: Derive the live streams
+        run: |
+          branches=$(bash tools/stream-sync/declared-branches.sh)
+          echo "BRANCHES=$branches" >> "$GITHUB_ENV"
+          echo "Publishing dashboard data for: $branches"
 
       - uses: actions/setup-go@v5
         with:

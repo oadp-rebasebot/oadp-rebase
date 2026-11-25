@@ -14,6 +14,11 @@ on:
       - 'Makefile'
       - '.shellcheckrc'
       - '.github/workflows/config-tests.yaml'
+      - '.github/workflows/cve-scan.yaml'
+      - '.github/workflows/auto-rebase-v2.yaml'
+      - '.github/workflows/publish-dashboard-data.yaml'
+      - '.github/workflows/chai-trigger.yaml'
+      - '.github/workflows/stream-sync.yaml'
   push:
     branches: [oadp-dev]
     paths:
@@ -27,6 +32,11 @@ on:
       - 'Makefile'
       - '.shellcheckrc'
       - '.github/workflows/config-tests.yaml'
+      - '.github/workflows/cve-scan.yaml'
+      - '.github/workflows/auto-rebase-v2.yaml'
+      - '.github/workflows/publish-dashboard-data.yaml'
+      - '.github/workflows/chai-trigger.yaml'
+      - '.github/workflows/stream-sync.yaml'
 
 permissions:
   contents: read
@@ -68,3 +78,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: make verify-kopia-alignment
+
+  tide-sync:
+    # Non-blocking on purpose: it clones openshift/release live, so that
+    # repo's state (or a network blip) must not fail unrelated PRs. It is
+    # the alarm for "the release queries lag the declared streams".
+    name: Tide-sync drift alarm
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Release queries carry every declared stream
+        run: make tide-sync-test

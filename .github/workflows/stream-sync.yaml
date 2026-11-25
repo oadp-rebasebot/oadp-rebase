@@ -1,0 +1,557 @@
+name: Stream Sync
+
+# Keeps the sibling workflows' stream booleans in step with the streams that
+# actually exist: when a release branch newer than the newest declared
+# boolean appears on the sentinel repo (openshift/oadp-operator), this opens
+# a PR adding the matching oadp_1_N boolean input to cve-scan.yaml and
+# auto-rebase-v2.yaml. Everything downstream (chai-trigger's derived
+# ALLOWED_BRANCHES, the dispatch loops, the schema tests) picks the new
+# stream up automatically on merge -- those files need no edit.
+#
+# The boolean-inputs branch changes .github/workflows/*: GITHUB_TOKEN can
+# never hold the `workflows` permission, so the push uses the
+# oadp-rebasebot-cloner app (contents+workflows write -- the same
+# credentials cve-scan uses) and the PR is opened with the
+# oadp-rebasebot-app (pull-requests write; contents read). An app-opened
+# PR also triggers this repo's checks, unlike a GITHUB_TOKEN-opened one.
+# Prerequisite: the cloner app installed on the oadp-rebasebot org,
+# and an oadp-rebasebot fork of openshift/release.
+#
+# The same run regenerates the author-scoped tide queries in
+# openshift/release: their includedBranches lists are the one remaining
+# hand-maintained stream list, so every _prowconfig.yaml carrying the
+# oadp-rebasebot-app[bot] query gets the new branches added and a
+# signed branch is pushed to the oadp-rebasebot org's fork of
+# openshift/release with the cloner app (contents:write, installed on
+# the org -- NOTHING is installed on any openshift org repo). PR
+# creation is DELEGATED to chai (redhat-chai-bot already holds
+# PR-create access on openshift/release): the workflow posts the
+# handoff on the chai-trigger issue and chai opens the PR from the
+# fork branch. The GPG signature and the committer identity come from the
+# RELEASE_GPG_KEY / RELEASE_GPG_KEY_ID / RELEASE_COMMITTER_NAME /
+# RELEASE_COMMITTER_EMAIL secrets in the `stream-sync-release` ENVIRONMENT
+# (openshift/release enforces signed commits, and app identities cannot
+# hold GPG keys) -- an environment, not a repo secret, so a writer to
+# this repo cannot reach the key from an arbitrary branch workflow. No
+# personal account is hardcoded in this workflow. Without the key the
+# diff lands in the run summary for a human to apply. Either way the PR
+# needs an OWNERS review -- automation prepares it, humans approve it.
+#
+# Streams are only ever ADDED forward (newer than the current max); retired
+# streams are never re-added (T32 owns removal). The PRs are deliberately
+# NOT oadp-bot labeled: adding a stream is an infrastructure decision and
+# gets a human review.
+
+on:
+  schedule:
+    - cron: '23 12 * * 1'   # Mondays 12:23 UTC
+  workflow_dispatch:
+
+permissions:
+  # All cross-repo and workflow-file writes go through app tokens. The
+  # builtin token only posts the handoff comment on this repo's issue.
+  issues: write
+
+concurrency:
+  group: stream-sync
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      missing: ${{ steps.detect.outputs.missing }}
+      max_declared: ${{ steps.detect.outputs.max_declared }}
+      declared_streams: ${{ steps.detect.outputs.declared_streams }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Detect streams newer than the declared set
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          # The newest stream the siblings declare (e.g. oadp_1_6 -> 1.6).
+          declared() {
+            for wf in cve-scan auto-rebase-v2; do
+              sed -n '/^  workflow_dispatch:/,/^run-name\|^permissions:/p' ".github/workflows/${wf}.yaml" \
+                | sed -n 's/^      \(oadp_1_[0-9]*\):$/\1/p'
+            done | sort -u | sed 's/^oadp_1_//; s/_/./g' | sort -V | tail -1
+          }
+          MAX_DECLARED=$(declared)
+
+          # Streams that exist on the sentinel repo (the operator is the
+          # first repo to carry a release branch).
+          DETECTED=$(gh api repos/openshift/oadp-operator/branches --paginate \
+            --jq '.[].name' | grep -E '^oadp-1\.[0-9]+$' | sed 's/^oadp-1\.//' | sort -Vu)
+
+          # Missing: detected versions strictly newer than the declared max.
+          MISSING=""
+          for v in $DETECTED; do
+            if [ "$(printf '%s\n%s\n' "$MAX_DECLARED" "$v" | sort -V | tail -1)" = "$v" ] \
+               && [ "$v" != "$MAX_DECLARED" ]; then
+              MISSING="$MISSING $v"
+            fi
+          done
+          MISSING="${MISSING# }"
+          # Every stream the siblings declare, MINUS the retired ones
+          # (same list test-tide-sync.sh subtracts): the release leg
+          # self-heals against this set, so a retired stream must not be
+          # re-added to the tide queries after T32 removes it.
+          RETIRED='["oadp-1.3"]'
+          # FULL branch names (oadp-1.3 ... oadp-dev), including dev (the
+          # oadp_[a-z0-9_]* pattern, same as test-tide-sync.sh expects
+          # every query to carry), minus the retired ones. The release
+          # leg consumes these verbatim -- deriving branch names
+          # downstream double-prefixed them.
+          DECLARED_STREAMS=$(for wf in cve-scan auto-rebase-v2; do
+            sed -n '/^  workflow_dispatch:/,/^run-name\|^permissions:/p' ".github/workflows/${wf}.yaml" \
+              | sed -n 's/^      \(oadp_[a-z0-9_]*\):$/\1/p'
+          done | sort -u | sed 's/^oadp_/oadp-/; s/_/./g' | while IFS= read -r b; do
+            if ! echo "$RETIRED" | jq -e --arg b "$b" 'index($b) != null' > /dev/null; then
+              echo "$b"
+            fi
+          done | tr '\n' ' ')
+          {
+            echo "max_declared=$MAX_DECLARED"
+            echo "missing=$MISSING"
+            echo "declared_streams=$DECLARED_STREAMS"
+          } >> "$GITHUB_OUTPUT"
+          echo "Declared max: $MAX_DECLARED; detected: $DETECTED; missing: ${MISSING:-none}"
+
+  booleans:
+    needs: detect
+    if: needs.detect.outputs.missing != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      pr_url: ${{ steps.pr.outputs.pr_url }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Mint the cloner app token (push workflow files)
+        # GITHUB_TOKEN cannot be granted the workflows permission, and the
+        # branch edits .github/workflows/*: the push needs an app token.
+        # oadp-rebasebot-app has only contents:read -- the cloner app
+        # (contents:write + workflows:write, the same credentials cve-scan
+        # uses for OADP_REBASEBOT_CLONER_ID/KEY) does the push. It must be
+        # installed on this repo. Repo name is literal on purpose: the
+        # schedule event payload carries no repository object.
+        id: cloner-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.OADP_REBASEBOT_CLONER_ID }}
+          private-key: ${{ secrets.OADP_REBASEBOT_CLONER_KEY }}
+          owner: oadp-rebasebot
+          repositories: oadp-rebase
+          permission-contents: write
+          permission-workflows: write
+
+      - name: Mint the rebasebot app token (open the PR)
+        # PR create/list needs pull-requests write -- the rebasebot app
+        # has it; the cloner app does not.
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.OADP_REBASEBOT_APP_ID }}
+          private-key: ${{ secrets.OADP_REBASEBOT_APP_KEY }}
+          owner: oadp-rebasebot
+          repositories: oadp-rebase
+          permission-pull-requests: write
+
+      - name: Add the missing stream booleans
+        env:
+          MISSING: ${{ needs.detect.outputs.missing }}
+        run: |
+          set -euo pipefail
+          python3 - "$MISSING" <<'PY'
+          import pathlib, re, sys
+
+          for v in sys.argv[1].split():
+              key = f"oadp_1_{v.replace('.', '_')}"
+              branch = f"oadp-1.{v}"
+              for wf in ("cve-scan", "auto-rebase-v2"):
+                  path = pathlib.Path(f".github/workflows/{wf}.yaml")
+                  s = path.read_text()
+                  if re.search(rf"^      {key}:$", s, re.M):
+                      continue  # already declared
+                  # Insert after the last oadp_1_N input block (4 lines:
+                  # key, description, type, default), before oadp_dev.
+                  lines = s.splitlines()
+                  last = max(i for i, l in enumerate(lines)
+                             if re.match(r"^      oadp_1_[0-9]+:$", l))
+                  block = [
+                      f"      {key}:",
+                      f"        description: '{branch}'",
+                      "        type: boolean",
+                      "        default: false",
+                  ]
+                  lines[last + 4:last + 4] = block
+                  path.write_text("\n".join(lines) + "\n")
+                  print(f"{wf}: added {key}")
+          PY
+          git diff --stat
+
+      - name: Open the stream-sync PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PUSH_TOKEN: ${{ steps.cloner-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          MISSING: ${{ needs.detect.outputs.missing }}
+          MAX_DECLARED: ${{ needs.detect.outputs.max_declared }}
+        run: |
+          set -euo pipefail
+          branch="stream-sync/add-${MISSING// /-}"
+          # Cloner bot identity for the commits (the pushing app), with
+          # the BOT USER id -- the noreply address needs it, not the app
+          # id, or GitHub does not link the bot account.
+          git config user.name "oadp-rebasebot-cloner[bot]"
+          git config user.email "227483447+oadp-rebasebot-cloner[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add .github/workflows/cve-scan.yaml .github/workflows/auto-rebase-v2.yaml
+          git commit -s -m "stream-sync: add oadp-1.${MISSING// / and oadp-1.} boolean inputs
+
+          Detected on openshift/oadp-operator; declared max was
+          oadp-1.${MAX_DECLARED}. chai-trigger's ALLOWED_BRANCHES, the
+          dispatch loops, and the schema tests all derive from these
+          booleans, so no other file changes."
+          # Idempotency: if the remote branch already carries exactly this
+          # content (the working tree is the committed tree here), do not
+          # re-push -- a new commit SHA would restart CI and dismiss
+          # reviews for an unchanged diff. Base drift between runs changes
+          # the files legitimately; then the diff differs and the push
+          # happens.
+          if git fetch -q "https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "${branch}" 2>/dev/null \
+             && git diff --quiet FETCH_HEAD -- .github/workflows/cve-scan.yaml .github/workflows/auto-rebase-v2.yaml; then
+            echo "remote ${branch} already carries this content; not re-pushing."
+            if gh pr list --head "$branch" --state open --json number --jq 'length' | grep -q '^0$'; then
+              gh pr create --head "$branch" \
+                --title "stream-sync: add oadp-1.${MISSING// / and oadp-1.} stream booleans" \
+                --body "Regenerated PR (content unchanged; the earlier one was closed). Human review on purpose: adding a stream is an infrastructure decision (this PR is not oadp-bot labeled)." \
+                --base oadp-dev | tee /tmp/pr-url.txt
+            else
+              gh pr list --head "$branch" --state open --json url --jq '.[0].url' | tee /tmp/pr-url.txt
+            fi
+            echo "pr_url=$(cat /tmp/pr-url.txt)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Content differs (or no remote branch yet): the branch is
+          # automation-owned, force-push overwrites a previous attempt.
+          git push -q -f "https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "${branch}"
+          if gh pr list --head "$branch" --state open --json number --jq 'length' | grep -q '^0$'; then
+            # --head on purpose: the branch was pushed to a URL, so no
+            # remote-tracking ref exists for gh to auto-detect.
+            gh pr create --head "$branch" \
+              --title "stream-sync: add oadp-1.${MISSING// / and oadp-1.} stream booleans" \
+              --body "Detected release branch(es) oadp-1.${MISSING// /, oadp-1.} on openshift/oadp-operator, newer than the declared max oadp-1.${MAX_DECLARED}. This adds the matching boolean inputs to both sibling workflows; every consumer derives from them, so nothing else changes.
+
+          Human review on purpose: adding a stream is an infrastructure decision (this PR is not oadp-bot labeled).
+
+          Prepared by the stream-sync automation (no LLM); the app-opened PR runs the repo's checks normally." \
+              --base oadp-dev | tee /tmp/pr-url.txt
+          else
+            gh pr list --head "$branch" --state open --json url --jq '.[0].url' | tee /tmp/pr-url.txt
+          fi
+          # /tmp does not cross job boundaries: hand the URL to the release
+          # job as an output.
+          echo "pr_url=$(cat /tmp/pr-url.txt)" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: [detect, booleans]
+    # Runs every time detect ran -- NOT gated on `missing`: once the
+    # booleans PR merges, `missing` is empty forever, and a failed push or
+    # handoff from an earlier week would never retry. The regenerate step
+    # diffs the live tide queries against the declared streams, so this
+    # leg self-heals weekly and no-ops when everything is current.
+    if: '!cancelled() && needs.detect.result == ''success'''
+    # Environment-scoped secrets: RELEASE_GPG_KEY / RELEASE_GPG_KEY_ID /
+    # RELEASE_COMMITTER_NAME / RELEASE_COMMITTER_EMAIL live in the
+    # `stream-sync-release` environment (deployment branch oadp-dev), not
+    # as repo secrets -- a repo writer cannot reach them from an arbitrary
+    # branch workflow.
+    environment: stream-sync-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DECLARED_STREAMS: ${{ needs.detect.outputs.declared_streams }}
+    steps:
+      - name: Regenerate openshift/release tide queries
+        id: regenerate
+        env:
+          # The full declared set (all sibling booleans), not just the new
+          # streams: this is what self-heals a week where the booleans PR
+          # merged but the release leg failed -- the gap is the difference
+          # between these and the live queries. MISSING stays the new
+          # streams, for branch naming and messages only.
+          DECLARED_STREAMS: ${{ needs.detect.outputs.declared_streams }}
+        run: |
+          set -euo pipefail
+
+          # The author-scoped tide queries in openshift/release carry the
+          # only remaining hand-maintained stream list (includedBranches).
+          # Find every such file dynamically -- no hardcoded repo list --
+          # and add the new branches to that query's list.
+          rm -rf /tmp/release
+          git clone -q --depth 1 --filter=blob:none --sparse \
+            https://github.com/openshift/release.git /tmp/release
+          git -C /tmp/release sparse-checkout set core-services/prow/02_config
+
+          mapfile -t FILES < <(grep -rl 'oadp-rebasebot-app\[bot\]' \
+            /tmp/release/core-services/prow/02_config --include='_prowconfig.yaml')
+          if [ "${#FILES[@]}" -eq 0 ]; then
+            echo "FAIL: no _prowconfig.yaml carries the oadp-rebasebot-app query" >&2
+            exit 1
+          fi
+          echo "tide queries found: ${#FILES[@]} files"
+
+          python3 - "$DECLARED_STREAMS" "${FILES[@]}" <<'PY'
+          import pathlib, sys
+
+          # Full branch names verbatim (oadp-1.4 ... oadp-dev): the
+          # detect step already resolved them; re-deriving here
+          # double-prefixed them.
+          new_branches = sorted(sys.argv[1].split())
+          matched = 0
+          added = set()
+
+          for arg in sys.argv[2:]:
+              p = pathlib.Path(arg)
+              lines = p.read_text().splitlines()
+              out, i, changed = [], 0, False
+              while i < len(lines):
+                  line = lines[i]
+                  if line == "  - author: oadp-rebasebot-app[bot]":
+                      matched += 1
+                      out.append(line)
+                      i += 1
+                      # Walk the query block: until the next query entry or a
+                      # dedent out of the queries list.
+                      while i < len(lines):
+                          l = lines[i]
+                          if l == "    includedBranches:":
+                              out.append(l)
+                              i += 1
+                              existing = []
+                              while i < len(lines) and lines[i].startswith("    - "):
+                                  existing.append(lines[i])
+                                  i += 1
+                              have = {e.strip()[2:] for e in existing}
+                              for b in new_branches:
+                                  if b not in have:
+                                      existing.append(f"    - {b}")
+                                      changed = True
+                                      added.add(b)
+                              out.extend(sorted(existing, key=lambda x: x.strip()))
+                          elif l.startswith("  - ") or not l.startswith("    "):
+                              break
+                          else:
+                              out.append(l)
+                              i += 1
+                      continue
+                  out.append(line)
+                  i += 1
+              if changed:
+                  p.write_text("\n".join(out) + "\n")
+                  print(f"updated {p.name}")
+          # A format drift that matches nothing must fail loudly, not
+          # report "already carries the branches".
+          if matched == 0:
+              sys.exit("FAIL: no author-scoped query block matched -- the release _prowconfig format drifted")
+          print(f"{matched} author-scoped query blocks matched")
+
+          # Post-write verification, EVERY author-scoped query block in
+          # each file (a file can carry more than one -- a first-only
+          # re-read missed the rest), exact whole-line compare.
+          import re as _re
+          failures = []
+          for arg in sys.argv[2:]:
+              f = pathlib.Path(arg)
+              text = f.read_text()
+              blocks = list(_re.finditer(
+                  r"^  - author: oadp-rebasebot-app\[bot\]$(.*?)(?=^  - |^\S|\Z)",
+                  text, _re.M | _re.S))
+              if not blocks:
+                  failures.append(f"{f.name}: no author-scoped query block on re-read")
+                  continue
+              for bi, m in enumerate(blocks, 1):
+                  block_lines = m.group(1).splitlines()
+                  # ONLY the includedBranches list counts: block-level
+                  # list items can belong to excludedBranches (or labels),
+                  # and matching those inverts the meaning.
+                  listed = []
+                  in_included = False
+                  for l in block_lines:
+                      if l.strip() == "includedBranches:":
+                          in_included = True
+                          continue
+                      if in_included:
+                          if l.startswith("    - "):
+                              listed.append(l.strip()[2:])
+                          else:
+                              in_included = False  # next key ended the list
+                  if not listed:
+                      failures.append(f"{f.name} query #{bi}: no includedBranches list found")
+                      continue
+                  for b in sorted(set(new_branches)):
+                      if b not in listed:
+                          failures.append(f"{f.name} query #{bi}: branch {b} missing from includedBranches after rewrite")
+          if failures:
+              sys.exit("FAIL: " + "; ".join(failures))
+          pathlib.Path("/tmp/tide-added.txt").write_text(" ".join(sorted(added)))
+          PY
+          echo "added=$(cat /tmp/tide-added.txt)" >> "$GITHUB_OUTPUT"
+
+          git -C /tmp/release diff > /tmp/tide-sync.diff
+          if [ ! -s /tmp/tide-sync.diff ]; then
+            echo "tide queries already carry the new branches; nothing to do"
+            exit 0
+          fi
+          cat /tmp/tide-sync.diff
+
+      - name: Decide whether the release PR can be automated
+        # Gate BEFORE minting the app token: if the app is not installed
+        # on the oadp-rebasebot org (the release fork) the mint fails
+        # red, and the GPG-key fallback (diff to run summary) would never
+        # run. Decide first, mint only when the release PR branch is
+        # actually going out.
+        id: release-gate
+        env:
+          GPG_KEY: ${{ secrets.RELEASE_GPG_KEY }}
+        run: |
+          if [ -n "${GPG_KEY:-}" ] && [ -s /tmp/tide-sync.diff ]; then
+            echo "do_release=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "do_release=no" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Mint the cloner app token (push to the org fork)
+        # The signed branch lives on the oadp-rebasebot org's fork of
+        # openshift/release -- a fork PR needs no permission on the
+        # openshift org at all. The cloner app (contents:write) is
+        # installed on the oadp-rebasebot org, covering both this repo
+        # and the fork; nothing is ever installed on an openshift repo.
+        id: cloner-token
+        if: steps.release-gate.outputs.do_release == 'yes'
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.OADP_REBASEBOT_CLONER_ID }}
+          private-key: ${{ secrets.OADP_REBASEBOT_CLONER_KEY }}
+          owner: oadp-rebasebot
+          repositories: release
+          permission-contents: write
+
+      - name: Push the release tide-sync branch, hand the PR to chai
+        # PR creation on openshift/release is delegated to chai
+        # (redhat-chai-bot already holds PR-create access there; this
+        # repo's apps do not and will not). The workflow pushes the
+        # GPG-signed branch to the oadp-rebasebot/release fork and posts
+        # the handoff request on the chai-trigger issue; chai opens the
+        # PR from the fork branch. The committer identity comes from
+        # environment secrets, not from any person hardcoded here.
+        env:
+          # What the regeneration actually added -- in a self-heal week
+          # `missing` is empty (the booleans merged) but the tide diff is
+          # not, so naming must come from the diff, not the detection.
+          ADDED: ${{ steps.regenerate.outputs.added }}
+          GH_TOKEN: ${{ github.token }}
+          # GH_REPO is required: the step cd's into /tmp/release, and gh
+          # would otherwise resolve THIS repo from that checkout's remote
+          # (openshift/release, where issues are disabled) and fail.
+          GH_REPO: ${{ github.repository }}
+          PUSH_TOKEN: ${{ steps.cloner-token.outputs.token }}
+          STREAM_SYNC_PR: ${{ needs.booleans.outputs.pr_url }}
+          # openshift/release enforces signed commits; app identities
+          # cannot hold GPG keys, so the commits carry a committer
+          # identity whose key this is. All three live in the
+          # stream-sync-release environment. Without them the step
+          # degrades to printing the diff in the run summary.
+          GPG_KEY: ${{ secrets.RELEASE_GPG_KEY }}
+          GPG_KEY_ID: ${{ secrets.RELEASE_GPG_KEY_ID }}
+          COMMITTER_NAME: ${{ secrets.RELEASE_COMMITTER_NAME }}
+          COMMITTER_EMAIL: ${{ secrets.RELEASE_COMMITTER_EMAIL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${GPG_KEY:-}" ] || [ -z "${COMMITTER_NAME:-}" ] || [ -z "${COMMITTER_EMAIL:-}" ] \
+             || [ ! -s /tmp/tide-sync.diff ]; then
+            {
+              echo "## openshift/release tide queries NOT regenerated"
+              echo
+              echo "The stream-sync-release environment is missing a secret"
+              echo "(RELEASE_GPG_KEY / RELEASE_COMMITTER_NAME / RELEASE_COMMITTER_EMAIL)"
+              echo "or there was no diff. A human must add the missing streams to"
+              echo "the author-scoped tide queries' includedBranches in"
+              echo "openshift/release (see the diff below):"
+              echo
+              echo '```diff'
+              cat /tmp/tide-sync.diff 2>/dev/null || echo "(no diff was generated)"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          cd /tmp/release
+          echo "$GPG_KEY" | gpg --batch --import
+          git config user.name "$COMMITTER_NAME"
+          git config user.email "$COMMITTER_EMAIL"
+          git config user.signingkey "$GPG_KEY_ID"
+          git config commit.gpgsign true
+          branch="tide-sync/add-${ADDED// /-}"
+          git checkout -q -b "$branch"
+          git add core-services/prow/02_config
+          git commit -s -m "tide-sync: pool ${ADDED// / and } in the oadp-bot queries"
+
+          # Idempotency: while the PR from this branch is still open, a
+          # weekly re-run must not force-push (new commit SHAs restart
+          # openshift/release CI and drop reviews) and must not spam the
+          # trigger issue with a repeat handoff.
+          # --head takes a bare branch name only ("owner:branch" is not
+          # supported and silently matches nothing), so the owner is
+          # filtered from the results instead.
+          open_prs=$(gh pr list --repo openshift/release \
+            --head "${branch}" --state open \
+            --json headRepositoryOwner \
+            --jq '[.[] | select(.headRepositoryOwner.login == "oadp-rebasebot")] | length')
+          if [ "$open_prs" != "0" ]; then
+            echo "a PR is already open from oadp-rebasebot:${branch}; nothing to do." >&2
+            exit 0
+          fi
+
+          # Push to the org's fork of openshift/release (the sparse clone
+          # above is the fresh upstream main the branch is cut from, so
+          # fork staleness is irrelevant). The GPG signature is what the
+          # commits-signed check verifies. -f: re-runs until the PR merges
+          # must overwrite the branch, not collide with it.
+          git push -q -f "https://x-access-token:${PUSH_TOKEN}@github.com/oadp-rebasebot/release.git" "HEAD:${branch}"
+
+          # Hand the PR creation to chai: request it on the trigger issue
+          # (found by its chai-trigger label, not a hardcoded number).
+          # chai already holds PR-create access on openshift/release; the
+          # PR comes from the org fork's branch.
+          # empty -> empty (jq prints null on .[0] of [], which would
+          # pass [ -n ] and fail the comment call below).
+          issue=$(gh issue list --label chai-trigger --state open \
+            --json number --jq 'if length > 0 then .[0].number else empty end')
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body "tide-sync handoff: branch ${branch} (GPG-signed, cut from openshift/release main, carrying ${ADDED// /, } in every author-scoped oadp-bot tide query) is pushed to oadp-rebasebot/release. chai: please open the PR on openshift/release from oadp-rebasebot:${branch} (base main) -- title 'tide-sync: pool ${ADDED// / and } in the oadp-bot queries'. Companion stream-sync PR: ${STREAM_SYNC_PR:-n/a}. Human review on purpose: adding a stream is an infrastructure decision.
+
+          Posted by the stream-sync automation (no LLM)."
+          else
+            # No silent green: the branch is pushed but nobody was told.
+            echo "::warning::no open chai-trigger issue; open the PR from oadp-rebasebot:${branch} manually"
+            {
+              echo "## tide-sync branch pushed, handoff NOT delivered"
+              echo
+              echo "No open chai-trigger issue was found. Open the PR on"
+              echo "openshift/release from oadp-rebasebot:${branch} (base main)"
+              echo "manually."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

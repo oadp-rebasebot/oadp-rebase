@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/oadp-rebasebot/oadp-rebase/blob/oadp-dev/tools/chai-trigger/schema.json",
+  "title": "chai-trigger comment payload",
+  "description": "The JSON a redhat-chai-bot comment carries (after the hidden marker line, inside a fenced json block) to start the Auto Rebase and/or the CVE scan. The executable form of this contract is validate-payload.sh, which the workflow runs; this file is the declarative form chai references.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["trigger", "branches", "waves", "dry_run"],
+  "properties": {
+    "trigger": {
+      "type": "string",
+      "enum": ["cve_scan", "rebase", "rebase_then_cve"]
+    },
+    "branches": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "description": "Exactly one release branch per trigger. The allowed values are the workflows' boolean inputs minus unsupported streams (any current stream, oadp-dev; retired streams are refused by the runtime allowlist, not this pattern); this schema cannot enumerate them because GitHub input definitions are static per workflow file -- validate-payload.sh takes the allowed list as an argument.",
+      "items": { "type": "string", "pattern": "^oadp-(1\\.[0-9]+|dev)$" }
+    },
+    "waves": {
+      "type": "string",
+      "pattern": "^[1-5]$",
+      "description": "One wave number, 1 to 5."
+    },
+    "dry_run": {
+      "type": "boolean",
+      "description": "true reports and previews only. false lets the workflows open real pull requests. A CVE fix PR whose diff touches nothing but go.mod, go.sum, and the vendored dependency tree is labeled oadp-bot and enters the author-scoped tide pool; it merges only once the required checks and reviews pass and the pool's enablement conditions are met (branch protection still applies). Any broader diff is deliberately left unlabeled and waits for human review like any other PR. Rebase PRs are never labeled: upstream rebases get a full human review (team decision 2026-11-23)."
+    },
+    "timeout_minutes": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 330,
+      "default": 120,
+      "description": "Optional wait budget for the rebase-before-scan gate. Capped under the 360-minute hosted-runner job limit -- a kill there is a cancel and never acks."
+    },
+    "plan_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9._-]*$",
+      "description": "chai's plan identifier, carried so an unknown post outcome can be recovered by finding this plan's comment. Conservative charset on purpose: the value is interpolated into workflow shell, so quotes, semicolons, and newlines are refused here rather than escaped downstream."
+    }
+  }
+}

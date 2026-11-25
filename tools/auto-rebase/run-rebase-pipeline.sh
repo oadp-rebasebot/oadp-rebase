@@ -56,9 +56,22 @@ pr_info=""
 
 parse_pr_output() {
     local output_file="$1"
-    pr_url=$(grep -oE 'https://github.com/[^[:space:]]+/pull/[0-9]+' "$output_file" | head -1 || echo "")
-    pr_info=$(grep -E '(I created a new rebase PR|I updated existing rebase PR|PR .+/pull/[0-9]+ already contains|rebase/manual)' \
-        "$output_file" | sed 's/.*INFO - //' | head -1 || echo "")
+    # URL and status from the SAME identified result line: taking the URL
+    # from anywhere in the log (or the status from a different line than
+    # the URL) lets a same-repo bot PR mentioned earlier be mistaken for
+    # ours. Every recognized result shape carries the PR URL on its line;
+    # when none matched, pr_url stays empty (the workflow's author check
+    # then refuses to stamp or label anything).
+    local line
+    line=$(grep -E '(I created a new rebase PR|I updated existing rebase PR|PR .+/pull/[0-9]+ already contains|rebase/manual)' \
+        "$output_file" | tail -1 || echo "")
+    if [ -n "$line" ]; then
+        pr_url=$(grep -oE "https://github.com/${DEST_REPO}/pull/[0-9]+" <<< "$line" | head -1 || echo "")
+        pr_info=$(sed 's/.*INFO - //' <<< "$line")
+    else
+        pr_url=""
+        pr_info=""
+    fi
 }
 
 # ── Phase 1: Dry-run (strict) ──────────────────────────────
@@ -153,11 +166,22 @@ fi
 log_phase "Write result"
 mkdir -p "$RESULTS_DIR"
 
-# Determine effective exit code
+# Determine effective exit code. A green exit MUST mean the real rebase
+# ran and succeeded: when the real run was skipped (dry-run verification
+# failed) or the outcome needs a human, exit nonzero -- chai's wait gate
+# dispatches the scan on the run's success conclusion, so a skipped
+# rebase reporting success would silently fire the scan on stale state.
+# 75 = real run skipped / manual intervention required (not a crash).
 if [ -n "$real_run_rc" ]; then
     exit_code="$real_run_rc"
 else
     exit_code="${dry_run_rc}"
+fi
+if [ -z "$real_run_rc" ] && { [ "${DRY_RUN_ONLY}" != "true" ] || [ "${verify_dry_run_rc:-1}" != "0" ]; }; then
+    # Covers both modes: a skipped real run, and (dry-run mode) a dry run
+    # whose verification failed -- a failed rehearsal is not a success.
+    log_fail "Real run did not execute (dry-run verification failed or prerequisites unmet) -- reporting failure, not success"
+    exit_code=75
 fi
 
 # Determine verify result
@@ -193,8 +217,11 @@ jq -n \
 
 log_info "Result written to ${RESULTS_DIR}/${TARGET}.json"
 
-# Exit with appropriate code
+# Exit with appropriate code. is_manual means the rebase could not
+# complete without a person -- that is not success either (see the exit
+# code note above); a manual outcome must not green-light the scan.
 if [ "$is_manual" = "true" ]; then
-    exit 0
+    log_fail "Manual intervention required -- reporting failure, not success"
+    exit 75
 fi
 exit "${exit_code}"
