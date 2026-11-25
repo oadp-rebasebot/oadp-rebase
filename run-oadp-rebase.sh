@@ -11,8 +11,16 @@ set -eu
 
 GITHUB_APP_ID="${GITHUB_APP_ID:-1810299}"
 GITHUB_CLONER_ID="${GITHUB_CLONER_ID:-1810272}"
-GIT_USERNAME="${GIT_USERNAME:-oadp-team-rebase-bot}"
-GIT_EMAIL="${GIT_EMAIL:-oadp-maintainers@redhat.com}"
+# Rebase commits are authored as the cloner app -- the identity that pushes
+# the rebase branch. GitHub holds a fork PR's Actions runs for approval when
+# the PR author OR the pushing actor is a first-time contributor (never had a
+# commit or PR merged in that repo). The PR author (oadp-rebasebot-app) passes
+# once it has a merged PR, but the cloner only pushes; authored as anyone else
+# it stays first-time forever and every push needs a maintainer's "approve
+# workflows to run". Authored as the cloner, its first merged rebase PR in a
+# repo makes it a contributor there. 227483447 = oadp-rebasebot-cloner[bot].
+GIT_USERNAME="${GIT_USERNAME:-oadp-rebasebot-cloner[bot]}"
+GIT_EMAIL="${GIT_EMAIL:-227483447+oadp-rebasebot-cloner[bot]@users.noreply.github.com}"
 # In the SECRETS_DIR, there are needed two private keys for the GITHUB APPs
 # oadp-rebasebot-app-key
 # oadp-rebasebot-cloner-key
