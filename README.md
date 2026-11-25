@@ -255,8 +255,8 @@ git diff source/<upstream-branch> -- go.mod
 
 # Run the go-mod-tidy hook (runs go mod tidy, go vet, and commits)
 REBASEBOT_SOURCE=<upstream-branch> \
-REBASEBOT_GIT_USERNAME="oadp-team-rebase-bot" \
-REBASEBOT_GIT_EMAIL="oadp-maintainers@redhat.com" \
+REBASEBOT_GIT_USERNAME="oadp-rebasebot-cloner[bot]" \
+REBASEBOT_GIT_EMAIL="227483447+oadp-rebasebot-cloner[bot]@users.noreply.github.com" \
 ../rebasebot-hook-scripts/go-mod-tidy-and-commit.sh
 
 # 6. Verify the result
