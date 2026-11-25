@@ -7,6 +7,11 @@ on:
   schedule:
     - cron: '0 * * * 1-5'
   workflow_dispatch:
+    inputs:
+      cve_scan_run_id:
+        description: 'CVE Scan run whose summary to publish (empty: the latest successful scan with one)'
+        required: false
+        default: ''
 
 env:
   DATA_BRANCH: dashboard-data
@@ -48,6 +53,7 @@ jobs:
         id: cve-scan
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REQUESTED_RUN_ID: ${{ inputs.cve_scan_run_id }}
         run: |
           # When this workflow is reacting to a CVE Scan run, use that run's
           # artifact — it may be a targeted re-scan of one repo after a fix
@@ -56,6 +62,16 @@ jobs:
              && [ "${{ github.event.workflow_run.name }}" = "CVE Scan" ]; then
             run_id="${{ github.event.workflow_run.id }}"
             echo "Using the triggering CVE Scan run: ${run_id}"
+          elif [ -n "$REQUESTED_RUN_ID" ]; then
+            # A bot-dispatched CVE Scan names itself (its publish-dashboard
+            # job): it is still in progress, so the success-only fallback
+            # below would pass it over for the previous scan.
+            if ! [[ "$REQUESTED_RUN_ID" =~ ^[0-9]+$ ]]; then
+              echo "::error::cve_scan_run_id must be a run id, got: ${REQUESTED_RUN_ID}"
+              exit 1
+            fi
+            run_id="$REQUESTED_RUN_ID"
+            echo "Using the requested CVE Scan run: ${run_id}"
           else
             # Fall back to the most recent successful scan that actually
             # published a summary — whatever triggered it. GitHub does not fire
