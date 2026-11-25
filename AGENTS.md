@@ -67,7 +67,7 @@ Downstream-only repos (oadp-operator, openshift-velero-plugin, etc.) set source 
 | `restic-submodule-and-commit_oadp-1.X.sh` | Sync restic git submodule |
 | `velero-submodule-and-commit_oadp-1.X.sh` | Sync velero git submodule (for must-gather) |
 | `kopia-submodule-and-commit_oadp-1.X.sh` | Sync kopia git submodule (for must-gather) |
-| `normalize-dockerfiles-and-commit.sh` | Strip Go patch versions in Dockerfiles (shared) |
+| `normalize-dockerfiles-and-commit.sh` | Strip Go patch versions in Dockerfiles; raise `golang:X.Y` and `rhel_9_golang_X.Y` builders older than go.mod's `go` directive (shared) |
 | `verify-tag-sha_oadp-1.X.sh` | **Generated** — verify upstream tag wasn't recreated |
 | `oadp-operator-copy-crds-from-velero-and-commit_oadp-1.X.sh` | Copy CRDs from velero fork |
 | `go-use-tag_oadp-operator_oadp-1.X.sh` | Pin oadp-operator module to branch |
