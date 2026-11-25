@@ -1,4 +1,4 @@
-.PHONY: generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-repos-yaml go-test auto-rebase-test cve-scan-test chai-trigger-test declared-branches-test tide-sync-test shellcheck
+.PHONY: hooks-test generate verify-generate test syntax-check config-load verify-resolve-config verify-hooks verify-kopia-alignment verify-repos-yaml go-test auto-rebase-test cve-scan-test chai-trigger-test declared-branches-test tide-sync-test shellcheck
 
 generate:
 	@bash tools/generate-go-replace-velero.sh
@@ -150,6 +150,10 @@ tide-sync-test:
 	@echo "=== Tide-sync tests — release queries carry every declared stream ==="
 	@bash tools/stream-sync/test-tide-sync.sh
 
+hooks-test:
+	@echo "=== Rebase hook tests — Dockerfile normalization and Go builder raise ==="
+	@bash tools/hooks/test-normalize-dockerfiles.sh
+
 cve-scan-test:
 	@echo "=== CVE scan tests — remediation selection and dashboard summary ==="
 	@bash tools/cve-scan/test-remediate.sh
@@ -165,6 +169,6 @@ shellcheck:
 	done; \
 	[ $$fail -eq 0 ] && echo "All files passed ShellCheck" || exit 1
 
-test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks go-test auto-rebase-test cve-scan-test chai-trigger-test declared-branches-test
+test: verify-repos-yaml verify-generate syntax-check config-load verify-resolve-config verify-hooks go-test auto-rebase-test cve-scan-test chai-trigger-test declared-branches-test hooks-test
 	@echo ""
 	@echo "All checks passed."
